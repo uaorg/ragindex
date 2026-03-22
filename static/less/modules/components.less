@@ -62,20 +62,24 @@
 
   ul {
     list-style: none;
+    margin: 0;
+    padding: 0;
     li {
-      margin: 0; // Rimossi margini tra voci
+      margin: 0;
       a {
+        text-align: left;
+        padding-left: 8px;
         font-family: @fsans;
         text-decoration: none;
         display: block;
-        padding: 2px 8px; // Padding ultracompatto
-        border-radius: 4px;
+        padding: 4px 8px;
+        border-radius: 6px;
         transition: all 0.2s ease;
         overflow: hidden;
         white-space: nowrap;
         text-overflow: ellipsis;
         color: @dark-text;
-        font-size: 0.9em; // Leggermente più piccolo per densità
+        font-size: 0.9em;
         &:hover {
           background: rgba(255,255,255,0.05);
           text-decoration: none;
