@@ -1684,7 +1684,17 @@ div.container {
 // Tema DARK
 // -------------------
 .theme-dark {
+  // Alias per il Mixin
+  @c-bg: @dark-bg;
+  @c-text: @dark-text;
+  @c-accent: @dark-color2;
+  @c-border: @dark-border-shadow;
+  @c-output-bg: @dark-output-bg;
+  @c-color1: @dark-color1;
+  @c-color2: @dark-color2;
+
   // --- Mappatura Variabili Generiche ---
+
   @pulse-animation: pulse-dark;
   @bg: @dark-bg;
   @log-bg: darken(@dark-color1, 20%);
