@@ -9,449 +9,127 @@
 import Dexie from "./vendor/dexie.js";
 
 // ============================================================================
-// VARIABILI PRIVATE
+// CONFIGURAZIONE DATABASE
 // ============================================================================
 
-/**
- * Istanza del database Dexie.
- * @type {Dexie}
- * @private
- */
 const _db = new Dexie("RagIndexDB");
 
-// Configurazione schema database
-// kvStore: tabella per dati pesanti (chunks, indici, conversazioni)
-// settings: tabella per configurazioni (ex localStorage)
 _db.version(2).stores({
     kvStore: "id",
     settings: "id"
 });
 
 // ============================================================================
-// FUNZIONI PRIVATE
+// FUNZIONI DI SUPPORTO (Private)
 // ============================================================================
 
-/**
- * Gestisce gli errori delle operazioni Dexie.
- * @param {string} operation - Nome dell'operazione fallita
- * @param {Error} error - Oggetto errore
- * @returns {boolean} Sempre false per indicare fallimento
- * @private
- */
-const _handleError = (operation, error) => {
-    console.error(`Dexie: Errore durante ${operation}:`, error);
-    return false;
-};
-
-/**
- * Legge un record dalla tabella settings.
- * @param {string} id - Identificativo del record
- * @returns {*} Valore del record o stringa vuota
- * @private
- */
-const _readFromSettings = async (id) => {
-    let value = "";
-
-    try {
-        const record = await _db.settings.get(id);
-        if (record) {
-            value = record.value;
-        }
-    } catch (error) {
-        console.error(`Dexie UaDb: Errore lettura ${id}:`, error);
-        value = "";
-    }
-
-    return value;
-};
-
-/**
- * Scrive un record nella tabella settings.
- * @param {string} id - Identificativo del record
- * @param {*} data - Dati da memorizzare
- * @returns {void}
- * @private
- */
-const _writeToSettings = async (id, data) => {
-    try {
-        await _db.settings.put({ id: id, value: data });
-    } catch (error) {
-        console.error(`Dexie UaDb: Errore salvataggio ${id}:`, error);
-    }
-};
-
-/**
- * Elimina un record dalla tabella settings.
- * @param {string} id - Identificativo del record
- * @returns {void}
- * @private
- */
-const _deleteFromSettings = async (id) => {
-    try {
-        await _db.settings.delete(id);
-    } catch (error) {
-        console.error(`Dexie UaDb: Errore eliminazione ${id}:`, error);
-    }
+const _logErr = (op, err) => { 
+    console.error(`Dexie [${op}]:`, err); 
+    return false; 
 };
 
 // ============================================================================
-// API PUBBLICA - idbMgr
+// API PUBBLICA - idbMgr (Tabella kvStore)
 // ============================================================================
 
-/**
- * Oggetto principale per operazioni su IndexedDB (tabella kvStore).
- * @namespace
- */
 export const idbMgr = {
+    db: () => _db,
 
-    /**
-     * Restituisce l'istanza del database Dexie per utilizzi avanzati.
-     * @returns {Dexie} Istanza del database
-     * @public
-     */
-    db: () => {
-        return _db;
+    create: async (key, val) => { 
+        try { await _db.kvStore.put({ id: key, value: val }); return true; } 
+        catch (e) { return _logErr("create", e); } 
     },
 
-    /**
-     * Crea o aggiorna un record nella tabella kvStore.
-     * @param {string} key - Chiave del record
-     * @param {*} value - Valore da memorizzare
-     * @returns {boolean} True se successo, false altrimenti
-     * @public
-     */
-    create: async (key, value) => {
-        let result = false;
-
-        try {
-            await _db.kvStore.put({ id: key, value: value });
-            result = true;
-        } catch (error) {
-            result = _handleError("creazione", error);
-        }
-
-        return result;
+    read: async (key) => { 
+        try { const r = await _db.kvStore.get(key); return r ? r.value : undefined; } 
+        catch (e) { _logErr("read", e); return undefined; } 
     },
 
-    /**
-     * Legge un record dalla tabella kvStore.
-     * @param {string} key - Chiave del record
-     * @returns {*} Valore del record o undefined
-     * @public
-     */
-    read: async (key) => {
-        let value = undefined;
+    update: async (key, val) => await idbMgr.create(key, val),
 
-        try {
-            const record = await _db.kvStore.get(key);
-            if (record) {
-                value = record.value;
-            }
-        } catch (error) {
-            _handleError("lettura", error);
-            value = undefined;
-        }
-
-        return value;
+    delete: async (key) => { 
+        try { await _db.kvStore.delete(key); return true; } 
+        catch (e) { return _logErr("delete", e); } 
     },
 
-    /**
-     * Aggiorna un record esistente (alias di create).
-     * @param {string} key - Chiave del record
-     * @param {*} value - Nuovo valore
-     * @returns {boolean} True se successo, false altrimenti
-     * @public
-     */
-    update: async (key, value) => {
-        const result = await idbMgr.create(key, value);
-        return result;
+    exists: async (key) => { 
+        try { return await _db.kvStore.where("id").equals(key).count() > 0; } 
+        catch (e) { return _logErr("exists", e); } 
     },
 
-    /**
-     * Elimina un record dalla tabella kvStore.
-     * @param {string} key - Chiave del record
-     * @returns {boolean} True se successo, false altrimenti
-     * @public
-     */
-    delete: async (key) => {
-        let result = false;
-
-        try {
-            await _db.kvStore.delete(key);
-            result = true;
-        } catch (error) {
-            result = _handleError("eliminazione", error);
-        }
-
-        return result;
+    getAllKeys: async () => { 
+        try { return await _db.kvStore.toCollection().primaryKeys(); } 
+        catch (e) { return _logErr("getAllKeys", e) || []; } 
     },
 
-    /**
-     * Verifica se una chiave esiste nella tabella kvStore.
-     * @param {string} key - Chiave da verificare
-     * @returns {boolean} True se esiste, false altrimenti
-     * @public
-     */
-    exists: async (key) => {
-        let exists = false;
-
-        try {
-            const count = await _db.kvStore.where("id").equals(key).count();
-            exists = count > 0;
-        } catch (error) {
-            _handleError("verifica esistenza", error);
-            exists = false;
-        }
-
-        return exists;
+    selectKeys: async (prefix) => { 
+        try { return await _db.kvStore.where("id").startsWith(prefix).primaryKeys(); } 
+        catch (e) { return _logErr("selectKeys", e) || []; } 
     },
 
-    /**
-     * Ottiene tutte le chiavi dalla tabella kvStore.
-     * @returns {string[]} Array di chiavi
-     * @public
-     */
-    getAllKeys: async () => {
-        let keys = [];
-
-        try {
-            keys = await _db.kvStore.toCollection().primaryKeys();
-        } catch (error) {
-            _handleError("recupero chiavi", error);
-            keys = [];
-        }
-
-        return keys;
+    getAllRecords: async () => { 
+        try { 
+            const all = await _db.kvStore.toArray(); 
+            return all.map(r => ({ key: r.id, value: r.value })); 
+        } catch (e) { return _logErr("getAllRecords", e) || []; } 
     },
 
-    /**
-     * Ottiene le chiavi che iniziano con un prefisso.
-     * @param {string} prefix - Prefisso da cercare
-     * @returns {string[]} Array di chiavi corrispondenti
-     * @public
-     */
-    selectKeys: async (prefix) => {
-        let keys = [];
-
-        try {
-            keys = await _db.kvStore
-                .where("id")
-                .startsWith(prefix)
-                .primaryKeys();
-        } catch (error) {
-            _handleError("selectKeys", error);
-            keys = [];
-        }
-
-        return keys;
+    selectRecords: async (prefix) => { 
+        try { 
+            const found = await _db.kvStore.where("id").startsWith(prefix).toArray(); 
+            return found.map(r => ({ key: r.id, value: r.value })); 
+        } catch (e) { return _logErr("selectRecords", e) || []; } 
     },
 
-    /**
-     * Ottiene tutti i record come array di oggetti {key, value}.
-     * @returns {Promise<Array<{key: string, value: *}>>} Array di record
-     * @public
-     */
-    getAllRecords: async () => {
-        let records = [];
-
-        try {
-            const all = await _db.kvStore.toArray();
-            records = all.map((r) => ({ key: r.id, value: r.value }));
-        } catch (error) {
-            _handleError("getAllRecords", error);
-            records = [];
-        }
-
-        return records;
-    },
-
-    /**
-     * Ottiene i record con un prefisso specifico.
-     * @param {string} prefix - Prefisso da cercare
-     * @returns {Promise<Array<{key: string, value: *}>>} Array di record
-     * @public
-     */
-    selectRecords: async (prefix) => {
-        let records = [];
-
-        try {
-            const found = await _db.kvStore
-                .where("id")
-                .startsWith(prefix)
-                .toArray();
-            records = found.map((r) => ({ key: r.id, value: r.value }));
-        } catch (error) {
-            console.error(`Dexie: Errore selectRecords con prefisso '${prefix}':`, error);
-            records = [];
-        }
-
-        return records;
-    },
-
-    /**
-     * Pulisce completamente tutte le tabelle del database.
-     * @returns {boolean} True se successo, false altrimenti
-     * @public
-     */
-    clearAll: async () => {
-        let result = false;
-
-        try {
-            const tables = _db.tables;
-            await Promise.all(tables.map((table) => table.clear()));
-            result = true;
-        } catch (error) {
-            _handleError("pulizia totale database", error);
-            result = false;
-        }
-
-        return result;
+    clearAll: async () => { 
+        try { await Promise.all(_db.tables.map(t => t.clear())); return true; } 
+        catch (e) { return _logErr("clearAll", e); } 
     }
 };
 
 // ============================================================================
-// API PUBBLICA - UaDb (wrapper per tabella settings)
+// API PUBBLICA - UaDb (Tabella settings)
 // ============================================================================
 
-/**
- * Oggetto wrapper per operazioni sulla tabella settings.
- * Fornisce metodi per salvare/leggere configurazioni e impostazioni.
- * @namespace
- */
 export const UaDb = {
-
-    /**
-     * Legge un valore dalla tabella settings.
-     * @param {string} id - Identificativo del record
-     * @returns {*} Valore letto o stringa vuota
-     * @public
-     */
     read: async (id) => {
-        const value = await _readFromSettings(id);
-        return value;
+        try { const r = await _db.settings.get(id); return r ? r.value : ""; }
+        catch (e) { return _logErr(`UaDb.read:${id}`, e) || ""; }
     },
 
-    /**
-     * Elimina un record dalla tabella settings.
-     * @param {string} id - Identificativo del record
-     * @returns {void}
-     * @public
-     */
     delete: async (id) => {
-        await _deleteFromSettings(id);
+        try { await _db.settings.delete(id); }
+        catch (e) { _logErr(`UaDb.delete:${id}`, e); }
     },
 
-    /**
-     * Salva un valore nella tabella settings.
-     * @param {string} id - Identificativo del record
-     * @param {*} data - Dati da memorizzare
-     * @returns {void}
-     * @public
-     */
     save: async (id, data) => {
-        await _writeToSettings(id, data);
+        try { await _db.settings.put({ id, value: data }); }
+        catch (e) { _logErr(`UaDb.save:${id}`, e); }
     },
 
-    /**
-     * Ottiene tutti gli identificativi dalla tabella settings.
-     * @returns {string[]} Array di identificativi
-     * @public
-     */
     getAllIds: async () => {
-        let ids = [];
-
-        try {
-            ids = await _db.settings.toCollection().primaryKeys();
-        } catch (error) {
-            console.error("Dexie UaDb: Errore recupero IDs:", error);
-            ids = [];
-        }
-
-        return ids;
+        try { return await _db.settings.toCollection().primaryKeys(); }
+        catch (e) { return _logErr("UaDb.getAllIds", e) || []; }
     },
 
-    /**
-     * Salva un array come stringa JSON.
-     * @param {string} id - Identificativo del record
-     * @param {Array} arr - Array da memorizzare
-     * @returns {void}
-     * @public
-     */
-    saveArray: async (id, arr) => {
-        const str = JSON.stringify(arr);
-        await UaDb.save(id, str);
-    },
+    saveArray: async (id, arr) => await UaDb.save(id, JSON.stringify(arr)),
 
-    /**
-     * Legge un array da stringa JSON.
-     * @param {string} id - Identificativo del record
-     * @returns {Array} Array parsato o array vuoto
-     * @public
-     */
     readArray: async (id) => {
         const str = await UaDb.read(id);
-        let arr = [];
-
-        if (!str || str.trim().length === 0) {
-            arr = [];
-        } else {
-            try {
-                arr = JSON.parse(str);
-            } catch (error) {
-                console.error("UaDb: Errore parsing array:", error);
-                arr = [];
-            }
-        }
-
-        return arr;
+        try { return str ? JSON.parse(str) : []; }
+        catch (e) { return _logErr("UaDb.readArray", e) || []; }
     },
 
-    /**
-     * Salva un oggetto come stringa JSON.
-     * @param {string} id - Identificativo del record
-     * @param {Object} js - Oggetto da memorizzare
-     * @returns {void}
-     * @public
-     */
-    saveJson: async (id, js) => {
-        const str = JSON.stringify(js);
-        await UaDb.save(id, str);
-    },
+    saveJson: async (id, js) => await UaDb.save(id, JSON.stringify(js)),
 
-    /**
-     * Legge un oggetto da stringa JSON.
-     * @param {string} id - Identificativo del record
-     * @returns {Object} Oggetto parsato o oggetto vuoto
-     * @public
-     */
     readJson: async (id) => {
         const str = await UaDb.read(id);
-        let obj = {};
-
-        if (!str) {
-            obj = {};
-        } else {
-            try {
-                obj = JSON.parse(str);
-            } catch (error) {
-                console.error("UaDb: Errore parsing JSON:", error);
-                obj = {};
-            }
-        }
-
-        return obj;
+        try { return str ? JSON.parse(str) : {}; }
+        catch (e) { return _logErr("UaDb.readJson", e) || {}; }
     },
 
-    /**
-     * Pulisce completamente la tabella settings.
-     * @returns {void}
-     * @public
-     */
     clear: async () => {
-        try {
-            await _db.settings.clear();
-        } catch (error) {
-            console.error("Dexie UaDb: Errore pulizia settings:", error);
-        }
+        try { await _db.settings.clear(); }
+        catch (e) { _logErr("UaDb.clear", e); }
     }
 };
