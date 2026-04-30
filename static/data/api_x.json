@@ -1,14 +1,19 @@
 {
-    "last_updated": "2026-02-10T14:17:39.476301",
+    "last_updated": "2026-04-30T12:27:04.218987",
     "providers": {
         "gemini": {
             "api_key_env": "GEMINI_API_KEY",
-            "exported_key": "ragindex",
+            "exported_key": "gab",
             "keys": [
                 {
-                    "name": "ragindex",
-                    "key": "mLEAxPmP4kiTbJpVqu6W7V_PU19bJif-knhK8jm",
+                    "name": "ua260305",
+                    "key": "mLEAxPXkA9rPiLJcwYB_lHn7dqiyacdpQqsI1DW",
                     "notes": "giuseppe.materni"
+                },
+                {
+                    "name": "gab",
+                    "key": "mLEAxPmoXRPFjtpMhpuQQdSrB0h6ocXleTxBbkL",
+                    "notes": "gabriele.tenebra"
                 },
                 {
                     "name": "gm",
@@ -19,28 +24,38 @@
                     "name": "giu",
                     "key": "mLEAxPXcOxVKfsyjCDa0qoeRe_aAHNAdhFaIIrR",
                     "notes": "giumaterni"
+                },
+                {
+                    "name": "ipotesi",
+                    "key": "mLEAxPpx77REpFF6IHuA04GVVmwl2wZ--ouZqZL",
+                    "notes": "ipotesi2000"
                 }
             ]
         },
         "openrouter": {
             "api_key_env": "OPENROUTER_API_KEY",
-            "exported_key": "opr1",
+            "exported_key": "260418",
             "keys": [
                 {
-                    "name": "opr1",
-                    "key": "67-WV-qu-SsuSsCABaBtIICI0IBIIC2sk00IAd0ggNCStugSddSIBkkt22sdsdasSadC2C00I",
+                    "name": "260418",
+                    "key": "67-WV-qu-gkglIsSlsICulagBklSduANBdgdAIlsI2tICatgASlIBCdsIASuN0dtB22aIN20a",
                     "notes": "giuseppe.materni"
                 }
             ]
         },
         "mistral": {
             "api_key_env": "MISTRAL_API_KEY",
-            "exported_key": "mst1",
+            "exported_key": "vibe1",
             "keys": [
                 {
-                    "name": "ua260203",
-                    "key": "H8VTkiSG9zV7qaZ8UFrYC3L4nIuKPFsc",
+                    "name": "260414",
+                    "key": "qyqMNcyMydvxWeEA6PCo8QkLe5boT7dA",
                     "notes": "giuseppe.materni"
+                },
+                {
+                    "name": "260416",
+                    "key": "VRd2FGMaeqvzGXHfsnQneD4bqPQi5qzi",
+                    "notes": "ipotesi1000"
                 }
             ]
         }

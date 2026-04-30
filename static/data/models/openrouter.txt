@@ -1,0 +1,4 @@
+openrouter/free|199680|9|18.39
+baidu/qianfan-ocr-fast:free|65536|8|6.45
+liquid/lfm-2.5-1.2b-instruct:free|32768|8|2.91
+openai/gpt-oss-120b:free|131072|9|33.04

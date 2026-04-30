@@ -308,7 +308,7 @@ export const LlmProvider = {
             const providers = ["gemini", "mistral", "openrouter"];
             for (const p of providers) {
                 try {
-                    const response = await fetch(`./data/models/${p}_wnd.txt`);
+                    const response = await fetch(`./data/models/${p}.txt`);
                     if (response.ok) {
                         const text = await response.text();
                         const lines = text.split("\n").filter((line) => line.trim() !== "");
