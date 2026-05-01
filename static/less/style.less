@@ -210,49 +210,56 @@ input, textarea, [contenteditable="true"] {
   .copy-output, .wnd-output, .clear-output, .clear-history, .clear-history1, .delete-kb-btn {
     box-sizing: border-box;
     border: none;
-    padding: 10px;
+    padding: 12px;
     cursor: pointer;
     border-radius: 50%;
-    width: 40px;
-    height: 40px;
+    width: 50px; // Ingrandito a 50px
+    height: 50px; // Ingrandito a 50px
     display: flex;
     align-items: center;
-    margin-bottom: 5px;
+    justify-content: center;
+    margin-bottom: 12px; // Più distanziati (12px)
     transition: background-color 0.3s, transform 0.3s;
-    .icon, .copy-icon { width: 24px; height: 24px; }
+    .icon, .copy-icon { width: 28px; height: 28px; } // Icone più grandi
   }
   .copy-output.copied { transform: scale(1.2); }
 }
+
 .input-actions {
+  display: flex;
+  flex-direction: column-reverse; // Cresce verso l'alto
+  align-items: center;
+  margin: 0 0.5vw;
+
   .clear-input {
     box-sizing: border-box;
     border: none;
-    padding: 10px;
+    padding: 12px;
     cursor: pointer;
     border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    margin-bottom: 5px;
+    width: 50px;
+    height: 50px;
+    margin-top: 12px; // Distanziato verso l'alto
     transition: background-color 0.3s;
   }
   #btn-action1-knowledge, #btn-action2-start-convo, #btn-action3-continue-convo {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 4px;
-    margin-bottom: 3px;
+    padding: 8px;
+    margin-top: 12px; // Distanziato verso l'alto
     border: none;
-    border-radius: 6px;
+    border-radius: 50%; // Reso tondo come gli altri
     cursor: pointer;
     transition: background-color 0.3s;
-    width: 28px;
-    height: 28px;
+    width: 50px; // Ingrandito a 50px
+    height: 50px; // Ingrandito a 50px
     color: #ffffff;
-    .btn-icon-svg { margin-right: 0; width: 16px; height: 16px; }
-  }
-  #btn-action3-continue-convo {
-    background-color: #81c784;
-    &:hover { background-color: lighten(#81c784, 10%); }
+
+    .btn-icon-svg {
+      width: 28px;
+      height: 28px;
+    }
   }
 }
 .clear-input { &:hover { font-weight: bolder; text-decoration: underline; } }
@@ -379,27 +386,35 @@ input, textarea, [contenteditable="true"] {
 
 .spinner-wait .pulse-icon { width: 40px; height: 40px; }
 
-// Nuovi Controlli Contestuali Input
-.input-context-actions {
-  position: absolute;
-  top: 8px;
-  right: 50px; 
+.item.item2 {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-  z-index: 10;
+  flex-direction: row;
+  align-items: flex-end; // Allinea tutto al fondo (fondamentale per i pulsanti che salgono)
+}
+
+.input-context-actions {
+  display: flex;
+  flex-direction: column-reverse; // Sale verso l'alto
+  margin: 0 0.5vw; // IDENTICO A OUTPUT
   
   #btn-edit-last-fixed, .clear-input {
+    box-sizing: border-box;
+    border: none;
+    padding: 12px; // IDENTICO A OUTPUT
     cursor: pointer;
-    width: 26px;
-    height: 26px;
-    padding: 0;
+    border-radius: 50%;
+    width: 50px; // IDENTICO A OUTPUT (50px)
+    height: 50px; // IDENTICO A OUTPUT (50px)
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 50%;
-    transition: all 0.2s ease;
-    .icon { width: 16px; height: 16px; }
+    margin-top: 12px; // DISTANZIATI DI PIÙ (12px)
+    transition: all 0.3s ease;
+    
+    .icon {
+      width: 28px; // IDENTICO A OUTPUT
+      height: 28px; // IDENTICO A OUTPUT
+    }
   }
 }
 #spinner-wait { z-index: 10001; }
@@ -1113,14 +1128,23 @@ input, textarea, [contenteditable="true"] {
         background: @delete-btn-hover-bg;
       }
     }
+    .copy-output {
+      background: @dark-color2; // Verde
+      .icon, .copy-icon {
+        fill: #ffffff;
+      }
+      &:hover {
+        background: lighten(@dark-color2, 10%);
+      }
+    }
     .clear-history {
-      background: @btn-send0-bg;
+      background: @btn-send0-bg; // Rosso (@dark-color1)
       &:hover {
         background: @btn-send0-hover-bg;
       }
     }
     .clear-history1 {
-      background: @btn-send1-bg;
+      background: @btn-send1-bg; // Giallo (@dark-color3)
       &:hover {
         background: @btn-send1-hover-bg;
       }
@@ -1130,48 +1154,46 @@ input, textarea, [contenteditable="true"] {
     }
   }
   
-  .input-context-actions {
-    #btn-edit-last-fixed, .clear-input {
-      background: fade(@container-bg, 80%);
-      border: 1px solid fade(@text, 10%);
-      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  .input-context-actions, .input-actions {
+    button {
+      background-color: @btn-bg;
+      .icon, .btn-icon-svg {
+        fill: @text;
+      }
+      border: none;
+      box-shadow: none;
       &:hover {
-        background: @container-bg;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        background-color: @btn-hover;
+        .icon, .btn-icon-svg {
+          fill: @btn-hover-fg;
+        }
         transform: scale(1.1);
       }
     }
-    // Colori base espliciti per massima visibilità
-    #btn-edit-last-fixed .icon { fill: @color2; } // Verde per ripristino
-    .clear-input .icon { fill: @color3; }         // Arancione/Giallo per cancellazione
-    
-    #btn-edit-last-fixed:hover .icon { fill: lighten(@color2, 10%); }
-    .clear-input:hover .icon { fill: @color1; } // Diventa rosso intenso al passaggio
   }
 
   .input-actions {
     #btn-action1-knowledge {
-      background: @btn-send0-bg;
-      &:hover {
-        background: @btn-send0-hover-bg;
-      }
+      background: @dark-color1; // Rosso
+      &:hover { background: lighten(@dark-color1, 10%); }
+    }
+    #btn-action2-start-convo {
+      background: @dark-color3; // Giallo
+      &:hover { background: lighten(@dark-color3, 10%); }
     }
     #btn-action3-continue-convo {
-      background: @btn-send2-bg;
-      &:hover {
-        background: @btn-send2-hover-bg;
-      }
+      background: @dark-color2; // Verde
+      &:hover { background: lighten(@dark-color2, 10%); }
     }
-    .clear-input {
+  }
+
+  .input-context-actions {
+    #btn-edit-last-fixed, .clear-input {
       background-color: @btn-bg;
-      .icon {
-        fill: @text;
-      }
+      .icon { fill: @text; }
       &:hover {
         background-color: @btn-hover;
-        .icon {
-          fill: @btn-hover-fg;
-        }
+        .icon { fill: @btn-hover-fg; }
       }
     }
   }
