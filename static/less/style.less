@@ -938,16 +938,14 @@ input, textarea, [contenteditable="true"] {
       .text-out {
         background: @output-bg;
         color: @text;
-        border: 1px solid fade(@text, 10%);
-        box-shadow: none;
+        border: none; // Rimuove il bordo fisico per usare lo shadow come input
+        box-shadow: 0 0 0 2px @border-shadow; // IDENTICO A INPUT
         transition: all 0.3s ease;
-        outline: none; // Rimuove il bordo default del browser per tabindex
+        outline: none;
         &:hover {
-          border-color: transparent;
-          box-shadow: 0 0 0 2px fade(@color2, 40%);
+          box-shadow: 0 0 0 2px @color2; // IDENTICO A INPUT
         }
         &:focus-within, &:focus {
-          border-color: transparent !important;
           box-shadow: 0 0 0 2px @color1; // IDENTICO A INPUT
         }
         .div-text {
