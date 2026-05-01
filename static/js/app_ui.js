@@ -66,7 +66,7 @@ const _Spinner = (function() {
     };
 
     const stopAsync = async function() {
-        const confirmed = await confirm("Confermi Cancellazione Richiesta?");
+        const confirmed = await confirm("Confermi lo STOP?");
         if (confirmed) {
             const client = AppMgr.getClientLLM();
             if (client && typeof client.cancelRequest === "function") {

@@ -337,13 +337,27 @@ input, textarea, [contenteditable="true"] {
   width: 100vw;
   height: 100vh;
   z-index: 10000;
-  background: rgba(0, 0, 0, 0.4); // Sfondo scuro semi-trasparente
+  background: rgba(0, 0, 0, 0.25); // Sfondo più velato e trasparente
   display: none;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  backdrop-filter: blur(2px);
+  backdrop-filter: blur(1.5px); // Blur ridotto per vedere meglio sotto
+
+  .spinner-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 60px;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    border: 6px solid currentColor; // Bordo ancora più cicciotto
+    border-radius: 35px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+    transition: all 0.3s ease;
+  }
 
   .pulse-icon { 
     width: 60px; 
@@ -353,16 +367,13 @@ input, textarea, [contenteditable="true"] {
   }
   
   .stop-message {
-    margin-top: 30px;
-    padding: 12px 25px;
-    border-radius: 30px;
-    font-size: 18px;
-    font-weight: bold;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-    transition: all 0.3s ease;
-    &:hover {
-      transform: scale(1.05);
-    }
+    margin-top: 20px;
+    font-size: 32px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    color: #fff;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
   }
 }
 
@@ -892,12 +903,16 @@ input, textarea, [contenteditable="true"] {
       background-color: @color1;
       animation: @pulse-animation 1.5s ease-in-out infinite;
     }
+    .spinner-content {
+      border-color: @color1;
+      &:hover {
+        transform: scale(1.02);
+        border-color: lighten(@color1, 15%);
+        background: rgba(0, 0, 0, 0.8);
+      }
+    }
     .stop-message {
       color: #fff;
-      background: @color1;
-      &:hover {
-        background: lighten(@color1, 10%);
-      }
     }
   }
 
