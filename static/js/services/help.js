@@ -41,38 +41,38 @@ export const help0_html = `
     <!-- Comandi Finestra di Output -->
     <p class="center">Comandi Finestra di Output (in alto a destra)</p>
     <div>
-        <strong>Copia Output</strong>
-        <p>Copia l'intero contenuto della finestra di output negli appunti.</p>
+        <strong>Copia Output (Verde)</strong>
+        <p>Il pulsante verde in alto a destra copia l'intero contenuto della finestra di output negli appunti.</p>
     </div>
 
     <div>
-        <strong>Nuova Conversazione</strong>
-        <p>Cancella la cronologia della conversazione attiva. Mantiene il Contesto attuale per permettere di ricominciare a parlare degli stessi argomenti.</p>
+        <strong>Nuova Conversazione (Giallo)</strong>
+        <p>Il pulsante giallo cancella la cronologia della conversazione attiva. Mantiene il Contesto attuale per permettere di ricominciare a parlare degli stessi argomenti.</p>
     </div>
     <div>
-        <strong>Nuovo Contesto & Conversazione</strong>
-        <p>Resetta completamente la sessione di lavoro: cancella il Contesto estratto e la cronologia della conversazione attiva.</p>
+        <strong>Nuovo Contesto & Conversazione (Rosso)</strong>
+        <p>Il pulsante rosso resetta completamente la sessione di lavoro: cancella il Contesto estratto e la cronologia della conversazione attiva.</p>
     </div>
 
     <hr>
 
     <!-- Pulsanti del Flusso RAG -->
-    <p class="center">Pulsanti del Flusso RAG</p>
+    <p class="center">Pulsanti d'Azione (a destra dell'input)</p>
     <div>
-        <strong>Crea Knowledge Base</strong>
-        <p>Analizza i documenti caricati, li suddivide in "Chunks" e crea un "Indice" di ricerca. Questo processo genera la Knowledge di lavoro corrente.</p>
+        <strong>(1) Crea Knowledge Base (Rosso)</strong>
+        <p>Il pulsante rosso in alto nella colonna di input analizza i documenti caricati e crea l'indice di ricerca.</p>
     </div>
     <div>
-        <strong>Inizia Conversazione</strong>
-        <p>Usa la domanda per cercare nella Knowledge Base attiva, estrae un "Contesto" pertinente e avvia il dialogo con l'LLM.</p>
+        <strong>(2) Inizia Conversazione (Giallo)</strong>
+        <p>Il pulsante giallo centrale usa la domanda per cercare nella KB e avvia il dialogo con l'LLM.</p>
     </div>
     <div>
-        <strong>Continua Conversazione</strong>
-        <p>Prosegue il dialogo inviando all'LLM la nuova domanda insieme alla cronologia precedente e al contesto già identificato.</p>
+        <strong>(3) Continua Conversazione (Verde)</strong>
+        <p>Il pulsante verde alla base della colonna prosegue il dialogo basandosi sulla storia precedente.</p>
     </div>
     <div>
-        <strong>Cancella Input</strong>
-        <p>Svuota rapidamente il campo di inserimento testo.</p>
+        <strong>Controlli Contestuali</strong>
+        <p>I pulsanti a destra della textarea (ingranditi per una facile selezione) permettono di cancellare l'input o ripristinare l'ultima domanda.</p>
     </div>
     <hr>
 
@@ -205,11 +205,11 @@ export const help2_html = `
     </p>
 
     <div class="step">
-        <strong style="color: #ff5252;">(1) Fase 1: Creazione Knowledge Base (KB)</strong>
+        <strong style="color: #e82323;">(1) Fase 1: Creazione Knowledge Base (Rosso)</strong>
         <p>In questa fase il sistema analizza i tuoi documenti e crea l'indice di ricerca.</p>
         <ul>
             <li><strong>Input:</strong> Carica i file (PDF, TXT, DOCX) con l'icona <strong>Nuvola</strong> oppure usa <strong>"Documenti Esempio"</strong> nel menu.</li>
-            <li><strong>Azione:</strong> Clicca il pulsante rosso <span style="font-weight: bold;">(1)</span>.</li>
+            <li><strong>Azione:</strong> Clicca il pulsante rosso <span style="font-weight: bold;">(1)</span> in alto a destra dell'input.</li>
             <li><strong>Risultato:</strong> Vedrai lo stato di avanzamento nel Log. Una volta terminato, il sistema è pronto a rispondere ai tuoi documenti.</li>
         </ul>
     </div>
@@ -217,11 +217,11 @@ export const help2_html = `
     <hr>
 
     <div class="step">
-        <strong style="color: #ffb74d;">(2) Fase 2: Inizia Conversazione</strong>
+        <strong style="color: #f6e602;">(2) Fase 2: Inizia Conversazione (Giallo)</strong>
         <p>In questa fase il sistema estrae il contesto pertinente alla tua domanda.</p>
         <ul>
             <li><strong>Input:</strong> Scrivi la tua domanda nel campo di testo in basso.</li>
-            <li><strong>Azione:</strong> Clicca il pulsante arancione <span style="font-weight: bold;">(2)</span> (o premi Invio).</li>
+            <li><strong>Azione:</strong> Clicca il pulsante giallo centrale <span style="font-weight: bold;">(2)</span> (o premi Invio).</li>
             <li><strong>Risultato:</strong> Il sistema cercherà i frammenti più rilevanti nella KB e li invierà all'AI per generare la risposta.</li>
         </ul>
     </div>
@@ -229,11 +229,11 @@ export const help2_html = `
     <hr>
 
     <div class="step">
-        <strong style="color: #81c784;">(3) Fase 3: Continua Conversazione</strong>
+        <strong style="color: #00bd97;">(3) Fase 3: Continua Conversazione (Verde)</strong>
         <p>In questa fase puoi approfondire l'argomento senza perdere il filo del discorso.</p>
         <ul>
             <li><strong>Input:</strong> Scrivi nuove domande di approfondimento (es: "Dimmi di più su questo punto").</li>
-            <li><strong>Azione:</strong> Clicca il pulsante verde <span style="font-weight: bold;">(3)</span>.</li>
+            <li><strong>Azione:</strong> Clicca il pulsante verde alla base <span style="font-weight: bold;">(3)</span>.</li>
             <li><strong>Risultato:</strong> L'AI risponderà basandosi sulla storia della chat e sul contesto già identificato nella fase 2.</li>
         </ul>
     </div>
