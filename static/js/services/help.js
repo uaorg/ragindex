@@ -41,8 +41,8 @@ export const help0_html = `
     <!-- Comandi Finestra di Output -->
     <p class="center">Comandi Finestra di Output (in alto a destra)</p>
     <div>
-        <strong>Copia Output (Verde)</strong>
-        <p>Il pulsante verde in alto a destra copia l'intero contenuto della finestra di output negli appunti.</p>
+        <strong>Copia Output</strong>
+        <p>Il pulsante in alto a destra copia l'intero contenuto della finestra di output negli appunti.</p>
     </div>
 
     <div>

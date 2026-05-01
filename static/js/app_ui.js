@@ -123,9 +123,10 @@ const _Spinner = (function() {
  * @param {string} id - ID del contenitore finestra.
  * @param {string} contentClass - Classe CSS del contenitore contenuto (div-text o pre-text).
  * @param {string} copyMethodName - Nome del metodo di copia globale.
+ * @param {boolean} [showCopy=true] - Se mostrare il pulsante di copia.
  * @returns {Object} API della finestra.
  */
-const _UaWindowFactory = function(id, contentClass, copyMethodName) {
+const _UaWindowFactory = function(id, contentClass, copyMethodName, showCopy = true) {
     const _win = UaWindowAdm.create(id);
 
     const close = function() {
@@ -162,12 +163,18 @@ const _UaWindowFactory = function(id, contentClass, copyMethodName) {
         const html = `
             <div class="window-text">
                 <div class="btn-wrapper">
+                    ${showCopy ? `
                     <button class="btn-copy wcp tt-left" data-tt="Copia" onclick="wnds.${copyMethodName}.copy()">
-                        <svg class="copy-icon" viewBox="0 0 20 24">
+                        <svg class="icon" viewBox="0 0 24 24">
                             <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"></path>
                         </svg>
                     </button>
-                    <button class="btn-close wcl tt-left" data-tt="chiudi" onclick="wnds.${copyMethodName}.close()">X</button>
+                    ` : ""}
+                    <button class="btn-close wcl tt-left" data-tt="chiudi" onclick="wnds.${copyMethodName}.close()">
+                        <svg class="icon" viewBox="0 0 24 24">
+                            <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" />
+                        </svg>
+                    </button>
                 </div>
                 <${contentClass === "pre-text" ? "pre" : "div"} class="${contentClass}">${content}</${contentClass === "pre-text" ? "pre" : "div"}>
             </div>
@@ -455,7 +462,7 @@ export const wnds = {
     winfo: null,
 
     init: function() {
-        wnds.wdiv = _UaWindowFactory("id-wnd-div", "div-text", "wdiv");
+        wnds.wdiv = _UaWindowFactory("id-wnd-div", "div-text", "wdiv", false);
         wnds.wpre = _UaWindowFactory("id-wnd-pre", "pre-text", "wpre");
         wnds.winfo = _UaWindowInfoFactory("id-wnd-info");
         
