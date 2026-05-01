@@ -940,11 +940,16 @@ input, textarea, [contenteditable="true"] {
         color: @text;
         border: 1px solid fade(@text, 10%);
         box-shadow: none;
+        transition: border-color 0.3s ease;
         &:hover {
           border-color: fade(@color2, 30%);
         }
+        &:focus-within {
+          border-color: @color1; // Stesso colore del focus di input
+        }
         .div-text {
           .user, .assistant, .system {
+            position: relative; // INDISPENSABILE per la matita
             border: none !important;
             border-bottom: 1px solid fade(@text, 5%) !important;
             background: transparent;
