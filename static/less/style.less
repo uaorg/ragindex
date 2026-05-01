@@ -863,19 +863,26 @@ input, textarea, [contenteditable="true"] {
         }
         .div-text {
           .user {
-            border: 2px solid @color2 !important;
+            border: 1px solid fade(@color2, 20%) !important;
+            border-left: 6px solid @color2 !important;
+            background: fade(@color2, 5%);
             b {
               color: @color1;
+              border-bottom: 1px solid fade(@color2, 10%) !important;
             }
           }
           .assistant {
-            border: 2px solid @color1 !important;
+            border: 1px solid fade(@color1, 20%) !important;
+            border-left: 6px solid @color1 !important;
+            background: fade(@color1, 5%);
             b {
               color: @color2;
+              border-bottom: 1px solid fade(@color1, 10%) !important;
             }
           }
           .system {
-            border: 2px dashed @color3 !important;
+            border: 1px dashed fade(@color3, 30%) !important;
+            background: fade(@color3, 3%);
             b {
               color: @color3;
             }

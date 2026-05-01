@@ -1,8 +1,11 @@
 /**
- * @fileoverview app_mgr.js - Gestore configurazione applicazione
- * @description Inizializza e gestisce la configurazione del provider LLM.
- *              Modulo specifico dell'applicazione RagIndex.
+ * app_mgr.js - Gestore configurazione applicazione.
+ * Inizializza e gestisce la configurazione del provider LLM.
+ *
  * @module app_mgr
+ * @version 0.1.0
+ * @date 2026-05-01
+ * @author Team Sviluppo
  */
 "use strict";
 
@@ -10,28 +13,18 @@ import { LlmProvider } from "./llm_provider.js";
 import { ragEngine } from "./rag_engine.js";
 
 // ============================================================================
+// COSTANTI DI MODULO
+// ============================================================================
+
+const BYTES_PER_TOKEN = 3;
+const PROMPT_OVERHEAD_PERCENT = 0.1;
+
+// ============================================================================
 // VARIABILI PRIVATE
 // ============================================================================
 
-/**
- * Configurazione LLM corrente.
- * @type {Object|null}
- * @private
- */
 let _configLLM = null;
-
-/**
- * Client LLM corrente.
- * @type {Object|null}
- * @private
- */
 let _clientLLM = null;
-
-/**
- * Dimensione del prompt in byte.
- * @type {number}
- * @private
- */
 let _promptSize = 0;
 
 // ============================================================================
@@ -40,86 +33,76 @@ let _promptSize = 0;
 
 /**
  * Converte token in byte.
- * @param {number} nk - Token in migliaia (default: 32)
- * @returns {number} Byte stimati
- * @private
+ * @param {number} nk - Token in migliaia.
+ * @returns {number} Byte stimati.
  */
-const _tokensToBytes = (nk = 32) => {
-    const nc = 1024 * nk * 3;
-    const sp = nc * 0.1;
-    const mlr = Math.trunc(nc + sp);
-    return mlr;
+const _tokensToBytes = function(nk = 32) {
+    const rawBytes = 1024 * nk * BYTES_PER_TOKEN;
+    const overhead = rawBytes * PROMPT_OVERHEAD_PERCENT;
+    const result = Math.trunc(rawBytes + overhead);
+    return result;
 };
 
 // ============================================================================
 // API PUBBLICA
 // ============================================================================
 
-/**
- * Gestore principale dell'applicazione.
- * @namespace
- */
 export const AppMgr = {
 
     /**
      * Inizializza l'applicazione.
-     * @returns {void}
-     * @public
      */
-    initApp: async () => {
+    initApp: async function() {
         await LlmProvider.init();
         await AppMgr.initConfig();
     },
 
     /**
      * Inizializza la configurazione LLM.
-     * @returns {void}
-     * @public
      */
-    initConfig: async () => {
+    initConfig: async function() {
         await LlmProvider.initConfig();
 
         _configLLM = LlmProvider.getConfig();
+        if (!_configLLM || !_configLLM.windowSize) {
+            console.error("AppMgr.initConfig: configurazione LLM mancante o non valida");
+            return;
+        }
+
         _promptSize = _tokensToBytes(_configLLM.windowSize);
 
-        console.info("=============================");
-        console.info(`*** PROVIDER    : ${_configLLM.provider}`);
-        console.info(`*** MODEL       : ${_configLLM.model}`);
-        console.info(`*** WINDOW_SIZE : ${_configLLM.windowSize}`);
-        console.info(`*** PROMPT_SIZE : ${_promptSize}`);
-        console.info(`*** CLIENT      : ${_configLLM.client}`);
-
-        const model = _configLLM.model;
-        const promptSize = _promptSize;
+        console.info("AppMgr.initConfig: configurazione caricata.");
+        console.info(`Provider: ${_configLLM.provider} | Model: ${_configLLM.model}`);
+        console.info(`Window: ${_configLLM.windowSize}k | Prompt: ${_promptSize} bytes`);
 
         _clientLLM = LlmProvider.getclient();
-        ragEngine.init(_clientLLM, model, promptSize);
+        ragEngine.init(_clientLLM, _configLLM.model, _promptSize);
     },
 
     /**
      * Ottiene la configurazione LLM.
-     * @returns {Object|null} Configurazione LLM
-     * @public
+     * @returns {Object|null}
      */
-    getConfigLLM: () => {
-        return _configLLM;
+    getConfigLLM: function() {
+        const result = _configLLM;
+        return result;
     },
 
     /**
      * Ottiene il client LLM.
-     * @returns {Object|null} Client LLM
-     * @public
+     * @returns {Object|null}
      */
-    getClientLLM: () => {
-        return _clientLLM;
+    getClientLLM: function() {
+        const result = _clientLLM;
+        return result;
     },
 
     /**
      * Ottiene la dimensione del prompt.
-     * @returns {number} Dimensione prompt in byte
-     * @public
+     * @returns {number}
      */
-    getPromptSize: () => {
-        return _promptSize;
+    getPromptSize: function() {
+        const result = _promptSize;
+        return result;
     }
 };

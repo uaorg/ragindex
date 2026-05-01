@@ -47,6 +47,17 @@ Il progetto non richiede un sistema di build (Webpack/Vite). Per lo sviluppo loc
     - `npx http-server .`
 - **Testing**: I test si trovano in `static/tests/` (verificare la struttura specifica se necessario aggiungere nuovi test).
 
+## Documentazione
+
+Per approfondimenti sull'architettura e le best practices, consultare la directory `/docs/`:
+
+- `BEST_PRACTICES_JS.md`: La "Costituzione" tecnica del progetto (da seguire rigorosamente).
+- `ARCHITETTURA.md`: Panoramica strutturale del sistema RAG.
+- `SPECIFICHE_PIPELINE.md`: Dettagli tecnici sulle pipeline di indicizzazione.
+- `GUIDA_PRATICA.md`: Guida didattica all'uso del sistema.
+- `modifiche_attuate.md`: Registro dei refactoring completati (minuscolo).
+- `modifiche_previste.md`: Registro dei refactoring pianificati (minuscolo).
+
 ## Struttura Directory Principale
 
 - `/static/js/`: Logica applicativa JS.
@@ -54,4 +65,4 @@ Il progetto non richiede un sistema di build (Webpack/Vite). Per lo sviluppo loc
 - `/static/js/services/`: Utility e servizi core (DB, log, sender).
 - `/static/less/`: Sorgenti LESS per gli stili.
 - `/static/data/`: Modelli di prompt e file di test.
-- `/docs/`: Documentazione tecnica e specifiche architetturali.
+- `/docs/`: Documentazione tecnica in formato markdown.

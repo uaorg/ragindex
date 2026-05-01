@@ -1,21 +1,67 @@
+/**
+ * sender.js - Servizio di invio eventi e analytics.
+ *
+ * Gestisce l'invio asincrono di dati verso un worker esterno per il tracciamento
+ * delle attività, includendo metadata dell'ambiente.
+ * Supporta la disattivazione automatica in ambiente locale.
+ *
+ * @module  services/sender
+ * @version 1.0.1
+ * @date    2026-05-01
+ * @author  Gemini CLI
+ */
+
 "use strict";
 
-const LOCAL_URL = "http://localhost:8788"
+// ============================================================================
+// CONFIGURAZIONE DI SISTEMA
+// ============================================================================
 
-/**
- * Stato globale del modulo (Singleton)
+/** @type {boolean} Se true, impedisce l'invio degli eventi in ambiente locale. */
+const DISABLE_ON_LOCAL = true;
+
+
+// ============================================================================
+// STATO PRIVATO (SINGLETON)
+// ============================================================================
+
+/** 
+ * Configurazione globale del mittente.
+ * @private 
  */
-let _globalConfig = {
-    workerUrl: LOCAL_URL,
-    userId: null,   // Impostato tramite init()
+const _config = {
+    workerUrl: "",
+    userId: null,
     isInitialized: false
 };
 
+
+// ============================================================================
+// FUNZIONI PRIVATE
+// ============================================================================
+
 /**
- * Funzioni di utilità interne
+ * Verifica se l'applicazione è in esecuzione in un ambiente locale.
+ *
+ * @returns {boolean} True se l'ambiente è locale.
+ */
+const _isLocalEnvironment = function () {
+    const host = window.location.hostname;
+    const protocol = window.location.protocol;
+
+    const isLocalHost = (host === "localhost" || host === "127.0.0.1");
+    const isLocalFile = (protocol === "file:");
+    const result = isLocalHost || isLocalFile;
+    return result;
+};
+
+/**
+ * Raccoglie i metadata dell'ambiente corrente.
+ *
+ * @returns {Object} Oggetto contenente metadata di sistema.
  */
 const _getMetadata = function () {
-    return {
+    const metadata = {
         userAgent: navigator.userAgent,
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         language: navigator.language,
@@ -23,52 +69,76 @@ const _getMetadata = function () {
         urlParams: Object.fromEntries(new URLSearchParams(window.location.search)),
         timestamp: Math.floor(Date.now() / 1000)
     };
+
+    const result = metadata;
+    return result;
 };
 
-/**
- * Il modulo esporta sia la funzione factory che i metodi diretti.
- */
+
+// ============================================================================
+// API PUBBLICA
+// ============================================================================
+
 export const UaSender = {
 
     /**
-     * Configura l'URL del worker e l'ID Utente.
+     * Inizializza il servizio di invio eventi.
+     *
+     * @param {Object} options - Opzioni di configurazione.
+     * @param {string} options.workerUrl - URL base del worker analytics.
+     * @param {string} options.userId - Identificativo unico dell'utente.
      */
-    init: function (config = {}) {
-        if (config.workerUrl) {
-            _globalConfig.workerUrl = config.workerUrl;
+    init: function (options = {}) {
+        if (options.workerUrl) {
+            _config.workerUrl = options.workerUrl;
         }
-        if (config.userId) {
-            _globalConfig.userId = config.userId;
+
+        if (options.userId) {
+            _config.userId = options.userId;
         }
-        _globalConfig.isInitialized = true;
-        console.log(`[RAGINDEX] Inizializzato. URL: ${_globalConfig.workerUrl}, UserID: ${_globalConfig.userId || "auto"}`);
+
+        _config.isInitialized = true;
+        console.info(`UaSender.init: servizio pronto. URL: ${_config.workerUrl}`);
     },
 
     /**
-     * Invia un evento usando la configurazione globale.
+     * Invia un evento asincrono al server di analytics.
+     *
+     * @param {string} appName - Nome dell'applicazione.
+     * @param {string} actionName - Nome dell'azione eseguita.
+     * @returns {any} Risposta del server o null in caso di errore/skip.
      */
     sendEventAsync: async function (appName, actionName) {
+        // 1. Validazione Input (Fail Fast)
         if (!appName || !actionName) {
-            console.error("UaSender: parametri mancanti");
-            return null;
+            console.error("UaSender.sendEventAsync: parametri mancanti");
+            const result = null;
+            return result;
         }
-        // HACK disattuva li sender 
-        // console.info(">>>>>>>>>>>>>>> SENDER DISATTIVATO");
-        // return null;
-        // if (_globalConfig.workerUrl == LOCAL_URL) return null;
 
-        // Se userId non è configurato nell'init, usiamo il fallback <appName>_user_id
-        const finalUserId = _globalConfig.userId || `${appName}_user_id`;
+        // 2. Controllo Ambiente Locale
+        if (DISABLE_ON_LOCAL && _isLocalEnvironment()) {
+            console.info("UaSender.sendEventAsync: invio saltato (ambiente locale)");
+            const result = null;
+            return result;
+        }
+
+        // 3. Preparazione Payload
+        const finalUserId = _config.userId || `${appName}_user_id`;
+        const metadata = _getMetadata();
 
         const payload = {
-            appName,
-            actionName,
+            appName: appName,
+            actionName: actionName,
             userId: finalUserId,
-            ..._getMetadata()
+            ...metadata
         };
 
+        // 4. Invio Richiesta
         try {
-            const response = await fetch(`${_globalConfig.workerUrl}/api/analytics`, {
+            const endpoint = `${_config.workerUrl}/api/analytics`;
+
+            const response = await fetch(endpoint, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
@@ -76,18 +146,25 @@ export const UaSender = {
 
             if (!response.ok) {
                 const errCode = response.status;
-                const errMsg = "Invio evento fallito";
-                alert(`ERRORE [${errCode}]: ${errMsg}`);
-                throw new Error(errMsg);
+                const errMsg = `Invio evento fallito [${errCode}]`;
+                await alert(errMsg);
+
+                const result = null;
+                return result;
             }
-            return await response.json();
+
+            const data = await response.json();
+            const result = data;
+            return result;
+
         } catch (error) {
-            console.warn("UaSender: invio fallito", error);
-            // Se l'errore non è già stato notificato via alert (es. errore di rete)
-            if (!error.message.includes("Invio evento fallito")) {
-                alert(`ERRORE: ${error.message || "Connessione fallita"}`);
-            }
-            return null;
+            console.warn("UaSender.sendEventAsync: errore di rete", error);
+
+            const errorMsg = error.message || "Connessione analytics fallita";
+            await alert(`ERRORE ANALYTICS: ${errorMsg}`);
+
+            const result = null;
+            return result;
         }
     }
 };

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="it">
+<head><meta charset="utf-8"><title>Test Runner idb_mgr</title></head>
+<body>
+    <h1>Test in esecuzione, guarda la console (F12)</h1>
+    <script type="module">
+        import { idbMgr } from "./static/js/services/idb_mgr.js";
+
+        async function runTests() {
+            console.log("=== INIZIO TEST AUTOMATICO idb_mgr.js ===");
+            try {
+                // Test 1: Creazione
+                const created = await idbMgr.create("test_key", "test_value");
+                console.log("Test Creazione:", created === true ? "PASS" : "FAIL");
+
+                // Test 2: Lettura
+                const value = await idbMgr.read("test_key");
+                console.log("Test Lettura:", value === "test_value" ? "PASS" : "FAIL");
+
+                // Test 3: Fail Fast (null)
+                const fail = await idbMgr.read(null);
+                console.log("Test Fail Fast (null key):", fail === undefined ? "PASS" : "FAIL");
+
+                // Test 4: Pulizia
+                await idbMgr.delete("test_key");
+                console.log("Test Pulizia completata.");
+            } catch (e) {
+                console.error("Test falliti con errore:", e);
+            }
+            console.log("=== FINE TEST ===");
+        }
+        runTests();
+    </script>
+</body>
+</html>

@@ -43,7 +43,7 @@ class GroqClient {
   /**
    * @param {object} payload
    * @param {number} [timeout=60]
-   * @returns {Promise<any>}
+   * @returns {any}
    */
   async sendRequest(payload, timeout = 60) {
     const headers = {

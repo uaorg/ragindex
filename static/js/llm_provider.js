@@ -3,6 +3,9 @@
  * @description Fornisce funzioni per caricare e gestire provider e modelli LLM.
  *              Modulo specifico dell'applicazione RagIndex.
  * @module llm_provider
+ * @version 0.1.0
+ * @date 2026-04-30
+ * @author Team Sviluppo
  */
 "use strict";
 
@@ -15,6 +18,12 @@ import { GroqClient } from "./llmclient/groq_client.js";
 import { UaWindowAdm } from "./services/uawindow.js";
 import { DATA_KEYS } from "./services/data_keys.js";
 import { UaDb } from "./services/uadb.js";
+
+// ============================================================================
+// COSTANTI DI MODULO
+// ============================================================================
+
+const PROVIDERS_LIST = ["gemini", "mistral", "openrouter"];
 
 // ============================================================================
 // VARIABILI PRIVATE
@@ -89,17 +98,15 @@ const _config = {
 
 /**
  * Controlla se una configurazione è valida.
- * @param {Object} config - Configurazione da validare
- * @returns {boolean} True se la configurazione è valida
- * @private
+ * @param {Object} config - Configurazione da validare.
+ * @returns {boolean} True se valida.
  */
-const _isValidConfig = (config) => {
+const _isValidConfig = function(config) {
     if (!config || typeof config !== "object" || Object.keys(config).length === 0) {
         return false;
     }
 
-    const { provider, model, client } = config;
-
+    const { provider, model } = config;
     if (!provider || !_PROVIDER_CONFIG[provider]) {
         return false;
     }
@@ -108,30 +115,30 @@ const _isValidConfig = (config) => {
         return false;
     }
 
-    return true;
+    const isValid = true;
+    return isValid;
 };
 
 /**
  * Aggiorna il display del modello attivo.
- * @private
  */
-const _updateActiveModelDisplay = () => {
+const _updateActiveModelDisplay = function() {
     const displayElement = document.getElementById("active-model-display");
-
-    if (displayElement) {
-        displayElement.textContent = `${_config.model} (${_config.windowSize}k)`;
+    if (!displayElement) {
+        return;
     }
+
+    const displayText = `${_config.model} (${_config.windowSize}k)`;
+    displayElement.textContent = displayText;
 };
 
 /**
  * Costruisce l'albero di selezione provider/modelli.
- * @returns {string} HTML dell'albero
- * @private
+ * @returns {string} HTML dell'albero.
  */
-const _buildTreeView = () => {
+const _buildTreeView = function() {
     const wnd = UaWindowAdm.get("provvider_id");
     const container = wnd.getElement();
-
     if (!container) {
         return "";
     }
@@ -147,21 +154,24 @@ const _buildTreeView = () => {
     for (const providerName in _PROVIDER_CONFIG) {
         const provider = _PROVIDER_CONFIG[providerName];
         const isActiveProvider = providerName === _config.provider;
+        const icon = isActiveProvider ? "&#9660;" : "&#9658;";
+        const activeClass = isActiveProvider ? "active" : "";
 
         treeHtml += `
         <li class="provider-node">
-          <span class="${isActiveProvider ? "active" : ""}" data-provider="${providerName}">
-            ${isActiveProvider ? "&#9660;" : "&#9658;"} ${providerName}
+          <span class="${activeClass}" data-provider="${providerName}">
+            ${icon} ${providerName}
           </span>
           <ul class="model-list" style="display: ${isActiveProvider ? "block" : "none"};">
       `;
 
-        Object.keys(provider.models).forEach((modelName) => {
+        Object.keys(provider.models).forEach(function(modelName) {
             const modelData = provider.models[modelName];
             const isActiveModel = isActiveProvider && modelName === _config.model;
+            const activeModelClass = isActiveModel ? "active" : "";
 
             treeHtml += `
-          <li class="model-node ${isActiveModel ? "active" : ""}"
+          <li class="model-node ${activeModelClass}"
               data-provider="${providerName}"
               data-model="${modelName}">
             ${modelName} (${modelData.windowSize}k)
@@ -172,58 +182,52 @@ const _buildTreeView = () => {
     }
 
     treeHtml += `</ul>`;
-
     return treeHtml;
 };
 
 /**
  * Aggiunge gli event listener all'albero di selezione.
- * @private
  */
-const _addTreeEventListeners = () => {
-    const container = UaWindowAdm.get("provvider_id").getElement();
-
+const _addTreeEventListeners = function() {
+    const wnd = UaWindowAdm.get("provvider_id");
+    const container = wnd.getElement();
     if (!container) {
         return;
     }
 
     const closeBtn = container.querySelector(".provider-tree-close-btn");
-
     if (closeBtn) {
-        closeBtn.addEventListener("click", () => {
+        closeBtn.addEventListener("click", function() {
             LlmProvider.toggleTreeView();
         });
     }
 
-    // Click sui provider (per aprire/chiudere)
-    container.querySelectorAll(".provider-node > span").forEach((span) => {
-        span.addEventListener("click", (e) => {
+    container.querySelectorAll(".provider-node > span").forEach(function(span) {
+        span.addEventListener("click", function(e) {
             const modelList = e.target.nextElementSibling;
             const isOpening = modelList.style.display === "none";
 
-            // Chiudi tutti i menu
-            container.querySelectorAll(".model-list").forEach((ml) => {
+            container.querySelectorAll(".model-list").forEach(function(ml) {
                 ml.style.display = "none";
             });
 
-            container.querySelectorAll(".provider-node > span").forEach((s) => {
-                s.innerHTML = `&#9658; ${s.dataset.provider}`;
+            container.querySelectorAll(".provider-node > span").forEach(function(s) {
+                const provName = s.dataset.provider;
+                s.innerHTML = `&#9658; ${provName}`;
             });
 
-            // Se stavo aprendo, mostra il menu
             if (isOpening) {
                 modelList.style.display = "block";
-                e.target.innerHTML = `&#9660; ${e.target.dataset.provider}`;
+                const provName = e.target.dataset.provider;
+                e.target.innerHTML = `&#9660; ${provName}`;
             }
         });
     });
 
-    // Click sui modelli (per selezionare)
-    container.querySelectorAll(".model-node").forEach((node) => {
-        node.addEventListener("click", (e) => {
+    container.querySelectorAll(".model-node").forEach(function(node) {
+        node.addEventListener("click", function(e) {
             const providerName = e.target.dataset.provider;
             const modelName = e.target.dataset.model;
-
             LlmProvider._setProviderAndModel(providerName, modelName);
         });
     });
@@ -231,11 +235,15 @@ const _addTreeEventListeners = () => {
 
 /**
  * Crea o aggiorna un client LLM.
- * @param {string} clientName - Nome del client
- * @param {string} apiKey - Chiave API
- * @private
+ * @param {string} clientName - Nome del client.
+ * @param {string} apiKey - Chiave API.
  */
-const _createClientInstance = (clientName, apiKey) => {
+const _createClientInstance = function(clientName, apiKey) {
+    if (!clientName) {
+        console.error("LlmProvider._createClientInstance: clientName mancante");
+        return;
+    }
+
     switch (clientName) {
         case "gemini":
             _CLIENTS[clientName] = new GeminiClient(apiKey);
@@ -251,7 +259,7 @@ const _createClientInstance = (clientName, apiKey) => {
             break;
         default:
             _CLIENTS[clientName] = null;
-            console.warn(`Client non supportato: ${clientName}`);
+            console.warn(`LlmProvider._createClientInstance: client non supportato: ${clientName}`);
             break;
     }
 };
@@ -382,29 +390,20 @@ export const LlmProvider = {
      * @returns {Object|null} Istanza del client o null
      * @public
      */
-    getclient: () => {
-        const currentClientName = _config.client;
-        const client = _CLIENTS[currentClientName] || null;
-        return client;
+    getclient: function() {
+        const clientName = _config.client;
+        const result = _CLIENTS[clientName] || null;
+        return result;
     },
 
-    /**
-     * Ottiene la configurazione corrente.
-     * @returns {Object} Configurazione corrente
-     * @public
-     */
-    getConfig: () => {
-        return _config;
+    getConfig: function() {
+        const config = _config;
+        return config;
     },
 
-    /**
-     * Mostra/nasconde l'albero di selezione provider.
-     * @public
-     */
-    toggleTreeView: () => {
+    toggleTreeView: function() {
         const wnd = UaWindowAdm.create(LlmProvider.container_id);
         const container = wnd.getElement();
-
         if (!container) {
             return;
         }
@@ -420,54 +419,46 @@ export const LlmProvider = {
         }
     },
 
-    /**
-     * Imposta provider e modello.
-     * @param {string} provider - Nome provider
-     * @param {string} model - Nome modello
-     * @returns {void}
-     * @private
-     */
-    _setProviderAndModel: async (provider, model) => {
+    _setProviderAndModel: async function(provider, model) {
+        if (!provider || !model) {
+            console.error("LlmProvider._setProviderAndModel: parametri mancanti");
+            return;
+        }
+
         _config.provider = provider;
         _config.model = model;
         _config.windowSize = _PROVIDER_CONFIG[provider].models[model].windowSize;
         _config.client = _PROVIDER_CONFIG[provider].client;
 
         await UaDb.saveJson(DATA_KEYS.KEY_PROVIDER, _config);
-
-        // Aggiorna il display
         _updateActiveModelDisplay();
 
-        // Ricostruisci il tree per aggiornare gli stati attivi
         if (LlmProvider.isTreeVisible) {
             const treeHtml = _buildTreeView();
             const wnd = UaWindowAdm.get(LlmProvider.container_id);
             wnd.setHtml(treeHtml);
             _addTreeEventListeners();
         }
-
-        // Chiudi il tree
         LlmProvider.toggleTreeView();
     },
 
-    /**
-     * Mostra la configurazione corrente.
-     * @returns {void}
-     * @public
-     */
-    showConfig: async () => {
+    showConfig: async function() {
         const llmConfig = LlmProvider.getConfig();
-
         const jfh = UaJtfh();
+
+        const prov = llmConfig.provider;
+        const mod = llmConfig.model;
+        const size = `${llmConfig.windowSize}k`;
+        const cli = llmConfig.client;
+
         jfh.append('<div class="config-confirm">');
         jfh.append('<table class="table-data">');
-        jfh.append(`<tr><td>Provider</td><td>${llmConfig.provider}</td></tr>`);
-        jfh.append(`<tr><td>Modello</td><td>${llmConfig.model}</td></tr>`);
-        jfh.append(`<tr><td>Prompt Size</td><td>${llmConfig.windowSize}k</td></tr>`);
-        jfh.append(`<tr><td>client</td><td>${llmConfig.client}</td></tr>`);
+        jfh.append(`<tr><td>Provider</td><td>${prov}</td></tr>`);
+        jfh.append(`<tr><td>Modello</td><td>${mod}</td></tr>`);
+        jfh.append(`<tr><td>Prompt Size</td><td>${size}</td></tr>`);
+        jfh.append(`<tr><td>client</td><td>${cli}</td></tr>`);
         jfh.append("</table></div>");
 
-        // Passiamo l'elemento HTML direttamente a wnds.winfo.show
         const { wnds } = await import("./app_ui.js");
         wnds.winfo.show(jfh.html());
     }
