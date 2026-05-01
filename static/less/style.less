@@ -938,42 +938,62 @@ input, textarea, [contenteditable="true"] {
       .text-out {
         background: @output-bg;
         color: @text;
-        box-shadow: 0 0 0 2px @border-shadow;
+        border: 1px solid fade(@text, 10%);
+        box-shadow: none;
         &:hover {
-          box-shadow: 0 0 0 2px @color2;
+          border-color: fade(@color2, 30%);
         }
         .div-text {
-          .user {
-            position: relative;
-            border: 1px solid fade(@color2, 20%) !important;
-            border-left: 6px solid @color2 !important;
-            background: fade(@color2, 5%);
+          .user, .assistant, .system {
+            border: none !important;
+            border-bottom: 1px solid fade(@text, 5%) !important;
+            background: transparent;
+            padding: 15px 10px;
+            margin-bottom: 0;
+            border-radius: 0;
             b {
-              color: @color1;
-              border-bottom: 1px solid fade(@color2, 10%) !important;
+              border-bottom: none !important;
+              font-size: 0.85em;
+              text-transform: uppercase;
+              letter-spacing: 1px;
+              opacity: 0.7;
+              display: block;
+              margin-bottom: 8px;
             }
+            // Allineamento liste
+            ol, ul {
+              padding-left: 25px;
+              margin: 10px 0;
+              list-style-position: outside; // Numeri fuori, testo allineato
+              li {
+                margin-bottom: 5px;
+                line-height: 1.5;
+              }
+            }
+          }
+          .user {
+            background: fade(@text, 2%);
+            b { color: @color2; }
             .btn-edit-last {
                 position: absolute;
-                top: 5px;
-                right: 5px;
-                background: fade(@container-bg, 80%);
+                top: 10px;
+                right: 10px;
+                background: transparent;
                 border: 1px solid fade(@text, 10%);
                 cursor: pointer;
                 color: @color2;
-                width: 28px;
-                height: 28px;
+                width: 32px;
+                height: 32px;
                 border-radius: 50%;
                 transition: all 0.2s ease;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                box-shadow: 0 1px 3px rgba(0,0,0,0.2);
                 z-index: 5;
                 &:hover {
                     color: @color1;
-                    background: @container-bg;
+                    background: fade(@text, 5%);
                     transform: scale(1.1);
-                    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
                 }
                 svg {
                     width: 18px;
@@ -982,20 +1002,12 @@ input, textarea, [contenteditable="true"] {
             }
           }
           .assistant {
-            border: 1px solid fade(@color1, 20%) !important;
-            border-left: 6px solid @color1 !important;
-            background: fade(@color1, 5%);
-            b {
-              color: @color2;
-              border-bottom: 1px solid fade(@color1, 10%) !important;
-            }
+            b { color: @color1; }
           }
           .system {
-            border: 1px dashed fade(@color3, 30%) !important;
-            background: fade(@color3, 3%);
-            b {
-              color: @color3;
-            }
+            font-style: italic;
+            opacity: 0.8;
+            b { color: @color3; }
           }
         }
       }
