@@ -327,19 +327,46 @@ input, textarea, [contenteditable="true"] {
 
 // --- 5.5 Altri Componenti ---
 
-// Spinner di Caricamento
-.spinner-bg { visibility: hidden; }
-.spinner, #spinner-wait {
-  z-index: 10002; position: relative; display: none; align-items: center; justify-content: center;
-  margin: 5px 0;
-  .pulse-icon { width: 14px; height: 14px; border-radius: 50%; }
+// Spinner di Caricamento (Modal Overlay)
+.spinner-bg { filter: blur(1px); opacity: 0.7; pointer-events: none; }
+
+.spinner, .spinner-wait {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 10000;
+  background: rgba(0, 0, 0, 0.4); // Sfondo scuro semi-trasparente
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  backdrop-filter: blur(2px);
+
+  .pulse-icon { 
+    width: 60px; 
+    height: 60px; 
+    border-radius: 50%; 
+    box-shadow: 0 0 20px rgba(255,255,255,0.2);
+  }
+  
   .stop-message {
-    position: absolute; right: 40px; white-space: nowrap;
-    padding: 2px 6px; border-radius: 4px; font-size: 11px;
-    font-weight: bold; opacity: 1; transition: opacity 0.3s, color 0.3s, background-color 0.3s;
-    &:hover { text-decoration: underline; }
+    margin-top: 30px;
+    padding: 12px 25px;
+    border-radius: 30px;
+    font-size: 18px;
+    font-weight: bold;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    transition: all 0.3s ease;
+    &:hover {
+      transform: scale(1.05);
+    }
   }
 }
+
+.spinner-wait .pulse-icon { width: 40px; height: 40px; }
 
 // Nuovi Controlli Contestuali Input
 .input-context-actions {
@@ -860,17 +887,16 @@ input, textarea, [contenteditable="true"] {
   color: @text;
 
   .spinner,
-  #spinner-wait {
+  .spinner-wait {
     .pulse-icon {
       background-color: @color1;
       animation: @pulse-animation 1.5s ease-in-out infinite;
     }
     .stop-message {
-      color: @spinner-stop-msg-fg;
-      background: @spinner-stop-msg-bg;
-      border: 2px solid @spinner-stop-msg-border;
+      color: #fff;
+      background: @color1;
       &:hover {
-        border: 3px solid @spinner-stop-msg-hover-border;
+        background: lighten(@color1, 10%);
       }
     }
   }
