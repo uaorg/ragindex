@@ -940,30 +940,31 @@ input, textarea, [contenteditable="true"] {
         color: @text;
         border: 1px solid fade(@text, 10%);
         box-shadow: none;
-        transition: border-color 0.3s ease;
+        transition: all 0.3s ease;
+        outline: none; // Rimuove il bordo default del browser per tabindex
         &:hover {
-          border-color: fade(@color2, 30%);
+          border-color: transparent;
+          box-shadow: 0 0 0 2px fade(@color2, 40%);
         }
-        &:focus-within {
-          border-color: @color1; // Stesso colore del focus di input
+        &:focus-within, &:focus {
+          border-color: transparent !important;
+          box-shadow: 0 0 0 2px @color1; // IDENTICO A INPUT
         }
         .div-text {
           .user, .assistant, .system {
             position: relative; // INDISPENSABILE per la matita
-            border: none !important;
-            border-bottom: 1px solid fade(@text, 5%) !important;
-            background: transparent;
-            padding: 15px 10px;
-            margin-bottom: 0;
-            border-radius: 0;
+            padding: 15px 15px;
+            margin-bottom: 10px;
+            border-radius: 4px;
             b {
-              border-bottom: none !important;
-              font-size: 0.85em;
+              border-bottom: 1px solid fade(@text, 10%) !important;
+              font-size: 0.9em;
               text-transform: uppercase;
-              letter-spacing: 1px;
-              opacity: 0.7;
+              letter-spacing: 1.2px;
+              opacity: 0.9;
               display: block;
-              margin-bottom: 8px;
+              margin-bottom: 10px;
+              padding-bottom: 5px;
             }
             // Allineamento liste
             ol, ul {
@@ -972,18 +973,20 @@ input, textarea, [contenteditable="true"] {
               list-style-position: outside; // Numeri fuori, testo allineato
               li {
                 margin-bottom: 5px;
-                line-height: 1.5;
+                line-height: 1.6;
               }
             }
           }
           .user {
-            background: fade(@text, 2%);
+            background: fade(@color2, 5%);
+            border: 1px solid fade(@color2, 20%) !important;
+            border-left: 6px solid @color2 !important; // Bordo cicciotto
             b { color: @color2; }
             .btn-edit-last {
                 position: absolute;
                 top: 10px;
                 right: 10px;
-                background: transparent;
+                background: fade(@container-bg, 80%);
                 border: 1px solid fade(@text, 10%);
                 cursor: pointer;
                 color: @color2;
@@ -997,7 +1000,7 @@ input, textarea, [contenteditable="true"] {
                 z-index: 5;
                 &:hover {
                     color: @color1;
-                    background: fade(@text, 5%);
+                    background: @container-bg;
                     transform: scale(1.1);
                 }
                 svg {
@@ -1007,11 +1010,14 @@ input, textarea, [contenteditable="true"] {
             }
           }
           .assistant {
+            background: fade(@color1, 5%);
+            border: 1px solid fade(@color1, 20%) !important;
+            border-left: 6px solid @color1 !important; // Bordo cicciotto
             b { color: @color1; }
           }
           .system {
-            font-style: italic;
-            opacity: 0.8;
+            background: fade(@color3, 5%);
+            border: 1px dashed fade(@color3, 30%) !important;
             b { color: @color3; }
           }
         }
