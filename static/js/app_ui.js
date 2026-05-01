@@ -1291,7 +1291,7 @@ export const bindEventListener = function() {
     const btnClearInput = document.querySelector(".clear-input");
     if (btnClearInput) { btnClearInput.onclick = function() { TextInput.clear(); }; }
     
-    const btnCopyOutput = document.querySelector(".copy-output");
+    const btnCopyOutput = document.querySelector("#btn-copy-output");
     if (btnCopyOutput) { btnCopyOutput.onclick = function() { TextOutput.copyAsync(); }; }
     
     const btnClearHist1 = document.querySelector("#clear-history1");
