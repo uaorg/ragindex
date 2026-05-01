@@ -238,17 +238,17 @@ input, textarea, [contenteditable="true"] {
   #btn-action1-knowledge, #btn-action2-start-convo, #btn-action3-continue-convo {
     display: flex;
     align-items: center;
-    justify-content: flex-start;
-    padding: 8px 12px;
-    margin-bottom: 5px;
+    justify-content: center;
+    padding: 4px;
+    margin-bottom: 3px;
     border: none;
-    border-radius: 8px;
+    border-radius: 6px;
     cursor: pointer;
-    font-size: 14px;
-    font-weight: bold;
     transition: background-color 0.3s;
-    width: 100%;
+    width: 28px;
+    height: 28px;
     color: #ffffff;
+    .btn-icon-svg { margin-right: 0; width: 16px; height: 16px; }
   }
   #btn-action3-continue-convo {
     background-color: #81c784;
@@ -330,13 +330,37 @@ input, textarea, [contenteditable="true"] {
 // Spinner di Caricamento
 .spinner-bg { visibility: hidden; }
 .spinner, #spinner-wait {
-  z-index: 10002; position: absolute; top: auto; bottom: 41.5vh; left: 30vw;
+  z-index: 10002; position: absolute; top: auto; bottom: 12.8vh; left: 50%;
   transform: translate(-50%, 0); cursor: pointer; display: none; align-items: center;
-  .pulse-icon { width: 30px; height: 30px; border-radius: 50%; }
+  .pulse-icon { width: 12px; height: 12px; border-radius: 50%; }
   .stop-message {
-    margin-left: 15px; padding: 9px 15px; border-radius: 10px; font-size: 22px;
+    margin-left: 6px; padding: 2px 6px; border-radius: 4px; font-size: 11px;
     font-weight: bold; opacity: 1; transition: opacity 0.3s, color 0.3s, background-color 0.3s;
     &:hover { text-decoration: underline; }
+  }
+}
+
+// Nuovi Controlli Contestuali Input
+.input-context-actions {
+  position: absolute;
+  top: 8px;
+  right: 50px; 
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 10;
+  
+  #btn-edit-last-fixed, .clear-input {
+    cursor: pointer;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    .icon { width: 16px; height: 16px; }
   }
 }
 #spinner-wait { z-index: 10001; }
@@ -863,12 +887,41 @@ input, textarea, [contenteditable="true"] {
         }
         .div-text {
           .user {
+            position: relative;
             border: 1px solid fade(@color2, 20%) !important;
             border-left: 6px solid @color2 !important;
             background: fade(@color2, 5%);
             b {
               color: @color1;
               border-bottom: 1px solid fade(@color2, 10%) !important;
+            }
+            .btn-edit-last {
+                position: absolute;
+                top: 5px;
+                right: 5px;
+                background: fade(@container-bg, 80%);
+                border: 1px solid fade(@text, 10%);
+                cursor: pointer;
+                color: @color2;
+                width: 28px;
+                height: 28px;
+                border-radius: 50%;
+                transition: all 0.2s ease;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+                z-index: 5;
+                &:hover {
+                    color: @color1;
+                    background: @container-bg;
+                    transform: scale(1.1);
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+                }
+                svg {
+                    width: 18px;
+                    height: 18px;
+                }
             }
           }
           .assistant {
@@ -1034,6 +1087,26 @@ input, textarea, [contenteditable="true"] {
       background: @btn-copied;
     }
   }
+  
+  .input-context-actions {
+    #btn-edit-last-fixed, .clear-input {
+      background: fade(@container-bg, 80%);
+      border: 1px solid fade(@text, 10%);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+      &:hover {
+        background: @container-bg;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        transform: scale(1.1);
+      }
+    }
+    // Colori base espliciti per massima visibilità
+    #btn-edit-last-fixed .icon { fill: @color2; } // Verde per ripristino
+    .clear-input .icon { fill: @color3; }         // Arancione/Giallo per cancellazione
+    
+    #btn-edit-last-fixed:hover .icon { fill: lighten(@color2, 10%); }
+    .clear-input:hover .icon { fill: @color1; } // Diventa rosso intenso al passaggio
+  }
+
   .input-actions {
     #btn-action1-knowledge {
       background: @btn-send0-bg;
@@ -1041,13 +1114,12 @@ input, textarea, [contenteditable="true"] {
         background: @btn-send0-hover-bg;
       }
     }
-    #btn-action2-start-convo {
-      background: @btn-send1-bg;
+    #btn-action3-continue-convo {
+      background: @btn-send2-bg;
       &:hover {
-        background: @btn-send1-hover-bg;
+        background: @btn-send2-hover-bg;
       }
     }
-
     .clear-input {
       background-color: @btn-bg;
       .icon {
@@ -1438,6 +1510,8 @@ input, textarea, [contenteditable="true"] {
   @btn-send0-hover-bg: @dark-btn-send0-hover-bg;
   @btn-send1-bg: @dark-btn-send1-bg;
   @btn-send1-hover-bg: @dark-btn-send1-hover-bg;
+  @btn-edit-fixed-bg: @dark-btn-edit-fixed-bg;
+  @btn-edit-fixed-hover-bg: @dark-btn-edit-fixed-hover-bg;
   @btn-send2-bg: @dark-btn-send2-bg;
   @btn-send2-hover-bg: @dark-btn-send2-hover-bg;
   @label-btn-bg: @dark-label-btn-bg;
@@ -1572,6 +1646,8 @@ input, textarea, [contenteditable="true"] {
   @btn-send0-hover-bg: @dark-btn-send0-hover-bg;
   @btn-send1-bg: @dark-btn-send1-bg;
   @btn-send1-hover-bg: @dark-btn-send1-hover-bg;
+  @btn-edit-fixed-bg: @dark-btn-edit-fixed-bg;
+  @btn-edit-fixed-hover-bg: @dark-btn-edit-fixed-hover-bg;
   @btn-send2-bg: @dark-btn-send2-bg;
   @btn-send2-hover-bg: @dark-btn-send2-hover-bg;
   @label-btn-bg: @light-label-btn-bg;

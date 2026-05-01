@@ -467,6 +467,48 @@ export const wnds = {
         if (wnds.wdiv) { wnds.wdiv.close(); }
         if (wnds.wpre) { wnds.wpre.close(); }
         if (wnds.winfo) { wnds.winfo.close(); }
+    },
+
+    /**
+     * Recupera l'ultima domanda dell'utente, la riporta nell'input 
+     * e rimuove l'ultima interazione dalla cronologia.
+     */
+    editLastQuestion: async function() {
+        const thread = await idbMgr.read(DATA_KEYS.KEY_THREAD);
+        
+        if (!thread || thread.length === 0) {
+            return;
+        }
+
+        // Trova l'ultimo messaggio dell'utente
+        let lastUserIndex = -1;
+        for (let i = thread.length - 1; i >= 0; i--) {
+            if (thread[i].role === "user") {
+                lastUserIndex = i;
+                break;
+            }
+        }
+
+        if (lastUserIndex === -1) {
+            return;
+        }
+
+        const lastQuestion = thread[lastUserIndex].content;
+
+        // Tronca la cronologia prima dell'ultimo messaggio utente
+        const newThread = thread.slice(0, lastUserIndex);
+        
+        await idbMgr.create(DATA_KEYS.KEY_THREAD, newThread);
+        
+        // Riporta il testo nell'input e focalizza
+        if (TextInput._inputEl) {
+            TextInput._inputEl.value = lastQuestion;
+            TextInput._inputEl.focus();
+            // Sposta il cursore alla fine
+            TextInput._inputEl.setSelectionRange(lastQuestion.length, lastQuestion.length);
+        }
+
+        await showHtmlThread();
     }
 };
 
@@ -1242,6 +1284,9 @@ export const bindEventListener = function() {
     
     const btnAct3 = document.getElementById("btn-action3-continue-convo");
     if (btnAct3) { btnAct3.onclick = function() { TextInput.continueConversationAsync(); }; }
+
+    const btnEditFixed = document.getElementById("btn-edit-last-fixed");
+    if (btnEditFixed) { btnEditFixed.onclick = function() { wnds.editLastQuestion(); }; }
 
     const btnClearInput = document.querySelector(".clear-input");
     if (btnClearInput) { btnClearInput.onclick = function() { TextInput.clear(); }; }

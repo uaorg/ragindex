@@ -67,10 +67,11 @@ const _normalizeContent = (content) => {
  * Formatta un messaggio per la visualizzazione HTML.
  * @param {string} role - Ruolo del messaggio
  * @param {string} content - Contenuto del messaggio
+ * @param {boolean} isLastUserMessage - Se è l'ultimo messaggio dell'utente
  * @returns {string} HTML formattato
  * @private
  */
-const _formatMessageHtml = (role, content) => {
+const _formatMessageHtml = (role, content, isLastUserMessage = false) => {
     let html = "";
     let formattedContent = content;
 
@@ -81,7 +82,12 @@ const _formatMessageHtml = (role, content) => {
             .replace(/\n{2,}/g, "\n");
         html = `<div class="assistant"><b>Assistant:</b><br>${formattedContent}</div>`;
     } else if (role === ROLE_USER) {
-        html = `<div class="user"><b>User:</b><br>${formattedContent}</div>`;
+        const editButton = isLastUserMessage 
+            ? `<button class="btn-edit-last tt-leftx" data-tt="Modifica domanda" onclick="wnds.editLastQuestion()">
+                <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+               </button>` 
+            : "";
+        html = `<div class="user">${editButton}<b>User:</b><br>${formattedContent}</div>`;
     } else if (role === ROLE_SYSTEM) {
         html = `<div class="system"><b>System:</b><br>${formattedContent}</div>`;
     } else {
@@ -135,8 +141,18 @@ export const messages2html = (history) => {
     }
 
     const htmlParts = [];
+    
+    // Trova l'indice dell'ultimo messaggio dell'utente
+    let lastUserIndex = -1;
+    for (let i = history.length - 1; i >= 0; i--) {
+        if (history[i].role === ROLE_USER) {
+            lastUserIndex = i;
+            break;
+        }
+    }
 
-    for (const msg of history) {
+    for (let i = 0; i < history.length; i++) {
+        const msg = history[i];
         if (!_isValidMessage(msg)) {
             continue;
         }
@@ -145,7 +161,8 @@ export const messages2html = (history) => {
         let content = msg.content;
         content = _normalizeContent(content);
 
-        const partHtml = _formatMessageHtml(role, content);
+        const isLastUser = (i === lastUserIndex);
+        const partHtml = _formatMessageHtml(role, content, isLastUser);
         htmlParts.push(partHtml);
     }
 
