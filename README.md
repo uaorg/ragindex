@@ -2,11 +2,11 @@
 
 # RagIndex: Generazione Aumentata da Recupero (RAG) 100% Client-Side
 
-**Versione:** 0.4.0
+**Versione:** 0.4.5
 
-**RagIndex** è un'applicazione web che implementa un'architettura RAG (Retrieval-Augmented Generation) completa, operando interamente nel browser dell'utente. Nessun dato viene inviato a un server, garantendo massima privacy e autonomia.
+**RagIndex** è un'applicazione web che implementa un'architettura RAG (Retrieval-Augmented Generation) completa, operando interamente nel browser dell'utente. Nessun dato lascia mai il client, garantendo massima privacy e autonomia.
 
-> 📘 **Documentazione Tecnica**: Per una spiegazione dettagliata "sotto il cofano" delle fasi di ingestione, chunking e retrieval, consulta [docs/ARCHITETTURA.md](docs/ARCHITETTURA.md).
+> 🚀 **Scopri di più**: Per una presentazione approfondita delle funzionalità e dell'implementazione tecnica, consulta la nuova pagina [ragindex.html](ragindex.html).
 
 ## Setup Rapido
 
@@ -14,62 +14,36 @@ Essendo un'applicazione puramente statica, non richiede build system complessi (
 
 1.  **Requisiti**: Un qualsiasi web server statico (es: `python3 -m http.server`, `npx http-server .`, o l'estensione "Live Server" di VS Code).
 2.  **Avvio**: Apri il browser all'indirizzo locale della cartella root.
-3.  **Configurazione API**: Apri il menu laterale e seleziona **"Gestisci API Key"**. Inserisci la tua chiave (Gemini o Mistral) e attivala cliccando sul relativo selettore.
+3.  **Configurazione API**: 
+    - Apri il menu laterale.
+    - Seleziona **"API Keys Default"** per caricare le chiavi di prova predefinite dal file locale.
+    - Oppure seleziona **"Gestisci API Key"** per inserire la tua chiave personale (**Gemini** o **Mistral**).
     > 🛡️ **Privacy**: Le chiavi sono salvate esclusivamente nell'**IndexedDB** del tuo browser. La comunicazione AI avviene direttamente dal tuo computer al provider, senza server intermedi.
 
-## Obiettivi del Progetto
+## Caratteristiche Principali
 
 - **Privacy Assoluta**: Tutta l'elaborazione dei documenti, dall'indicizzazione alla costruzione del contesto, avviene localmente. I documenti non lasciano mai il computer dell'utente.
+- **Strategia Parent-Child**: Utilizza una segmentazione gerarchica per la massima precisione:
+    - **Child Chunks**: Singole frasi indicizzate per una ricerca ultra-precisa.
+    - **Parent Chunks**: Paragrafi completi inviati all'AI per mantenere il contesto.
 - **Zero Dipendenze da Backend**: L'applicazione è un puro front-end che sfrutta le API degli LLM direttamente dal client.
-- **Efficienza e Velocità**: Sfrutta un indice di ricerca lessicale (Lunr.js con BM25) e un parser Markdown professionale (Marked.js), entrambi ottimizzati per il browser.
-- **Interpretabilità**: I risultati della ricerca sono trasparenti e verificabili tramite la visualizzazione del contesto estratto.
-
-## Architettura
-
-L'architettura separa le operazioni UI da quelle intensive (eseguite in Web Worker) e utilizza **IndexedDB** (tramite Dexie.js) per la persistenza di documenti e indici di grandi dimensioni.
-
-### Strati Architetturali
-
-1.  **Presentation Layer (UI)**: `index.html`, `less/*.less` (Style modulare e compatto).
-2.  **Controller Layer**: `app.js`, `app_ui.js`.
-3.  **Business Logic Layer**: `rag_engine.js` (orchestratore RAG).
-4.  **Background Processing**: `rag_worker.js` (Web Worker per chunking e indicizzazione).
-5.  **Service Layer**: `services/*.js` (IndexedDB, API Client, Marked.js Parser, Logger).
-
-### Innovazioni: Chunking Parent-Child
-
-RagIndex utilizza una segmentazione gerarchica:
-- **Parent Chunks**: Unità di contesto (paragrafi completi) inviate all'LLM.
-- **Child Chunks**: Unità di ricerca (singole frasi) indicizzate per massima precisione.
-
-### Supporto Multi-Provider LLM
-
-RagIndex supporta diverse piattaforme tramite API standard. I modelli sono configurabili tramite l'interfaccia UI:
-
-- **Gemini** (Google): 
-  - `gemini-2.5-flash`
-  - `gemini-2.5-flash-lite`
-  - `gemini-3-flash-preview`
-- **Mistral**: 
-  - `mistral-large-latest`
-  - `mistral-medium-latest`
-  - `mistral-small-latest`
-  - `devstral-latest` (e varianti medium/small)
-  - `ministral-14b-2512`
-
-## Funzionalità Avanzate
-
-RagIndex include strumenti completi per la gestione dei dati locali:
-
-- **Gestione Knowledge Base**: È possibile archiviare (salvare) e ricaricare intere Knowledge Base indicizzate, permettendo di cambiare contesto di lavoro istantaneamente senza ri-processare i documenti.
-- **Archivio Conversazioni**: Salva e riprendi sessioni di chat, mantenendo intatto il contesto storico.
-- **Ispezione Dati**: Strumenti integrati per visualizzare il contenuto grezzo di localStorage e IndexedDB (chiavi, dimensioni, JSON).
-- **Temi**: Supporto nativo per temi Chiaro/Scuro.
+- **Ricerca Lessicale BM25**: Sfrutta `Lunr.js` per un'indicizzazione veloce e affidabile direttamente nel browser.
 
 ## Il Flusso di Lavoro a 3 Azioni
 
-RagIndex è progettato per essere utilizzato seguendo tre fasi sequenziali, identificate dai pulsanti numerati:
+L'applicazione è progettata per essere utilizzata seguendo tre fasi sequenziali, identificate dai pulsanti numerati:
 
-1.  **🔴 (1) Crea Knowledge Base**: Carica i tuoi documenti (icona nuvola o menu documenti esempio) e clicca il pulsante **(1)**. Il sistema segmenterà il testo e creerà un indice di ricerca locale.
-2.  **🟠 (2) Inizia Conversazione**: Scrivi la tua domanda nel campo di input e clicca il pulsante **(2)** (o premi Invio). Il sistema cercherà i frammenti più rilevanti e interrogherà l'AI.
-3.  **🟢 (3) Continua Conversazione**: Scrivi domande di approfondimento e clicca il pulsante **(3)**. L'AI risponderà tenendo conto di tutta la cronologia e del contesto già identificato.
+1.  **🔴 (1) Crea Knowledge Base**: Carica i tuoi documenti (PDF, TXT, DOCX) e clicca il pulsante **(1)**. Il sistema creerà l'indice di ricerca locale.
+2.  **🟠 (2) Inizia Conversazione**: Scrivi la tua domanda e clicca il pulsante **(2)**. Il sistema estrarrà i frammenti pertinenti e interrogherà l'AI.
+3.  **🟢 (3) Continua Conversazione**: Prosegui il dialogo cliccando il pulsante **(3)**. L'AI risponderà tenendo conto di tutta la cronologia.
+
+## Architettura del Codice
+
+- **UI Controller**: `static/js/app_ui.js` (Gestione DOM ed eventi).
+- **RAG Engine**: `static/js/rag_engine.js` (Orchestratore del flusso RAG).
+- **Worker**: `static/js/rag_worker.js` (Elaborazione intensiva in background).
+- **LLM Clients**: `static/js/llmclient/` (Integrazione diretta con Google Gemini e Mistral AI).
+- **Database Locale**: `static/js/services/idb_mgr.js` (Persistenza via Dexie.js).
+
+---
+*RagIndex è un progetto focalizzato sulla privacy e sull'efficienza dell'AI lato client.*
