@@ -13,8 +13,6 @@ import { UaJtfh } from "./services/uajtfh.js";
 import { getApiKey, fetchApiKeys } from "./services/key_retriever.js";
 import { GeminiClient } from "./llmclient/gemini_client.js";
 import { MistralClient } from "./llmclient/mistral_client.js";
-import { OpenRouterClient } from "./llmclient/openrouter_client.js";
-import { GroqClient } from "./llmclient/groq_client.js";
 import { UaWindowAdm } from "./services/uawindow.js";
 import { DATA_KEYS } from "./services/data_keys.js";
 import { UaDb } from "./services/uadb.js";
@@ -23,7 +21,7 @@ import { UaDb } from "./services/uadb.js";
 // COSTANTI DI MODULO
 // ============================================================================
 
-const PROVIDERS_LIST = ["gemini", "mistral", "openrouter"];
+const PROVIDERS_LIST = ["gemini", "mistral"];
 
 // ============================================================================
 // VARIABILI PRIVATE
@@ -251,12 +249,6 @@ const _createClientInstance = function(clientName, apiKey) {
         case "mistral":
             _CLIENTS[clientName] = new MistralClient(apiKey);
             break;
-        case "openrouter":
-            _CLIENTS[clientName] = new OpenRouterClient(apiKey);
-            break;
-        case "groq":
-            _CLIENTS[clientName] = new GroqClient(apiKey);
-            break;
         default:
             _CLIENTS[clientName] = null;
             console.warn(`LlmProvider._createClientInstance: client non supportato: ${clientName}`);
@@ -312,8 +304,7 @@ export const LlmProvider = {
         try {
             console.info("**** load models *******");
             // AAA lista providers
-            // const providers = ["gemini", "mistral", "openrouter", "groq"];
-            const providers = ["gemini", "mistral", "openrouter"];
+            const providers = ["gemini", "mistral"];
             for (const p of providers) {
                 try {
                     const response = await fetch(`./data/models/${p}.txt`);

@@ -202,7 +202,6 @@ export const help1_html = `
         <ul>
             <li><strong>Google Gemini:</strong> Modelli Flash e Pro (2.5, 3.0).</li>
             <li><strong>Mistral:</strong> Large, Medium, Small e la serie Pixtral/Ministral.</li>
-            <li><strong>OpenRouter:</strong> Accesso a centinaia di modelli tramite un'unica chiave API.</li>
         </ul>
     </div>
 

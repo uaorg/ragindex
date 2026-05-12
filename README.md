@@ -14,7 +14,7 @@ Essendo un'applicazione puramente statica, non richiede build system complessi (
 
 1.  **Requisiti**: Un qualsiasi web server statico (es: `python3 -m http.server`, `npx http-server .`, o l'estensione "Live Server" di VS Code).
 2.  **Avvio**: Apri il browser all'indirizzo locale della cartella root.
-3.  **Configurazione API**: Apri il menu laterale e seleziona **"Gestisci API Key"**. Inserisci la tua chiave (Gemini, Mistral o OpenRouter) e attivala cliccando sul relativo selettore.
+3.  **Configurazione API**: Apri il menu laterale e seleziona **"Gestisci API Key"**. Inserisci la tua chiave (Gemini o Mistral) e attivala cliccando sul relativo selettore.
     > 🛡️ **Privacy**: Le chiavi sono salvate esclusivamente nell'**IndexedDB** del tuo browser. La comunicazione AI avviene direttamente dal tuo computer al provider, senza server intermedi.
 
 ## Obiettivi del Progetto

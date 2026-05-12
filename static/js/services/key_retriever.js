@@ -12,7 +12,7 @@ const STORAGE_KEY = DATA_KEYS.KEY_API_KEYS;
  * @type {Array<string>}
  * @private
  */
-const _SUPPORTED_PROVIDERS = ["gemini", "mistral", "openrouter"];
+const _SUPPORTED_PROVIDERS = ["gemini", "mistral"];
 
 /**
  * Recupera la chiave attiva per un determinato provider.

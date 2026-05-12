@@ -1,2 +1,0 @@
-openrouter/owl-alpha|1048576|9|32.99
-openrouter/free|199680|6|13.85
