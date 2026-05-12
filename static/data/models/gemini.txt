@@ -1,0 +1,5 @@
+gemini-2.5-flash|1048576|10|7.40
+gemini-2.5-flash|1048576|10|7.40
+gemini-2.5-flash-lite|1048576|8|4.06
+gemini-flash-latest|1048576|10|10.08
+gemini-flash-lite-latest|1048576|9|4.44

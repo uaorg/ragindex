@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="utf-8">
+    <title>Test Runner Formattazione RagIndex</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; line-height: 1.6; }
+        .pass { color: green; font-weight: bold; }
+        .fail { color: red; font-weight: bold; }
+        .case { margin-bottom: 10px; padding: 10px; border: 1px solid #eee; border-radius: 4px; }
+        pre { background: #f4f4f4; padding: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Test Formattazione e Pulizia Output</h1>
+    <div id="results">In esecuzione...</div>
+
+    <script type="module">
+        import { cleanLlmResponse } from "./static/js/services/history_utils.js";
+
+        const resultsDiv = document.getElementById("results");
+        resultsDiv.innerHTML = "";
+
+        const cases = [
+            { 
+                name: "Rimozione Preambolo 'Certamente'", 
+                input: "Certamente! Ecco le informazioni: Il progetto RagIndex è client-side.", 
+                expected: "Il progetto RagIndex è client-side." 
+            },
+            { 
+                name: "Rimozione Preambolo 'Sulla base del contesto'", 
+                input: "Sulla base del contesto fornito, ecco quanto richiesto: L'architettura è modulare.", 
+                expected: "L'architettura è modulare." 
+            },
+            { 
+                name: "Rimozione Chiacchiere Finali", 
+                input: "Il sistema usa Lunr.js. Spero che questo aiuti.", 
+                expected: "Il sistema usa Lunr.js." 
+            },
+            { 
+                name: "Test Normalizzazione Multi-linea", 
+                input: "Paragrafo 1\n\n\n\nParagrafo 2", 
+                expected: "Paragrafo 1\n\nParagrafo 2" 
+            }
+        ];
+
+        cases.forEach(c => {
+            let result;
+            if (c.name.includes("Normalizzazione")) {
+                // Per testare _normalizeContent dovremmo esportarla, 
+                // ma cleanLlmResponse la usa internamente tramite il flusso di rag_engine.
+                // Qui testiamo l'effetto finale di pulizia.
+                result = cleanLlmResponse(c.input);
+            } else {
+                result = cleanLlmResponse(c.input);
+            }
+
+            const pass = result === c.expected;
+            const div = document.createElement("div");
+            div.className = "case";
+            div.innerHTML = `
+                <strong>${c.name}:</strong> <span class="${pass ? 'pass' : 'fail'}">${pass ? 'PASS' : 'FAIL'}</span>
+                ${!pass ? `
+                    <br><em>Input:</em> <pre>${c.input}</pre>
+                    <em>Atteso:</em> <pre>${c.expected}</pre>
+                    <em>Ottenuto:</em> <pre>${result}</pre>
+                ` : ''}
+            `;
+            resultsDiv.appendChild(div);
+        });
+    </script>
+</body>
+</html>

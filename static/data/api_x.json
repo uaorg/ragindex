@@ -1,0 +1,39 @@
+{
+    "last_updated": "2026-04-30T12:27:04.218987",
+    "providers": {
+        "gemini": {
+            "api_key_env": "GEMINI_API_KEY",
+            "exported_key": "gab",
+            "keys": [
+                {
+                    "name": "gm",
+                    "key": "mLEAxPXTtsPxMN_aFNztNwMwBJwPBqiMejOS_JB",
+                    "notes": "gmaterni"
+                }
+            ]
+        },
+        "openrouter": {
+            "api_key_env": "OPENROUTER_API_KEY",
+            "exported_key": "260418",
+            "keys": [
+                {
+                    "name": "260512",
+                    "key": "67-dNkdSlssIAABBdudgCtsSI02gSAtSAkl",
+                    "notes": "giuseppe.materni"
+                }
+
+            ]
+        },
+        "mistral": {
+            "api_key_env": "MISTRAL_API_KEY",
+            "exported_key": "vibe1",
+            "keys": [
+                {
+                    "name": "260416",
+                    "key": "VRd2FGMaeqvzGXHfsnQneD4bqPQi5qzi",
+                    "notes": "ipotesi1000"
+                }
+            ]
+        }
+    }
+}

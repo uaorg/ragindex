@@ -1,0 +1,5 @@
+mistral-large-latest|262144|9|13.24
+mistral-medium-latest|131072|9|12.40
+mistral-small-latest|262144|8|8.38
+
+ 
