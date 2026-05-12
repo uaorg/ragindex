@@ -208,28 +208,49 @@ export async function fetchApiKeys() {
             console.log("*** API_KEYS db found.");
             return;
         }
-        console.info(`*** API_KEYS loading from: ${URL}`);
-        const response = await fetch(URL);
-        if (!response.ok) {
-            console.warn(`File chiavi non trovato o errore nel caricamento: ${URL}`);
-            return;
-        }
-        const rsp = await response.json();
-        const data = decodeApiKeysJson(rsp);
-        if (data && data.providers) {
-            // Per ogni provider, se non c'è una chiave attiva ma ci sono chiavi disponibili,
-            // impostiamo la prima come attiva di default.
-            Object.values(data.providers).forEach(provider => {
-                if (provider.keys && provider.keys.length > 0) {
-                    provider.exported_key = provider.keys[0].name;
-                }
-            });
-            data.last_updated = new Date().toISOString();
-            await UaDb.saveJson(STORAGE_KEY, data);
-            console.log("API Keys caricate dal file JSON e salvate nel DB con selezione automatica.");
-        }
+        await _loadDefaultKeys(URL);
     } catch (error) {
         console.error("Errore in fetchApiKeys:", error);
+    }
+}
+
+/**
+ * Carica forzatamente le chiavi di default dal file JSON.
+ */
+export async function restoreDefaultApiKeys() {
+    const URL = "./data/api_x.json";
+    if (!await confirm("Vuoi caricare le API Keys di default? Le chiavi attuali verranno sovrascritte.")) return;
+    
+    try {
+        await _loadDefaultKeys(URL);
+        await alert("API Keys di default caricate con successo.");
+    } catch (error) {
+        console.error("Errore in restoreDefaultApiKeys:", error);
+        await alert("Errore durante il caricamento delle API Keys di default.");
+    }
+}
+
+/**
+ * Logica comune di caricamento chiavi dal server/file.
+ * @private
+ */
+async function _loadDefaultKeys(url) {
+    console.info(`*** Loading API_KEYS from: ${url}`);
+    const response = await fetch(url);
+    if (!response.ok) {
+        throw new Error(`File chiavi non trovato: ${url}`);
+    }
+    const rsp = await response.json();
+    const data = decodeApiKeysJson(rsp);
+    if (data && data.providers) {
+        Object.values(data.providers).forEach(provider => {
+            if (provider.keys && provider.keys.length > 0) {
+                provider.exported_key = provider.keys[0].name;
+            }
+        });
+        data.last_updated = new Date().toISOString();
+        await UaDb.saveJson(STORAGE_KEY, data);
+        console.log("API Keys caricate e salvate nel DB.");
     }
 }
 
