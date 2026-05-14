@@ -101,29 +101,61 @@ class MistralClient {
     return success;
   }
 
+  /**
+   * Crea un oggetto risultato standard.
+   *
+   * @param {boolean} ok - Successo della richiesta.
+   * @param {Object} [response=null] - Risposta grezza.
+   * @param {string} [data=null] - Dati estratti.
+   * @param {Object} [error=null] - Oggetto errore.
+   * @returns {Object} Oggetto risultato.
+   * @private
+   */
   _createResult(ok, response = null, data = null, error = null) {
-    return {
+    const result = {
       ok,
       response,
       data,
       error,
     };
+    return result;
   }
 
+  /**
+   * Crea un oggetto errore standardizzato.
+   *
+   * @param {string} message - Messaggio d'errore.
+   * @param {string} type - Tipo di errore.
+   * @param {number|string} code - Codice errore.
+   * @param {Object} [details] - Dettagli aggiuntivi.
+   * @returns {Object} Oggetto errore.
+   * @private
+   */
   _createError(message, type, code, details) {
-    return {
+    const errDetails = {
+      message: details?.message || null,
+      type: details?.type || null,
+      param: details?.param || null,
+      code: details?.code || null,
+    };
+
+    const error = {
       message: message || null,
       type: type || null,
       code: code || null,
-      details: {
-        message: details?.message || null,
-        type: details?.type || null,
-        param: details?.param || null,
-        code: details?.code || null,
-      },
+      details: errDetails,
     };
+
+    return error;
   }
 
+  /**
+   * Gestisce gli errori HTTP provenienti dalle API Mistral.
+   *
+   * @param {Response} response - Oggetto risposta della fetch.
+   * @returns {Promise<Object>} Oggetto errore formattato.
+   * @private
+   */
   async _handleHttpError(response) {
     const errorMessages = {
       400: "Richiesta non valida",
@@ -135,54 +167,109 @@ class MistralClient {
       503: "Servizio non disponibile",
     };
 
-    let detailsContent;
+    let detailsContent = null;
     let errorType = "HTTPError";
-    let message = errorMessages[response.status] || `Errore HTTP ${response.status}`;
+    const status = response.status;
+    let message = errorMessages[status] || `Errore HTTP ${status}`;
 
     try {
-      if (response.headers.get("Content-Type")?.includes("application/json")) {
+      const contentType = response.headers.get("Content-Type");
+      if (contentType && contentType.includes("application/json")) {
         detailsContent = await response.json();
-        if (response.status === 400 && detailsContent) {
-          const errorMsg = typeof detailsContent.error === "string" ? detailsContent.error : detailsContent.message || detailsContent.error?.message;
-          if (
-            errorMsg &&
-            (errorMsg.includes("token limit") || errorMsg.includes("token exceeded") || errorMsg.includes("input too long") || errorMsg.includes("context length") || errorMsg.includes("max tokens"))
-          ) {
-            message = "Input troppo lungo - Superato il limite di token";
-            errorType = "TokenLimitError";
+        if (status === 400 && detailsContent) {
+          const errorData = detailsContent.error || detailsContent;
+          const errorMsg = typeof errorData === "string" ? errorData : errorData.message;
+
+          if (errorMsg) {
+            const isTokenLimit =
+              errorMsg.includes("token limit") ||
+              errorMsg.includes("token exceeded") ||
+              errorMsg.includes("input too long") ||
+              errorMsg.includes("context length") ||
+              errorMsg.includes("max tokens");
+
+            if (isTokenLimit) {
+              message = "Input troppo lungo - Superato il limite di token";
+              errorType = "TokenLimitError";
+            }
           }
         }
       } else {
-        detailsContent = await response.text();
-        if (response.status === 400 && (detailsContent.includes("token limit") || detailsContent.includes("input too long") || detailsContent.includes("context length"))) {
+        const textContent = await response.text();
+        if (
+          status === 400 &&
+          (textContent.includes("token limit") ||
+            textContent.includes("input too long") ||
+            textContent.includes("context length"))
+        ) {
           message = "Input troppo lungo - Superato il limite di token";
           errorType = "TokenLimitError";
         }
+        detailsContent = { message: textContent };
       }
     } catch (e) {
+      console.error("MistralClient._handleHttpError:", e);
       detailsContent = { message: "Impossibile estrarre i dettagli dell'errore" };
     }
-    const errorObj = this._createError(message, errorType, response.status, typeof detailsContent === "string" ? { message: detailsContent } : detailsContent);
-    alert(`ERRORE API [${errorObj.code}]\n${errorObj.message}`);
-    return errorObj;
+
+    const errorObj = this._createError(message, errorType, status, detailsContent);
+
+    const errCode = errorObj.code;
+    const errText = errorObj.message;
+    const alertMsg = `ERRORE API [${errCode}]\n${errText}`;
+    await alert(alertMsg);
+
+    const result = errorObj;
+    return result;
   }
 
+  /**
+   * Gestisce gli errori di rete o i timeout per Mistral.
+   *
+   * @param {Error} error - L'oggetto errore catturato.
+   * @returns {Object} Oggetto errore formattato.
+   * @private
+   */
   _handleNetworkError(error) {
-    let errorObj;
+    let errorObj = null;
+
     if (error.name === "AbortError") {
       if (this.isCancelled) {
-        errorObj = this._createError("Richiesta interrotta dall'utente", "CancellationError", 499, { message: "La richiesta è stata interrotta volontariamente dall'utente" });
-        return errorObj; // Non mostriamo alert per l'interruzione manuale
-      } else {
-        errorObj = this._createError("Richiesta interrotta per timeout", "TimeoutError", 408, { message: "La richiesta è stata interrotta a causa di un timeout", isTimeout: true });
+        errorObj = this._createError(
+          "Richiesta interrotta dall'utente",
+          "CancellationError",
+          499,
+          { message: "La richiesta è stata interrotta volontariamente dall'utente" }
+        );
+        return errorObj;
       }
+
+      errorObj = this._createError(
+        "Richiesta interrotta per timeout",
+        "TimeoutError",
+        408,
+        { message: "La richiesta è stata interrotta a causa di un timeout", isTimeout: true }
+      );
     } else if (error.name === "TypeError" && error.message.includes("Failed to fetch")) {
-      errorObj = this._createError("Errore di rete", "NetworkError", 0, { message: "Impossibile raggiungere il server. Controlla la connessione." });
+      errorObj = this._createError(
+        "Errore di rete",
+        "NetworkError",
+        0,
+        { message: "Impossibile raggiungere il server. Controlla la connessione." }
+      );
     } else {
-      errorObj = this._createError("Errore imprevisto", error.name || "UnknownError", 500, { message: error.message || "Si è verificato un errore sconosciuto" });
+      const errName = error.name || "UnknownError";
+      const errMsg = error.message || "Si è verificato un errore sconosciuto";
+      errorObj = this._createError("Errore imprevisto", errName, 500, { message: errMsg });
     }
-    alert(`ERRORE RETE [${errorObj.code}]\n${errorObj.message}`);
-    return errorObj;
+
+    const errCode = errorObj.code;
+    const errText = errorObj.message;
+    const alertMsg = `ERRORE RETE [${errCode}]\n${errText}`;
+    alert(alertMsg);
+
+    const result = errorObj;
+    return result;
   }
 
   /**
