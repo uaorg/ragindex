@@ -1,170 +1,204 @@
 /**
- * @fileoverview rag_worker.js - Web Worker per elaborazione RAG
- * @description Esegue chunking e indicizzazione in background senza bloccare la UI.
- *              Utilizza Compromise.js per NLP e Lunr.js per indicizzazione.
- * @module services/worker/rag_worker
+ * rag_worker.js - Web Worker per elaborazione RAG.
+ *
+ * Esegue chunking e indicizzazione in background senza bloccare la UI.
+ * Utilizza Compromise.js per NLP e Lunr.js per indicizzazione.
+ *
+ * @module  rag_worker
+ * @version 1.1.0
+ * @date    2026-05-14
+ * @author  Gemini CLI
  */
+
 "use strict";
 
 // Import script nel contesto worker
 /* eslint-disable no-undef */
 importScripts(
-    './services/vendor/compromise.js',
-    './services/vendor/lunr.js',
-    './services/vendor/lunr.stemmer.support.js',
-    './services/vendor/lunr.it.js'
+  "./services/vendor/compromise.js",
+  "./services/vendor/lunr.js",
+  "./services/vendor/lunr.stemmer.support.js",
+  "./services/vendor/lunr.it.js"
 );
 
 // ============================================================================
-// VARIABILI PRIVATE
+// COSTANTI DI MODULO
 // ============================================================================
 
 /**
  * Configurazione chunking.
+ * @type {Object}
  */
-const _CONFIG = {
-    TARGET_PARENT_SIZE: 1000,  // Dimensione target per Parent Chunk
-    MIN_CHILD_LENGTH: 15       // Lunghezza minima per Child Chunk
+const CONFIG = {
+  TARGET_PARENT_SIZE: 1000, // Dimensione target per Parent Chunk
+  MIN_CHILD_LENGTH: 15, // Lunghezza minima per Child Chunk
 };
 
 // ============================================================================
-// FUNZIONI PRIVATE - WorkerLogic
+// FUNZIONI PRIVATE
 // ============================================================================
 
 /**
  * Estrae metadati (keywords ed entità) da un testo.
- * @param {string} text - Testo da analizzare
- * @returns {Object} Oggetto con keywords ed entities
+ *
+ * @param {string} text - Testo da analizzare.
+ * @returns {Object} Oggetto con keywords ed entities.
  * @private
  */
-const _processText = (text) => {
-    const doc = self.nlp(text);
+const _processText = function (text) {
+  // Fail Fast
+  if (!text) {
+    console.error("_processText: testo mancante");
+    const emptyResult = { keywords: [], entities: [] };
+    return emptyResult;
+  }
 
-    // Estrazione parti del discorso
-    const nouns = doc.nouns().out("array");
-    const verbs = doc.verbs().out("array");
+  const doc = self.nlp(text);
 
-    // Parole chiave (nomi + verbi, lowercase, lunghezza > 3)
-    const keywords = [...new Set([...nouns, ...verbs])]
-        .map((w) => w.toLowerCase())
-        .filter((w) => w.length > 3);
+  // Estrazione parti del discorso
+  const nouns = doc.nouns().out("array");
+  const verbs = doc.verbs().out("array");
 
-    // Named Entity Recognition
-    const people = doc.people().out("array");
-    const places = doc.places().out("array");
-    const orgs = doc.organizations().out("array");
+  // Parole chiave (nomi + verbi, lowercase, lunghezza > 3)
+  const allWords = [...nouns, ...verbs];
+  const uniqueWords = [...new Set(allWords)];
+  const keywords = uniqueWords.map((w) => w.toLowerCase()).filter((w) => w.length > 3);
 
-    const entities = [...new Set([...people, ...places, ...orgs])]
-        .map((e) => e.toLowerCase());
+  // Named Entity Recognition
+  const people = doc.people().out("array");
+  const places = doc.places().out("array");
+  const orgs = doc.organizations().out("array");
 
-    const result = { keywords, entities };
-    return result;
+  const allEntities = [...people, ...places, ...orgs];
+  const uniqueEntities = [...new Set(allEntities)];
+  const entities = uniqueEntities.map((e) => e.toLowerCase());
+
+  const result = { keywords, entities };
+  return result;
 };
 
 /**
- * Costruisce indice Lunr da un array di entry.
- * @param {Array} indexEntries - Array di {id, body, keywords, entities}
- * @returns {Object} Indice Lunr serializzabile
+ * Costruisce l'indice Lunr da un array di entry.
+ *
+ * @param {Array<Object>} indexEntries - Array di {id, body, keywords, entities}.
+ * @returns {Object} Indice Lunr serializzabile.
  * @private
  */
-const _buildIndex = (indexEntries) => {
-    const idx = self.lunr(function () {
-        // Configura lingua italiana
-        this.use(self.lunr.it);
+const _buildIndex = function (indexEntries) {
+  // Fail Fast
+  if (!indexEntries || indexEntries.length === 0) {
+    console.error("_buildIndex: indexEntries mancanti o vuote");
+    return null;
+  }
 
-        // Campo di riferimento (ID)
-        this.ref("id");
+  const idx = self.lunr(function () {
+    // Configura lingua italiana
+    this.use(self.lunr.it);
 
-        // Campo principale per ricerca
-        this.field("body");
+    // Campo di riferimento (ID)
+    this.ref("id");
 
-        // Aggiunge ogni entry all'indice
-        indexEntries.forEach((entry) => {
-            // Unisce corpo, keywords ed entities in un unico testo
-            const fullText = `${entry.body} ${entry.keywords.join(" ")} ${entry.entities.join(" ")}`;
-            this.add({ id: entry.id, body: fullText });
-        });
+    // Campo principale per ricerca
+    this.field("body");
+
+    // Aggiunge ogni entry all'indice
+    indexEntries.forEach((entry) => {
+      // Unisce corpo, keywords ed entities in un unico testo
+      const keywordsStr = entry.keywords.join(" ");
+      const entitiesStr = entry.entities.join(" ");
+      const fullText = `${entry.body} ${keywordsStr} ${entitiesStr}`;
+
+      this.add({ id: entry.id, body: fullText });
+    });
+  });
+
+  const result = idx;
+  return result;
+};
+
+/**
+ * Esegue il chunking gerarchico Parent-Child su un documento.
+ *
+ * @param {string} text - Testo del documento.
+ * @param {number} docIndex - Indice del documento (per ID univoci).
+ * @returns {Promise<Object>} {parents: [], indexEntries: []}.
+ * @private
+ */
+const _chunkDocument = async function (text, docIndex) {
+  // Fail Fast
+  if (!text) {
+    console.error("_chunkDocument: testo mancante");
+    return { parents: [], indexEntries: [] };
+  }
+
+  const parents = [];
+  const indexEntries = [];
+
+  // Usa compromise per dividere in frasi
+  const sentences = self.nlp(text).sentences().out("array");
+
+  let currentParentText = "";
+  let currentParentSentences = [];
+  let parentIdx = 0;
+
+  /**
+   * Finalizza un Parent Chunk e crea i relativi Children.
+   * @returns {void}
+   */
+  const finalizeParent = async function () {
+    const pid = `d${docIndex}p${parentIdx++}`;
+
+    // 1. Creo il Parent (Contesto)
+    parents.push({
+      id: pid,
+      text: currentParentText,
+      source: `doc_${docIndex}`, // Metadata per citazioni future
     });
 
-    return idx;
-};
+    // 2. Creo i Children (Unità di Ricerca)
+    let childIdx = 0;
 
-/**
- * Esegue chunking gerarchico Parent-Child su un documento.
- * @param {string} text - Testo del documento
- * @param {number} docIndex - Indice del documento (per ID univoci)
- * @returns {Object} {parents: [], indexEntries: []}
- * @private
- */
-const _chunkDocument = async (text, docIndex) => {
-    const parents = [];
-    const indexEntries = [];
+    for (const sent of currentParentSentences) {
+      // Filtro frasi troppo brevi che sporcano l'indice
+      if (sent.length < CONFIG.MIN_CHILD_LENGTH) {
+        continue;
+      }
 
-    // Usa compromise per dividere in frasi
-    const sentences = self.nlp(text).sentences().out("array");
+      const cid = `${pid}#${childIdx++}`; // ID Composito: ParentID#ChildID
+      const meta = _processText(sent);
 
-    let currentParentText = "";
-    let currentParentSentences = [];
-    let parentIdx = 0;
-
-    /**
-     * Finalizza un Parent Chunk e crea i relativi Children.
-     * @returns {void}
-     */
-    const finalizeParent = async () => {
-        const pid = `d${docIndex}p${parentIdx++}`;
-
-        // 1. Creo il Parent (Contesto)
-        parents.push({
-            id: pid,
-            text: currentParentText,
-            source: `doc_${docIndex}` // Metadata per citazioni future
-        });
-
-        // 2. Creo i Children (Unità di Ricerca)
-        let childIdx = 0;
-
-        for (const sent of currentParentSentences) {
-            // Filtro frasi troppo brevi che sporcano l'indice
-            if (sent.length < _CONFIG.MIN_CHILD_LENGTH) {
-                continue;
-            }
-
-            const cid = `${pid}#${childIdx++}`; // ID Composito: ParentID#ChildID
-            const meta = _processText(sent);
-
-            indexEntries.push({
-                id: cid,
-                body: sent,
-                keywords: meta.keywords,
-                entities: meta.entities
-            });
-        }
-    };
-
-    // Accumulo frasi in Parent (sliding window)
-    for (const s of sentences) {
-        const shouldFinalize = currentParentText.length > 0 &&
-            currentParentText.length + s.length > _CONFIG.TARGET_PARENT_SIZE;
-
-        if (shouldFinalize) {
-            await finalizeParent();
-            currentParentText = s;
-            currentParentSentences = [s];
-        } else {
-            const separator = currentParentText.length > 0 ? " " : "";
-            currentParentText += separator + s;
-            currentParentSentences.push(s);
-        }
+      indexEntries.push({
+        id: cid,
+        body: sent,
+        keywords: meta.keywords,
+        entities: meta.entities,
+      });
     }
+  };
 
-    // Flush finale
-    if (currentParentText.length > 0) {
-        await finalizeParent();
+  // Accumulo frasi in Parent (sliding window)
+  for (const s of sentences) {
+    const shouldFinalize =
+      currentParentText.length > 0 && currentParentText.length + s.length > CONFIG.TARGET_PARENT_SIZE;
+
+    if (shouldFinalize) {
+      await finalizeParent();
+      currentParentText = s;
+      currentParentSentences = [s];
+    } else {
+      const separator = currentParentText.length > 0 ? " " : "";
+      currentParentText += separator + s;
+      currentParentSentences.push(s);
     }
+  }
 
-    const result = { parents, indexEntries };
-    return result;
+  // Flush finale
+  if (currentParentText.length > 0) {
+    await finalizeParent();
+  }
+
+  const result = { parents, indexEntries };
+  return result;
 };
 
 /**
