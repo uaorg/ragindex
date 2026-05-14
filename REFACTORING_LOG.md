@@ -20,4 +20,5 @@ Questo documento traccia le modifiche effettuate passo-passo per rendere il prog
 | 12 | 2026-05-14 | static/js/llmclient/huggingface_client.js | Rifattorizzato gestione errori (_handleHttpError, _handleNetworkError) e utility | Validato |
 | 13 | 2026-05-14 | static/js/rag_worker.js | Aggiunto header modulo, JSDoc e conversione funzioni nominate | Validato |
 | 14 | 2026-05-14 | static/js/rag_worker.js | Rifattorizzato _createKnowledgeBase e onmessage (Logica worker) | Validato |
-| 15 | 2026-05-14 | static/js/rag_engine.js | Aggiunto header modulo, JSDoc e rifattorizzato gestione worker | In corso |
+| 15 | 2026-05-14 | static/js/rag_engine.js | Aggiunto header modulo, JSDoc e rifattorizzato gestione worker | Validato |
+| 16 | 2026-05-14 | static/js/rag_engine.js | Rifattorizzato comunicazione LLM (_distillQuery, _sendRequest, _sleep) | In corso |

@@ -117,18 +117,26 @@ const _postCommandToWorker = function (command, data) {
 };
 
 // ============================================================================
-// FUNZIONI PRIVATE - LLM Communication
+// FUNZIONI PRIVATE - Comunicazione LLM
 // ============================================================================
 
+/**
+ * Distilla una query utente in termini di ricerca ottimizzati.
+ *
+ * @param {string} query - La domanda originale dell'utente.
+ * @returns {Promise<string>} Termini di ricerca ottimizzati.
+ * @private
+ */
 const _distillQuery = async function (query) {
-    if (!query) {
-        console.error("ragEngine._distillQuery: query mancante");
-        return "";
-    }
+  // Fail Fast
+  if (!query) {
+    console.error("_distillQuery: query mancante");
+    return "";
+  }
 
-    UaLog.log("🔍 Ottimizzazione termini di ricerca...");
+  UaLog.log("🔍 Ottimizzazione termini di ricerca...");
 
-    const promptText = `
+  const promptText = `
 # COMPITO
 Agisci come un esperto di Information Retrieval. Data la domanda di un utente, estrai esclusivamente una lista di 5-8 parole chiave (nomi, entità, concetti tecnici) ottimizzate per una ricerca lessicale BM25.
 
@@ -144,59 +152,83 @@ ${query}
 # PAROLE CHIAVE OTTIMIZZATE:
 `.trim();
 
-    const payload = {
-        model: _model,
-        messages: [{ role: "user", content: promptText }],
-        temperature: 0.1,
-        max_tokens: DISTILLATION_TOKEN_LIMIT
-    };
+  const payload = {
+    model: _model,
+    messages: [{ role: "user", content: promptText }],
+    temperature: 0.1,
+    max_tokens: DISTILLATION_TOKEN_LIMIT,
+  };
 
-    const rr = await _sendRequest(_client, payload, "ERR_DISTILL_QUERY");
+  const rr = await _sendRequest(_client, payload, "ERR_DISTILL_QUERY");
 
-    let result = query;
-    if (rr && rr.ok) {
-        result = rr.data.trim();
-    } else {
-        console.warn("ragEngine._distillQuery: distillazione fallita, uso query originale.");
-    }
+  let result = query;
+  if (rr && rr.ok) {
+    const data = rr.data;
+    result = data.trim();
+  } else {
+    console.warn("_distillQuery: distillazione fallita, uso query originale.");
+  }
 
-    return result;
+  return result;
 };
 
+/**
+ * Sospende l'esecuzione per un periodo specificato.
+ *
+ * @param {number} ms - Millisecondi di attesa.
+ * @returns {Promise<void>}
+ * @private
+ */
 const _sleep = function (ms) {
-    const promise = new Promise(function (resolve) {
-        setTimeout(resolve, ms);
-    });
-    return promise;
+  const promise = new Promise(function (resolve) {
+    setTimeout(resolve, ms);
+  });
+  return promise;
 };
 
+/**
+ * Invia una richiesta al client LLM con gestione dei tentativi (retry).
+ *
+ * @param {Object} client - Istanza del client LLM.
+ * @param {Object} payload - Payload della richiesta.
+ * @param {string} errorTag - Etichetta per il logging degli errori.
+ * @returns {Promise<Object|null>} Risultato della richiesta o null.
+ * @private
+ */
 const _sendRequest = async function (client, payload, errorTag) {
-    if (!client || !payload) {
-        console.error("ragEngine._sendRequest: client o payload mancanti");
-        return null;
+  // Fail Fast
+  if (!client || !payload) {
+    console.error("_sendRequest: client o payload mancanti");
+    return null;
+  }
+
+  let result = null;
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    const rr = await client.sendRequest(payload, 90);
+
+    if (!rr || rr.ok) {
+      result = rr;
+      break;
     }
 
-    let result = null;
-    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-        const rr = await client.sendRequest(payload, 90);
+    const err = rr.error;
+    const errCode = err ? err.code : null;
+    const attemptLog = `Attempt ${attempt}/${MAX_RETRIES}`;
+    console.error(`_sendRequest.${errorTag} (${attemptLog}):`, err);
 
-        if (!rr || rr.ok) {
-            result = rr;
-            break;
-        }
+    const isRetryable = errCode === 408 || [500, 502, 503, 504].includes(errCode);
 
-        const err = rr.error;
-        console.error(`ragEngine.${errorTag} (Attempt ${attempt}/${MAX_RETRIES}):`, err);
-
-        if (err && (err.code === 408 || [500, 502, 503, 504].includes(err.code))) {
-            UaLog.log(`Transient error ${err.code}. Retrying...`);
-            await _sleep(RETRY_DELAY_MS);
-        } else {
-            result = rr;
-            break;
-        }
+    if (isRetryable) {
+      const retryMsg = `Errore transitorio ${errCode}. Riprovo...`;
+      UaLog.log(retryMsg);
+      await _sleep(RETRY_DELAY_MS);
+    } else {
+      result = rr;
+      break;
     }
-    return result;
+  }
+
+  return result;
 };
 
 // ============================================================================
