@@ -1,7 +1,24 @@
-/** @format */
+/**
+ * gemini_client.js - Client per l'integrazione con le API di Google Gemini.
+ *
+ * Questo modulo gestisce la comunicazione con i modelli Gemini, inclusa la
+ * trasformazione dei payload, la gestione dei timeout e delle interruzioni.
+ *
+ * @module  GeminiClient
+ * @version 1.1.0
+ * @date    2026-05-14
+ * @author  Gemini CLI
+ */
+
 "use strict";
 
-const convertToGemPayload = (payload) => {
+/**
+ * Converte un payload generico nel formato richiesto dalle API Gemini.
+ *
+ * @param {Object} payload - Il payload originale con messaggi e configurazione.
+ * @returns {Object} Il payload formattato per Gemini.
+ */
+const convertToGemPayload = function (payload) {
   const geminiPayload = {
     contents: [],
     system_instruction: null,
