@@ -29,8 +29,9 @@ const adaptMistralPayload = function (payload) {
 
 class MistralClient {
   /**
-   * @param {string} apiKey
-   * @param {string} [baseUrl]
+   * Inizializza il client con la chiave API.
+   *
+   * @param {string} apiKey - La chiave API per l'autenticazione.
    */
   constructor(apiKey) {
     this.apiKey = apiKey;
@@ -40,30 +41,46 @@ class MistralClient {
   }
 
   /**
-   * @param {object} payload
-   * @param {number} [timeout=60]
-   * @returns {any}
+   * Invia una richiesta di generazione contenuto al modello Mistral.
+   *
+   * @param {Object} payload - Dati della richiesta.
+   * @param {number} [timeout=60] - Tempo massimo di attesa in secondi.
+   * @returns {Promise<Object>} Oggetto risultato con {ok, response, data, error}.
    */
   async sendRequest(payload, timeout = 60) {
+    const apiKey = this.apiKey;
+    const authHeader = `Bearer ${apiKey}`;
+
     const headers = {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${this.apiKey}`,
+      Authorization: authHeader,
     };
 
     const adaptedPayload = adaptMistralPayload(payload);
 
-    const result = await this._fetch(this.baseUrl, adaptedPayload, headers, timeout);
+    const baseUrl = this.baseUrl;
+    const result = await this._fetch(baseUrl, adaptedPayload, headers, timeout);
+
+    let finalResult = null;
 
     if (result.ok) {
       try {
         const responseData = result.response.choices[0].message.content;
-        return this._createResult(true, result.response, responseData);
+        finalResult = this._createResult(true, result.response, responseData);
       } catch (error) {
-        return this._createResult(false, null, null, this._createError("Invalid response structure", "ParsingError", null, error));
+        const errorDetails = this._createError(
+          "Invalid response structure",
+          "ParsingError",
+          null,
+          error
+        );
+        finalResult = this._createResult(false, null, null, errorDetails);
       }
     } else {
-      return result;
+      finalResult = result;
     }
+
+    return finalResult;
   }
 
   cancelRequest() {
