@@ -1,12 +1,16 @@
 /**
- * @fileoverview rag_engine.js - Motore RAG principale.
- * Coordina la creazione della knowledge base e la generazione delle risposte.
+ * rag_engine.js - Motore RAG principale.
  *
- * @module rag_engine
- * @version 0.1.0
- * @date 2026-04-30
- * @author Team Sviluppo
+ * Coordina la creazione della knowledge base, il recupero del contesto e
+ * la generazione delle risposte tramite LLM. Gestisce il ciclo di vita del
+ * Web Worker per le operazioni intensive.
+ *
+ * @module  rag_engine
+ * @version 1.1.0
+ * @date    2026-05-14
+ * @author  Gemini CLI
  */
+
 "use strict";
 
 import { UaLog } from "./services/ualog3.js";
@@ -24,7 +28,7 @@ const DISTILLATION_TOKEN_LIMIT = 50;
 const CONTEXT_PERCENTAGE = 0.7;
 
 // ============================================================================
-// VARIABILI PRIVATE
+// STATO PRIVATO DEL MODULO
 // ============================================================================
 
 let _worker = null;
@@ -34,53 +38,82 @@ let _model = null;
 let _promptSize = 0;
 
 // ============================================================================
-// FUNZIONI PRIVATE - Worker Management
+// FUNZIONI PRIVATE - Gestione Worker
 // ============================================================================
 
+/**
+ * Inizializza il Web Worker per l'elaborazione RAG.
+ * Configura gli handler per i messaggi e gli errori.
+ *
+ * @private
+ */
 const _initWorker = function () {
-    const workerUrl = new URL(WORKER_PATH, import.meta.url).href;
-    _worker = new Worker(workerUrl);
+  if (_worker) {
+    return;
+  }
 
-    _worker.onmessage = function (e) {
-        const { status, command, result, error, progress } = e.data;
+  const workerUrl = new URL(WORKER_PATH, import.meta.url).href;
+  _worker = new Worker(workerUrl);
 
-        if (status === "progress") {
-            UaLog.log(progress);
-            return;
-        }
+  /**
+   * Handler per i messaggi dal worker.
+   */
+  _worker.onmessage = function (e) {
+    const { status, command, result, error, progress } = e.data;
 
-        const promise = _requestPromises[command];
-        if (promise) {
-            if (status === "complete") {
-                promise.resolve(result);
-            } else if (status === "error") {
-                promise.reject(new Error(error));
-            }
-            delete _requestPromises[command];
-        }
-    };
-
-    _worker.onerror = function (e) {
-        console.error("ragEngine._initWorker (error):", e);
-        Object.values(_requestPromises).forEach(function (p) {
-            p.reject(new Error("Errore nel worker"));
-        });
-        Object.keys(_requestPromises).forEach(function (key) {
-            delete _requestPromises[key];
-        });
-    };
-};
-
-const _postCommandToWorker = function (command, data) {
-    if (!_worker) {
-        _initWorker();
+    if (status === "progress") {
+      UaLog.log(progress);
+      return;
     }
 
-    const promise = new Promise(function (resolve, reject) {
-        _requestPromises[command] = { resolve, reject };
-        _worker.postMessage({ command, data });
+    const promise = _requestPromises[command];
+    if (promise) {
+      if (status === "complete") {
+        promise.resolve(result);
+      } else if (status === "error") {
+        const err = new Error(error);
+        promise.reject(err);
+      }
+      delete _requestPromises[command];
+    }
+  };
+
+  /**
+   * Handler per gli errori del worker.
+   */
+  _worker.onerror = function (e) {
+    console.error("_initWorker (error):", e);
+    const errorMsg = "Errore critico nel worker RAG";
+    const workerErr = new Error(errorMsg);
+
+    Object.values(_requestPromises).forEach(function (p) {
+      p.reject(workerErr);
     });
-    return promise;
+
+    // Pulizia totale dei riferimenti alle promesse
+    for (const key in _requestPromises) {
+      delete _requestPromises[key];
+    }
+  };
+};
+
+/**
+ * Invia un comando al worker e restituisce una promessa.
+ *
+ * @param {string} command - Nome del comando da eseguire.
+ * @param {any} data - Dati associati al comando.
+ * @returns {Promise<any>} Risultato dell'operazione.
+ * @private
+ */
+const _postCommandToWorker = function (command, data) {
+  _initWorker();
+
+  const promise = new Promise(function (resolve, reject) {
+    _requestPromises[command] = { resolve, reject };
+    _worker.postMessage({ command, data });
+  });
+
+  return promise;
 };
 
 // ============================================================================
