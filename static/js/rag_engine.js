@@ -235,100 +235,161 @@ const _sendRequest = async function (client, payload, errorTag) {
 // API PUBBLICA
 // ============================================================================
 
+/**
+ * Gestore del motore RAG.
+ */
 export const ragEngine = {
+  /**
+   * Inizializza il motore con le configurazioni LLM.
+   *
+   * @param {Object} client - Client LLM attivo.
+   * @param {string} model - Nome del modello selezionato.
+   * @param {number} promptSize - Dimensione massima del prompt in byte.
+   */
+  init: function (client, model, promptSize) {
+    _client = client;
+    _model = model;
+    _promptSize = promptSize;
 
-    init: function (client, model, promptSize) {
-        _client = client;
-        _model = model;
-        _promptSize = promptSize;
+    _initWorker();
+  },
 
-        if (!_worker) {
-            _initWorker();
-        }
-    },
+  /**
+   * Ferma il motore RAG e termina il worker.
+   * Pulisce le promesse pendenti.
+   */
+  stop: function () {
+    if (_worker) {
+      _worker.terminate();
+      _worker = null;
 
-    stop: function () {
-        if (_worker) {
-            _worker.terminate();
-            _worker = null;
-            Object.values(_requestPromises).forEach(function (p) {
-                p.reject(new Error("Operazione interrotta dall'utente"));
-            });
-            Object.keys(_requestPromises).forEach(function (key) {
-                delete _requestPromises[key];
-            });
-            console.log("ragEngine.stop: Worker terminato.");
-        }
-    },
+      const stopErr = new Error("Operazione interrotta dall'utente");
+      Object.values(_requestPromises).forEach(function (p) {
+        p.reject(stopErr);
+      });
 
-    createKnowledgeBase: function (documents) {
-        const promise = _postCommandToWorker("createKnowledgeBase", documents);
-        return promise;
-    },
+      for (const key in _requestPromises) {
+        delete _requestPromises[key];
+      }
 
-    buildContext: function (serializedIndex, allChunks, query) {
-        if (!serializedIndex || !allChunks || !query) {
-            console.error("ragEngine.buildContext: input mancanti");
-            return "";
-        }
-
-        const index = lunr.Index.load(JSON.parse(serializedIndex));
-        const searchResults = index.search(query);
-
-        let context = "";
-        const MAX_CONTEXT_LENGTH = _promptSize * CONTEXT_PERCENTAGE;
-        const usedParentIds = new Set();
-
-        for (const result of searchResults) {
-            const parentId = result.ref.split("#")[0];
-            if (!usedParentIds.has(parentId)) {
-                usedParentIds.add(parentId);
-                const chunk = allChunks.find(function (c) { return c.id === parentId; });
-                if (chunk) {
-                    const chunkSnippet = `--- Context: ${chunk.id} (Score: ${result.score.toFixed(4)}) ---\n${chunk.text}\n\n`;
-                    if ((context + chunkSnippet).length <= MAX_CONTEXT_LENGTH) {
-                        context += chunkSnippet;
-                    } else {
-                        break;
-                    }
-                }
-            }
-        }
-        return context;
-    },
-
-    getOptimizedContext: async function (query, kbData, thread) {
-        const isFirstQuestion = !thread || thread.length <= 1;
-
-        if (!kbData || !kbData.index || !isFirstQuestion) {
-            return "";
-        }
-
-        const searchTerms = await _distillQuery(query);
-        UaLog.log("📄 Recupero informazioni pertinenti...");
-
-        const context = ragEngine.buildContext(kbData.index, kbData.chunks, searchTerms);
-        return context;
-    },
-
-    generateResponse: async function (context, thread) {
-        const messages = promptBuilder.answerPrompt(context, thread);
-        const payload = {
-            model: _model,
-            messages: messages,
-            random_seed: 42,
-            temperature: 0.7,
-            max_tokens: 4000
-        };
-
-        UaLog.log("✍️ Generazione risposta LLM...");
-        const rr = await _sendRequest(_client, payload, "ERR_GENERATE_RESPONSE");
-
-        if (!rr || !rr.ok) {
-            throw rr ? rr.error : new Error("Request failed without response");
-        }
-
-        const result = cleanLlmResponse(rr.data);
-        return result;
+      console.log("ragEngine.stop: Worker terminato.");
     }
+  },
+
+  /**
+   * Avvia la creazione della Knowledge Base dai documenti.
+   *
+   * @param {Array<Object>} documents - Lista di documenti {name, text}.
+   * @returns {Promise<Object>} Risultato della creazione KB.
+   */
+  createKnowledgeBase: function (documents) {
+    const promise = _postCommandToWorker("createKnowledgeBase", documents);
+    return promise;
+  },
+
+  /**
+   * Costruisce il contesto rilevante per una query tramite ricerca Lunr.
+   *
+   * @param {string} serializedIndex - Indice Lunr serializzato in JSON.
+   * @param {Array<Object>} allChunks - Tutti i frammenti (Parent Chunks).
+   * @param {string} query - Termini di ricerca ottimizzati.
+   * @returns {string} Stringa di contesto formattata.
+   */
+  buildContext: function (serializedIndex, allChunks, query) {
+    // Fail Fast
+    if (!serializedIndex || !allChunks || !query) {
+      console.error("ragEngine.buildContext: input mancanti");
+      return "";
+    }
+
+    const indexJson = JSON.parse(serializedIndex);
+    const index = self.lunr.Index.load(indexJson);
+    const searchResults = index.search(query);
+
+    let context = "";
+    const MAX_CONTEXT_LENGTH = _promptSize * CONTEXT_PERCENTAGE;
+    const usedParentIds = new Set();
+
+    for (const result of searchResults) {
+      const parentId = result.ref.split("#")[0];
+
+      if (!usedParentIds.has(parentId)) {
+        usedParentIds.add(parentId);
+        const chunk = allChunks.find(function (c) {
+          const isMatch = c.id === parentId;
+          return isMatch;
+        });
+
+        if (chunk) {
+          const scoreStr = result.score.toFixed(4);
+          const chunkId = chunk.id;
+          const chunkText = chunk.text;
+          const chunkSnippet = `--- Context: ${chunkId} (Score: ${scoreStr}) ---\n${chunkText}\n\n`;
+
+          if (context.length + chunkSnippet.length <= MAX_CONTEXT_LENGTH) {
+            context += chunkSnippet;
+          } else {
+            break;
+          }
+        }
+      }
+    }
+
+    const finalContext = context;
+    return finalContext;
+  },
+
+  /**
+   * Ottiene il contesto ottimizzato tramite distillazione della query.
+   *
+   * @param {string} query - Query originale dell'utente.
+   * @param {Object} kbData - Dati della KB {index, chunks}.
+   * @param {Array} thread - Cronologia messaggi della conversazione.
+   * @returns {Promise<string>} Contesto recuperato.
+   */
+  getOptimizedContext: async function (query, kbData, thread) {
+    const isFirstQuestion = !thread || thread.length <= 1;
+
+    if (!kbData || !kbData.index || !isFirstQuestion) {
+      return "";
+    }
+
+    const searchTerms = await _distillQuery(query);
+    UaLog.log("📄 Recupero informazioni pertinenti...");
+
+    const context = ragEngine.buildContext(kbData.index, kbData.chunks, searchTerms);
+    const result = context;
+    return result;
+  },
+
+  /**
+   * Genera una risposta tramite LLM dato il contesto e il thread.
+   *
+   * @param {string} context - Contesto recuperato dai documenti.
+   * @param {Array} thread - Cronologia messaggi.
+   * @returns {Promise<string>} Risposta generata e pulita.
+   */
+  generateResponse: async function (context, thread) {
+    const messages = promptBuilder.answerPrompt(context, thread);
+    const payload = {
+      model: _model,
+      messages: messages,
+      random_seed: 42,
+      temperature: 0.7,
+      max_tokens: 4000,
+    };
+
+    UaLog.log("✍️ Generazione risposta LLM...");
+    const rr = await _sendRequest(_client, payload, "ERR_GENERATE_RESPONSE");
+
+    if (!rr || !rr.ok) {
+      const errorToThrow = rr ? rr.error : new Error("Request failed without response");
+      throw errorToThrow;
+    }
+
+    const rawData = rr.data;
+    const cleanedData = cleanLlmResponse(rawData);
+    const result = cleanedData;
+    return result;
+  },
 };

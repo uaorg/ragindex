@@ -21,4 +21,5 @@ Questo documento traccia le modifiche effettuate passo-passo per rendere il prog
 | 13 | 2026-05-14 | static/js/rag_worker.js | Aggiunto header modulo, JSDoc e conversione funzioni nominate | Validato |
 | 14 | 2026-05-14 | static/js/rag_worker.js | Rifattorizzato _createKnowledgeBase e onmessage (Logica worker) | Validato |
 | 15 | 2026-05-14 | static/js/rag_engine.js | Aggiunto header modulo, JSDoc e rifattorizzato gestione worker | Validato |
-| 16 | 2026-05-14 | static/js/rag_engine.js | Rifattorizzato comunicazione LLM (_distillQuery, _sendRequest, _sleep) | In corso |
+| 16 | 2026-05-14 | static/js/rag_engine.js | Rifattorizzato comunicazione LLM (_distillQuery, _sendRequest, _sleep) | Validato |
+| 17 | 2026-05-14 | static/js/rag_engine.js | Rifattorizzato API pubblica (ragEngine) e completato file | In corso |
