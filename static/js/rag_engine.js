@@ -37,11 +37,11 @@ let _promptSize = 0;
 // FUNZIONI PRIVATE - Worker Management
 // ============================================================================
 
-const _initWorker = function() {
+const _initWorker = function () {
     const workerUrl = new URL(WORKER_PATH, import.meta.url).href;
     _worker = new Worker(workerUrl);
 
-    _worker.onmessage = function(e) {
+    _worker.onmessage = function (e) {
         const { status, command, result, error, progress } = e.data;
 
         if (status === "progress") {
@@ -60,23 +60,23 @@ const _initWorker = function() {
         }
     };
 
-    _worker.onerror = function(e) {
+    _worker.onerror = function (e) {
         console.error("ragEngine._initWorker (error):", e);
-        Object.values(_requestPromises).forEach(function(p) {
+        Object.values(_requestPromises).forEach(function (p) {
             p.reject(new Error("Errore nel worker"));
         });
-        Object.keys(_requestPromises).forEach(function(key) {
+        Object.keys(_requestPromises).forEach(function (key) {
             delete _requestPromises[key];
         });
     };
 };
 
-const _postCommandToWorker = function(command, data) {
+const _postCommandToWorker = function (command, data) {
     if (!_worker) {
         _initWorker();
     }
 
-    const promise = new Promise(function(resolve, reject) {
+    const promise = new Promise(function (resolve, reject) {
         _requestPromises[command] = { resolve, reject };
         _worker.postMessage({ command, data });
     });
@@ -87,7 +87,7 @@ const _postCommandToWorker = function(command, data) {
 // FUNZIONI PRIVATE - LLM Communication
 // ============================================================================
 
-const _distillQuery = async function(query) {
+const _distillQuery = async function (query) {
     if (!query) {
         console.error("ragEngine._distillQuery: query mancante");
         return "";
@@ -130,14 +130,14 @@ ${query}
     return result;
 };
 
-const _sleep = function(ms) {
-    const promise = new Promise(function(resolve) {
+const _sleep = function (ms) {
+    const promise = new Promise(function (resolve) {
         setTimeout(resolve, ms);
     });
     return promise;
 };
 
-const _sendRequest = async function(client, payload, errorTag) {
+const _sendRequest = async function (client, payload, errorTag) {
     if (!client || !payload) {
         console.error("ragEngine._sendRequest: client o payload mancanti");
         return null;
@@ -172,7 +172,7 @@ const _sendRequest = async function(client, payload, errorTag) {
 
 export const ragEngine = {
 
-    init: function(client, model, promptSize) {
+    init: function (client, model, promptSize) {
         _client = client;
         _model = model;
         _promptSize = promptSize;
@@ -182,26 +182,26 @@ export const ragEngine = {
         }
     },
 
-    stop: function() {
+    stop: function () {
         if (_worker) {
             _worker.terminate();
             _worker = null;
-            Object.values(_requestPromises).forEach(function(p) {
+            Object.values(_requestPromises).forEach(function (p) {
                 p.reject(new Error("Operazione interrotta dall'utente"));
             });
-            Object.keys(_requestPromises).forEach(function(key) {
+            Object.keys(_requestPromises).forEach(function (key) {
                 delete _requestPromises[key];
             });
             console.log("ragEngine.stop: Worker terminato.");
         }
     },
 
-    createKnowledgeBase: function(documents) {
+    createKnowledgeBase: function (documents) {
         const promise = _postCommandToWorker("createKnowledgeBase", documents);
         return promise;
     },
 
-    buildContext: function(serializedIndex, allChunks, query) {
+    buildContext: function (serializedIndex, allChunks, query) {
         if (!serializedIndex || !allChunks || !query) {
             console.error("ragEngine.buildContext: input mancanti");
             return "";
@@ -218,7 +218,7 @@ export const ragEngine = {
             const parentId = result.ref.split("#")[0];
             if (!usedParentIds.has(parentId)) {
                 usedParentIds.add(parentId);
-                const chunk = allChunks.find(function(c) { return c.id === parentId; });
+                const chunk = allChunks.find(function (c) { return c.id === parentId; });
                 if (chunk) {
                     const chunkSnippet = `--- Context: ${chunk.id} (Score: ${result.score.toFixed(4)}) ---\n${chunk.text}\n\n`;
                     if ((context + chunkSnippet).length <= MAX_CONTEXT_LENGTH) {
@@ -232,7 +232,7 @@ export const ragEngine = {
         return context;
     },
 
-    getOptimizedContext: async function(query, kbData, thread) {
+    getOptimizedContext: async function (query, kbData, thread) {
         const isFirstQuestion = !thread || thread.length <= 1;
 
         if (!kbData || !kbData.index || !isFirstQuestion) {
@@ -241,12 +241,12 @@ export const ragEngine = {
 
         const searchTerms = await _distillQuery(query);
         UaLog.log("📄 Recupero informazioni pertinenti...");
-        
+
         const context = ragEngine.buildContext(kbData.index, kbData.chunks, searchTerms);
         return context;
     },
 
-    generateResponse: async function(context, thread) {
+    generateResponse: async function (context, thread) {
         const messages = promptBuilder.answerPrompt(context, thread);
         const payload = {
             model: _model,

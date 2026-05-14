@@ -128,26 +128,47 @@ class GeminiClient {
     return finalResult;
   }
 
+  /**
+   * Annulla la richiesta attualmente in corso.
+   *
+   * @returns {boolean} True se una richiesta è stata effettivamente interrotta.
+   */
   cancelRequest() {
     this.isCancelled = true;
+    let success = false;
+
     if (this.abortController) {
       this.abortController.abort();
       this.abortController = null;
-      return true;
+      success = true;
     }
-    return false;
+
+    return success;
   }
 
+  /**
+   * Esegue la chiamata fetch effettiva con gestione del timeout.
+   *
+   * @param {string} url - URL completo della richiesta.
+   * @param {Object} payload - Corpo della richiesta in formato Gemini.
+   * @param {number} [timeout=60] - Timeout in secondi.
+   * @returns {Promise<Object>} Risultato della fetch.
+   * @private
+   */
   async _fetch(url, payload, timeout = 60) {
     this.isCancelled = false;
     this.abortController = new AbortController();
     const signal = this.abortController.signal;
 
+    // Conversione timeout in millisecondi per setTimeout
+    const timeoutMs = timeout * 1000;
     const timeoutId = setTimeout(() => {
       if (this.abortController) {
         this.abortController.abort();
       }
-    }, timeout * 1000);
+    }, timeoutMs);
+
+    let result = null;
 
     try {
       const response = await fetch(url, {
@@ -160,26 +181,29 @@ class GeminiClient {
       clearTimeout(timeoutId);
 
       if (this.isCancelled) {
-        return this._createResult(false, null, null, this._createError(
-          "Richiesta interrotta dall'utente", "CancellationError", 499, 
+        const cancelErr = this._createError(
+          "Richiesta interrotta dall'utente",
+          "CancellationError",
+          499,
           { message: "La richiesta è stata interrotta volontariamente dall'utente" }
-        ));
+        );
+        result = this._createResult(false, null, null, cancelErr);
+      } else if (!response.ok) {
+        const httpErr = await this._handleHttpError(response);
+        result = this._createResult(false, null, null, httpErr);
+      } else {
+        const respJson = await response.json();
+        result = this._createResult(true, respJson);
       }
-
-      if (!response.ok) {
-        const err = await this._handleHttpError(response);
-        return this._createResult(false, null, null, err);
-      }
-
-      const respJson = await response.json();
-      return this._createResult(true, respJson);
     } catch (error) {
       clearTimeout(timeoutId);
-      const err = this._handleNetworkError(error);
-      return this._createResult(false, null, null, err);
+      const networkErr = this._handleNetworkError(error);
+      result = this._createResult(false, null, null, networkErr);
     } finally {
       this.abortController = null;
     }
+
+    return result;
   }
 
   async _handleHttpError(response) {
