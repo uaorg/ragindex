@@ -202,54 +202,67 @@ const _chunkDocument = async function (text, docIndex) {
 };
 
 /**
- * Crea Knowledge Base da un array di documenti.
- * @param {Array} documents - Array di {name, text}
- * @returns {Object} {chunks: [], serializedIndex: ""}
+ * Crea la Knowledge Base da un array di documenti.
+ *
+ * @param {Array<Object>} documents - Array di {name, text}.
+ * @returns {Promise<Object>} {chunks: [], serializedIndex: ""}.
  * @private
  */
-const _createKnowledgeBase = async (documents) => {
-    // Fase 0: Chunking Gerarchico (Parent-Child)
+const _createKnowledgeBase = async function (documents) {
+  // Fail Fast
+  if (!documents || documents.length === 0) {
+    console.error("_createKnowledgeBase: documenti mancanti o vuoti");
+    const emptyResult = { chunks: [], serializedIndex: "" };
+    return emptyResult;
+  }
+
+  // Fase 0: Chunking Gerarchico (Parent-Child)
+  self.postMessage({
+    status: "progress",
+    command: "createKnowledgeBase",
+    progress: "Fase 0: Segmentazione (Parent-Child)...",
+  });
+
+  const allParents = [];
+  const allIndexEntries = [];
+
+  // Elabora ogni documento
+  for (let i = 0; i < documents.length; i++) {
+    const doc = documents[i];
+    const docName = doc.name;
+    const progressMsg = ` -> Elaboro ${docName}`;
+
     self.postMessage({
-        status: "progress",
-        command: "createKnowledgeBase",
-        progress: "Fase 0: Segmentazione (Parent-Child)..."
+      status: "progress",
+      command: "createKnowledgeBase",
+      progress: progressMsg,
     });
 
-    let allParents = [];
-    let allIndexEntries = [];
+    const result = await _chunkDocument(doc.text, i);
+    allParents.push(...result.parents);
+    allIndexEntries.push(...result.indexEntries);
+  }
 
-    // Elabora ogni documento
-    for (let i = 0; i < documents.length; i++) {
-        const doc = documents[i];
+  // Fase 1: Indicizzazione
+  const itemsCount = allIndexEntries.length;
+  const indexProgressMsg = `Fase 1: Indicizzazione (${itemsCount} items)...`;
 
-        self.postMessage({
-            status: "progress",
-            command: "createKnowledgeBase",
-            progress: ` -> Elaboro ${doc.name}`
-        });
+  self.postMessage({
+    status: "progress",
+    command: "createKnowledgeBase",
+    progress: indexProgressMsg,
+  });
 
-        const result = await _chunkDocument(doc.text, i);
-        allParents.push(...result.parents);
-        allIndexEntries.push(...result.indexEntries);
-    }
+  const index = _buildIndex(allIndexEntries);
+  const serializedIndex = JSON.stringify(index);
 
-    // Fase 1: Indicizzazione
-    self.postMessage({
-        status: "progress",
-        command: "createKnowledgeBase",
-        progress: `Fase 1: Indicizzazione (${allIndexEntries.length} items)...`
-    });
+  // Restituisce chunks (Parent) e indice serializzato
+  const finalResult = {
+    chunks: allParents,
+    serializedIndex: serializedIndex,
+  };
 
-    const index = _buildIndex(allIndexEntries);
-    const serializedIndex = JSON.stringify(index);
-
-    // Restituisce chunks (Parent) e indice serializzato
-    const result = {
-        chunks: allParents,
-        serializedIndex: serializedIndex
-    };
-
-    return result;
+  return finalResult;
 };
 
 // ============================================================================
@@ -258,33 +271,38 @@ const _createKnowledgeBase = async (documents) => {
 
 /**
  * Gestisce i messaggi in arrivo dal thread principale.
+ *
+ * @param {MessageEvent} e - Evento messaggio contenente {command, data}.
  */
-self.onmessage = async (e) => {
-    const { command, data } = e.data;
+self.onmessage = async function (e) {
+  const { command, data } = e.data;
 
-    try {
-        let result = null;
+  try {
+    let result = null;
 
-        switch (command) {
-            case "createKnowledgeBase":
-                result = await _createKnowledgeBase(data);
-                break;
+    switch (command) {
+      case "createKnowledgeBase":
+        result = await _createKnowledgeBase(data);
+        break;
 
-            default:
-                throw new Error(`Comando non riconosciuto per il worker: ${command}`);
-        }
-
-        self.postMessage({
-            status: "complete",
-            command: command,
-            result: result
-        });
-
-    } catch (error) {
-        self.postMessage({
-            status: "error",
-            command: command,
-            error: error.message
-        });
+      default: {
+        const errorMsg = `Comando non riconosciuto per il worker: ${command}`;
+        throw new Error(errorMsg);
+      }
     }
+
+    self.postMessage({
+      status: "complete",
+      command: command,
+      result: result,
+    });
+  } catch (error) {
+    console.error(`rag_worker.onmessage [${command}]:`, error);
+    self.postMessage({
+      status: "error",
+      command: command,
+      error: error.message,
+    });
+  }
 };
+

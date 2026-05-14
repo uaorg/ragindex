@@ -18,4 +18,5 @@ Questo documento traccia le modifiche effettuate passo-passo per rendere il prog
 | 10 | 2026-05-14 | static/js/llmclient/huggingface_client.js | Applicato Return Strict e Template Literal Strict a constructor e sendRequest | Validato |
 | 11 | 2026-05-14 | static/js/llmclient/huggingface_client.js | Rifattorizzato cancelRequest e _fetch (Lifecycle richiesta) | Validato |
 | 12 | 2026-05-14 | static/js/llmclient/huggingface_client.js | Rifattorizzato gestione errori (_handleHttpError, _handleNetworkError) e utility | Validato |
-| 13 | 2026-05-14 | static/js/rag_worker.js | Aggiunto header modulo, JSDoc e conversione prime funzioni nominate | In corso |
+| 13 | 2026-05-14 | static/js/rag_worker.js | Aggiunto header modulo, JSDoc e conversione funzioni nominate | Validato |
+| 14 | 2026-05-14 | static/js/rag_worker.js | Rifattorizzato _createKnowledgeBase e onmessage (Logica worker) | In corso |
