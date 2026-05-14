@@ -1,9 +1,28 @@
 /**
- * @format
+ * huggingface_client.js - Client per l'integrazione con le API di Hugging Face.
+ *
+ * Questo modulo gestisce la comunicazione con i modelli ospitati su Hugging Face,
+ * inclusa la validazione dei payload, la gestione dei timeout e delle interruzioni.
+ *
+ * @module  HuggingFaceClient
+ * @version 1.1.0
+ * @date    2026-05-14
+ * @author  Gemini CLI
  */
 
-const adaptHuggingFacePayload = (payload) => {
-  if (!payload.model) {
+"use strict";
+
+/**
+ * Adatta il payload per le API Hugging Face.
+ *
+ * @param {Object} payload - Il payload originale.
+ * @returns {Object} Il payload adattato.
+ * @throws {Error} Se il parametro 'model' è mancante.
+ */
+const adaptHuggingFacePayload = function (payload) {
+  // Fail Fast
+  if (!payload || !payload.model) {
+    console.error("adaptHuggingFacePayload: parametro 'model' mancante");
     throw new Error("Il parametro 'model' è obbligatorio nel payload per HuggingFace.");
   }
 
@@ -24,13 +43,15 @@ const adaptHuggingFacePayload = (payload) => {
     }
   }
 
-  return adapted;
+  const result = adapted;
+  return result;
 };
 
 class HuggingFaceClient {
   /**
-   * @param {string} apiKey
-   * @param {string} [baseUrl]
+   * Inizializza il client con la chiave API.
+   *
+   * @param {string} apiKey - La chiave API per l'autenticazione.
    */
   constructor(apiKey) {
     this.apiKey = apiKey;
@@ -40,36 +61,53 @@ class HuggingFaceClient {
   }
 
   /**
-   * @param {object} payload
-   * @param {number} [timeout=60]
-   * @returns {any}
+   * Invia una richiesta di generazione contenuto al modello Hugging Face.
+   *
+   * @param {Object} payload - Dati della richiesta.
+   * @param {number} [timeout=60] - Tempo massimo di attesa in secondi.
+   * @returns {Promise<Object>} Oggetto risultato con {ok, response, data, error}.
    */
   async sendRequest(payload, timeout = 60) {
-    const url = this.baseUrl;
+    const apiKey = this.apiKey;
+    const authHeader = `Bearer ${apiKey}`;
+
     const headers = {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${this.apiKey}`,
+      Authorization: authHeader,
     };
 
     let adaptedPayload;
     try {
       adaptedPayload = adaptHuggingFacePayload(payload);
     } catch (error) {
-      return this._createResult(false, null, null, this._createError(error.message, "ValidationError"));
+      const valError = this._createError(error.message, "ValidationError");
+      const res = this._createResult(false, null, null, valError);
+      return res;
     }
 
-    const result = await this._fetch(url, adaptedPayload, headers, timeout);
+    const baseUrl = this.baseUrl;
+    const result = await this._fetch(baseUrl, adaptedPayload, headers, timeout);
+
+    let finalResult = null;
 
     if (result.ok) {
       try {
         const responseData = result.response.choices[0].message.content;
-        return this._createResult(true, result.response, responseData);
+        finalResult = this._createResult(true, result.response, responseData);
       } catch (error) {
-        return this._createResult(false, null, null, this._createError("Invalid response structure", "ParsingError", null, error));
+        const parseErr = this._createError(
+          "Invalid response structure",
+          "ParsingError",
+          null,
+          error
+        );
+        finalResult = this._createResult(false, null, null, parseErr);
       }
     } else {
-      return result;
+      finalResult = result;
     }
+
+    return finalResult;
   }
 
   cancelRequest() {
