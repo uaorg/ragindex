@@ -1,12 +1,30 @@
 /**
- * @format
+ * mistral_client.js - Client per l'integrazione con le API di Mistral AI.
+ *
+ * Questo modulo gestisce la comunicazione con i modelli Mistral, inclusa la
+ * validazione dei payload, la gestione dei timeout e delle interruzioni.
+ *
+ * @module  MistralClient
+ * @version 1.1.0
+ * @date    2026-05-14
+ * @author  Gemini CLI
  */
 
-const adaptMistralPayload = (payload) => {
+"use strict";
+
+/**
+ * Adatta il payload per le API Mistral, rimuovendo campi non supportati.
+ *
+ * @param {Object} payload - Il payload originale.
+ * @returns {Object} Il payload adattato.
+ */
+const adaptMistralPayload = function (payload) {
   const adapted = { ...payload };
   // Rimuoviamo campi non standard per sicurezza
   delete adapted.safe_prompt;
-  return adapted;
+
+  const result = adapted;
+  return result;
 };
 
 class MistralClient {
