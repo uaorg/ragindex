@@ -206,44 +206,108 @@ class GeminiClient {
     return result;
   }
 
+  /**
+   * Gestisce gli errori HTTP provenienti dalle API Gemini.
+   *
+   * @param {Response} response - Oggetto risposta della fetch.
+   * @returns {Promise<Object>} Oggetto errore formattato.
+   * @private
+   */
   async _handleHttpError(response) {
-    let detailsContent;
+    let detailsContent = null;
     try {
       detailsContent = await response.json();
     } catch (e) {
       detailsContent = { message: "Impossibile estrarre i dettagli dell'errore" };
     }
+
     const errMsg = detailsContent.error?.message || detailsContent.message || "Errore sconosciuto";
+    const status = response.status;
+    const fullMsg = `Errore HTTP ${status}: ${errMsg}`;
+
     const errorObj = this._createError(
-      `Errore HTTP ${response.status}: ${errMsg}`, "HTTPError", response.status, detailsContent
+      fullMsg,
+      "HTTPError",
+      status,
+      detailsContent
     );
-    alert(`ERRORE API [${errorObj.code}]\n${errorObj.message}`);
-    return errorObj;
+
+    const errCode = errorObj.code;
+    const errText = errorObj.message;
+    const alertMsg = `ERRORE API [${errCode}]\n${errText}`;
+
+    // alert è asincrono (sovrascritto in uadialog.js)
+    await alert(alertMsg);
+
+    const result = errorObj;
+    return result;
   }
 
+  /**
+   * Gestisce gli errori di rete o i timeout.
+   *
+   * @param {Error} error - L'oggetto errore catturato nel try/catch.
+   * @returns {Object} Oggetto errore formattato.
+   * @private
+   */
   _handleNetworkError(error) {
-    let errorObj;
+    let errorObj = null;
+
     if (error.name === "AbortError") {
-      errorObj = this._createError(
-        this.isCancelled ? "Richiesta interrotta dall'utente" : "Timeout", 
-        "NetworkError", this.isCancelled ? 499 : 408, error
-      );
-      // Non mostriamo alert per l'interruzione manuale
-      if (this.isCancelled) return errorObj;
+      const msg = this.isCancelled ? "Richiesta interrotta dall'utente" : "Timeout";
+      const code = this.isCancelled ? 499 : 408;
+
+      errorObj = this._createError(msg, "NetworkError", code, error);
+
+      // Non mostriamo alert per l'interruzione manuale dell'utente
+      if (this.isCancelled) {
+        return errorObj;
+      }
     } else {
       errorObj = this._createError("Errore di rete", "NetworkError", 0, error);
     }
-    alert(`ERRORE RETE [${errorObj.code}]\n${errorObj.message}`);
-    return errorObj;
+
+    const errCode = errorObj.code;
+    const errText = errorObj.message;
+    const alertMsg = `ERRORE RETE [${errCode}]\n${errText}`;
+
+    // Nota: in un metodo non-async l'alert asincrono non può essere atteso con await
+    // ma la visualizzazione avverrà comunque.
+    alert(alertMsg);
+
+    const result = errorObj;
+    return result;
   }
 
+  /**
+   * Crea un oggetto risultato standard per i metodi pubblici.
+   *
+   * @param {boolean} ok - Indica se l'operazione ha avuto successo.
+   * @param {Object} [response=null] - La risposta grezza dell'API.
+   * @param {string} [data=null] - Il testo estratto dalla risposta.
+   * @param {Object} [error=null] - Eventuale oggetto errore.
+   * @returns {Object} Oggetto risultato {ok, response, data, error}.
+   * @private
+   */
   _createResult(ok, response = null, data = null, error = null) {
-    return { ok, response, data, error };
+    const result = { ok, response, data, error };
+    return result;
   }
 
+  /**
+   * Crea un oggetto errore standardizzato.
+   *
+   * @param {string} message - Messaggio descrittivo.
+   * @param {string} type - Categoria dell'errore.
+   * @param {number|string} code - Codice identificativo.
+   * @param {Object} [details] - Dettagli tecnici o risposta originale.
+   * @returns {Object} Oggetto errore {message, type, code, details}.
+   * @private
+   */
   _createError(message, type, code, details) {
-    return { message, type, code, details };
+    const error = { message, type, code, details };
+    return error;
   }
-}
+  }
 
-export { GeminiClient };
+  export { GeminiClient };
