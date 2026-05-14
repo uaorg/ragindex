@@ -89,26 +89,43 @@ class GeminiClient {
     this.isCancelled = false;
   }
 
+  /**
+   * Invia una richiesta di generazione contenuto al modello Gemini.
+   *
+   * @param {Object} payload - Dati della richiesta (modello, messaggi, ecc.).
+   * @param {number} [timeout=60] - Tempo massimo di attesa in secondi.
+   * @returns {Promise<Object>} Oggetto risultato con {ok, response, data, error}.
+   */
   async sendRequest(payload, timeout = 60) {
     const modelName = payload.model || "gemini-2.0-flash";
-    const url = `${this.baseUrl}${modelName}:generateContent?key=${this.apiKey}`;
-    
+    const apiKey = this.apiKey;
+    const baseUrl = this.baseUrl;
+    const url = `${baseUrl}${modelName}:generateContent?key=${apiKey}`;
+
     const preparedData = convertToGemPayload(payload);
-    
+
     const result = await this._fetch(url, preparedData, timeout);
+
+    let finalResult = null;
 
     if (result.ok) {
       try {
         const responseData = result.response.candidates[0].content.parts[0].text;
-        return this._createResult(true, result.response, responseData);
+        finalResult = this._createResult(true, result.response, responseData);
       } catch (error) {
-        return this._createResult(false, null, null, this._createError(
-          "Struttura risposta non valida", "ParsingError", null, error
-        ));
+        const errorDetails = this._createError(
+          "Struttura risposta non valida",
+          "ParsingError",
+          null,
+          error
+        );
+        finalResult = this._createResult(false, null, null, errorDetails);
       }
     } else {
-      return result;
+      finalResult = result;
     }
+
+    return finalResult;
   }
 
   cancelRequest() {
