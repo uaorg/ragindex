@@ -55,55 +55,79 @@ export let activeKbState = "Nessuna KB attiva";
 
 /**
  * Gestore dell'indicatore di caricamento (Spinner).
+ * Utilizza una closure per incapsulare la logica.
  */
-const _Spinner = (function() {
-    
-    const _getElements = function() {
-        const els = {
-            outputArea: document.querySelector("#id-text-out .div-text"),
-            spinner: document.getElementById("spinner")
-        };
-        return els;
+const _Spinner = (function () {
+  /**
+   * Recupera gli elementi DOM necessari.
+   * @returns {Object} Elementi outputArea, spinner e content.
+   */
+  const _getElements = function () {
+    const els = {
+      outputArea: document.querySelector("#id-text-out .div-text"),
+      spinner: document.getElementById("spinner"),
+      spinnerContent: document.querySelector("#spinner .spinner-content"),
     };
+    return els;
+  };
 
-    const stopAsync = async function() {
-        const confirmed = await confirm("Confermi lo STOP?");
-        if (confirmed) {
-            const client = AppMgr.getClientLLM();
-            if (client && typeof client.cancelRequest === "function") {
-                client.cancelRequest();
-            }
-            ragEngine.stop();
-            hide();
-        }
-    };
+  /**
+   * Interrompe le operazioni in corso dopo conferma.
+   * @param {Event} event - L'evento click.
+   */
+  const stopAsync = async function (event) {
+    if (event) {
+      event.stopPropagation();
+    }
+    const confirmed = await confirm("Confermi lo STOP?");
+    if (confirmed) {
+      const client = AppMgr.getClientLLM();
+      if (client && typeof client.cancelRequest === "function") {
+        client.cancelRequest();
+      }
+      ragEngine.stop();
+      hide();
+    }
+  };
 
-    const show = function() {
-        const { spinner } = _getElements();
-        
-        if (spinner) {
-            spinner.classList.add(CSS_SHOW_SPINNER);
-            spinner.addEventListener("click", stopAsync);
-        }
-    };
+  /**
+   * Mostra lo spinner.
+   */
+  const show = function () {
+    const { spinner, spinnerContent } = _getElements();
 
-    const hide = function() {
-        const { outputArea, spinner } = _getElements();
-        
-        if (outputArea) {
-            outputArea.classList.remove(CSS_SPINNER_BG);
-        }
+    if (spinner) {
+      spinner.classList.add(CSS_SHOW_SPINNER);
+    }
 
-        if (spinner) {
-            spinner.classList.remove(CSS_SHOW_SPINNER);
-            spinner.removeEventListener("click", stopAsync);
-        }
-    };
+    if (spinnerContent) {
+      spinnerContent.addEventListener("click", stopAsync);
+    }
+  };
 
-    return {
-        show: show,
-        hide: hide
-    };
+  /**
+   * Nasconde lo spinner.
+   */
+  const hide = function () {
+    const { outputArea, spinner, spinnerContent } = _getElements();
+
+    if (outputArea) {
+      outputArea.classList.remove(CSS_SPINNER_BG);
+    }
+
+    if (spinner) {
+      spinner.classList.remove(CSS_SHOW_SPINNER);
+    }
+
+    if (spinnerContent) {
+      spinnerContent.removeEventListener("click", stopAsync);
+    }
+  };
+
+  return {
+    show: show,
+    hide: hide,
+  };
 })();
 
 
