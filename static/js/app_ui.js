@@ -621,17 +621,14 @@ export const TextInput = {
         setTimeout(async function() {
             try {
                 const thread = await idbMgr.read(DATA_KEYS.KEY_THREAD) || [];
-                const index = await idbMgr.read(DATA_KEYS.PHASE1_INDEX);
-                const chunks = await idbMgr.read(DATA_KEYS.PHASE0_CHUNKS);
+                const context = await idbMgr.read(DATA_KEYS.PHASE2_CONTEXT) || "";
 
                 // TODO: Stato indice in continuazione
-                console.debug("continueConversationAsync - index exists:", !!index, "thread length:", thread.length);
-                UaLog.log(`Continuazione - Indice: ${!!index}, Messaggi: ${thread.length}`);
+                UaLog.log(`Continuazione - Messaggi: ${thread.length}, Contesto attivo: ${context.length > 0}`);
 
-                const kbData = { index, chunks };
                 thread.push({ role: "user", content: query });
                 await AppMgr.initConfig();
-                const context = await ragEngine.getOptimizedContext(query, kbData, thread);
+                
                 const answer = await ragEngine.generateResponse(context, thread);
                 thread.push({ role: "assistant", content: answer });
                 await idbMgr.create(DATA_KEYS.KEY_THREAD, thread);

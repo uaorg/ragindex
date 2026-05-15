@@ -25,14 +25,15 @@ import "./services/uadialog.js";
 // ============================================================================
 
 /** @type {string} Versione dell'applicazione. */
-const APP_VERSION = "0.4.0";
+const APP_VERSION = "0.4.1";
 
 /** @type {string} URL del worker per l'invio eventi. */
 const WORKER_URL = "https://ragindex.workerua.workers.dev";
 
 // Disabilitazione log non necessari
 console.debug = () => { };
-// console.info  = () => {};
+// console.info = () => { };
+// console.warn = () => { };
 
 
 // ============================================================================
