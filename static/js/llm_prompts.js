@@ -133,8 +133,8 @@ export const promptBuilder = {
      * Costruisce il prompt per risposta con contesto e cronologia.
      */
     answerPrompt: (context, history) => {
-        // FIXME: Log per debug tipo e contenuto contesto
-        console.warn("[FIXME] answerPrompt - context type:", typeof context, "value:", JSON.stringify(context));
+        // FIXME: Debug tipo e contenuto contesto
+        console.warn("answerPrompt - context type:", typeof context, "value:", JSON.stringify(context));
 
         // La domanda corrente è l'ultimo messaggio nell'array history
         const currentUserQuery = history[history.length - 1].content;
@@ -149,13 +149,15 @@ export const promptBuilder = {
 
         if (isContextEmpty) {
             systemMessage = _buildNoContextSystemMessage();
-            const msg = ">>> [FIXME] MODO SENZA CONTESTO ATTIVATO (isContextEmpty=true) <<<";
+            // FIXME: Log attivazione modalità senza contesto
+            const msg = ">>> MODO SENZA CONTESTO ATTIVATO (isContextEmpty=true) <<<";
             console.warn(msg);
             UaLog.log(msg);
-            UaLog.log(`[FIXME] System Message Length: ${systemMessage.length}`);
+            UaLog.log(`System Message Length: ${systemMessage.length}`);
         } else {
             systemMessage = _buildRagSystemMessage(context);
-            const msg = `[FIXME] MODO RAG ATTIVATO - Context length: ${context.length}`;
+            // FIXME: Log attivazione modalità RAG
+            const msg = `MODO RAG ATTIVATO - Context length: ${context.length}`;
             console.warn(msg);
             UaLog.log(msg);
         }
