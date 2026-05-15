@@ -33,7 +33,7 @@ textarea,
   left: 0;
   width: 100vw;
   height: 4.5vh;
-  z-index: 100;
+  z-index: 10010; // Alzato sopra lo spinner (10000)
   .menu-btn {
     appearance: none;
     &:checked + .menu-icon .nav-icon::before {
@@ -165,6 +165,7 @@ textarea,
     .log {
       font-size: @fsize-log;
       left: 83vw;
+      z-index: 10010; // Sopra lo spinner (10000)
     }
   }
   .btn-theme-toggle {
@@ -443,6 +444,11 @@ textarea,
 
 // --- 5.5 Altri Componenti ---
 
+// Finestra Log sopra tutto
+#ualog_id {
+  z-index: 10011 !important; // Sopra pulsante log e spinner
+}
+
 // Spinner di Caricamento (Modal Overlay)
 .spinner-bg {
   filter: blur(1px);
@@ -463,8 +469,9 @@ textarea,
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  cursor: default; // Rimosso pointer dall'overlay globale
-  backdrop-filter: blur(0.5px); // Blur ulteriormente ridotto per massima visibilità
+  cursor: default;
+  backdrop-filter: blur(0.5px);
+  pointer-events: auto; // Blocca i click su tutto ciò che sta sotto (tranne ciò che ha z-index > 10000)
 
   .spinner-content {
     display: flex;
@@ -479,6 +486,7 @@ textarea,
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
     transition: all 0.3s ease;
     cursor: pointer; // Cursore pointer solo sul box centrale
+    pointer-events: auto; // Assicura che lo STOP sia cliccabile
 
     &:hover {
       transform: scale(1.05); // Leggero ingrandimento
@@ -555,6 +563,18 @@ textarea,
 .show-spinner,
 .show-spinner-wait {
   display: flex !important;
+
+  // Disabilita elementi barra superiore (tranne Log)
+  & ~ .menu-h {
+    .menu-icon,
+    .help,
+    .upload,
+    .provider-settings,
+    .btn-theme-toggle {
+      pointer-events: none !important;
+      opacity: 0.3 !important;
+    }
+  }
 }
 @keyframes pulse-dark {
   0% {
