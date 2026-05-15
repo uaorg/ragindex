@@ -337,7 +337,25 @@ const _updateThemeAsync = async function(theme) {
     const isLight = theme === "light";
     document.body.classList.toggle("theme-light", isLight);
     document.body.classList.toggle("theme-dark", !isLight);
+    
+    const btn = document.getElementById("btn-theme-toggle");
+    if (btn) {
+        const sunIcon = btn.querySelector(".icon-sun");
+        const moonIcon = btn.querySelector(".icon-moon");
+        if (sunIcon && moonIcon) {
+            sunIcon.style.display = isLight ? "none" : "block";
+            moonIcon.style.display = isLight ? "block" : "none";
+        }
+        btn.setAttribute("data-tt", isLight ? "Tema Scuro" : "Tema Chiaro");
+    }
+    
     await UaDb.save(DATA_KEYS.KEY_THEME, theme);
+};
+
+const toggleThemeAsync = async function() {
+    const currentTheme = document.body.classList.contains("theme-light") ? "light" : "dark";
+    const newTheme = currentTheme === "light" ? "dark" : "light";
+    await _updateThemeAsync(newTheme);
 };
 
 
@@ -656,10 +674,8 @@ export const TextOutput = {
 // ============================================================================
 
 export const getTheme = async function() {
-    const theme = await UaDb.read(DATA_KEYS.KEY_THEME);
-    const isLight = theme === "light";
-    document.body.classList.toggle("theme-light", isLight);
-    document.body.classList.toggle("theme-dark", !isLight);
+    const theme = await UaDb.read(DATA_KEYS.KEY_THEME) || "dark";
+    await _updateThemeAsync(theme);
 };
 
 export const updateActiveKbDisplay = async function() {
@@ -695,8 +711,7 @@ export const bindEventListener = function() {
         "btn-upload": Commands.upload,
         "id_log": Commands.log,
         "btn-provider-settings": Commands.providerSettings,
-        "btn-dark-theme": () => _updateThemeAsync("dark"),
-        "btn-light-theme": () => _updateThemeAsync("light"),
+        "btn-theme-toggle": toggleThemeAsync,
         "menu-readme": _actionShowReadme,
         "menu-quickstart": _actionShowQuickstart,
         "menu-save-kb": _actionSaveKnowledgeBaseAsync,

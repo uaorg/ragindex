@@ -3,134 +3,59 @@
 
 /**
  * HTML per la finestra di aiuto dei comandi (Help).
- * Descrive le funzionalità dell'interfaccia e dei pulsanti principali.
+ * Descrive l'architettura, la logica di funzionamento e l'interfaccia.
  */
 export const help0_html = `
 <div class="text">
-    <p class="center">Interfaccia e Supporto</p>
+    <p class="center" style="font-size: 1.2em; font-weight: bold;">Architettura e Logica RagIndex</p>
+    
     <div>
-        <strong>HelpPopup (Grigio)</strong>
-        <p>Passando il mouse sui pulsanti d'azione (1, 2, 3), sull'upload o sui cestini, apparirà una finestra descrittiva grigio scuro con dettagli sul funzionamento.</p>
+        <strong>Privacy e Logica 100% Client-Side</strong>
+        <p>RagIndex opera interamente nel tuo browser. L'ingestione dei documenti, il chunking, l'indicizzazione e la ricerca del contesto avvengono localmente. I tuoi file non vengono mai inviati a un server; solo il prompt finale (domanda + contesto estratto) viene inviato al provider AI scelto.</p>
     </div>
+
     <div>
-        <strong>Tooltip Dinamici</strong>
-        <p>Il pulsante Log e l'icona del Menu cambiano il loro suggerimento testuale (Open/Close) in base allo stato attuale del pannello.</p>
-    </div>
-    <hr>
-    <!-- Barra Superiore -->
-    <p class="center">Barra Superiore</p>
-    <div>
-        <strong>Menu Laterale (icona hamburger)</strong>
-        <p>Apre e chiude il menu laterale con i comandi principali.</p>
-    </div>
-    <div>
-        <strong>? (Help)</strong>
-        <p>Mostra questa finestra con la descrizione dei comandi.</p>
-    </div>
-    <div>
-        <strong>Upload file</strong>
-        <p>Apre la finestra per caricare uno o più documenti (PDF, DOCX, TXT) dal tuo computer.</p>
-    </div>
-    <div>
-        <strong>LLM (Provider/Modello)</strong>
-        <p>Apre il menu per scegliere il provider AI (es. Gemini, Mistral) e il modello specifico da usare.</p>
-    </div>
-    <div>
-        <strong>Log</strong>
-        <p>Attiva o disattiva la finestra di log, utile per vedere le fasi del processo RAG in tempo reale.</p>
-    </div>
-    <div>
-        <strong>Tema (Sole/Luna)</strong>
-        <p>Passa dal tema scuro a quello chiaro.</p>
+        <strong>Generazione del Contesto (La Chiave del RAG)</strong>
+        <p>Il cuore del sistema è la <strong>generazione del contesto</strong>: quando poni la prima domanda (Azione 2), il sistema cerca nella Knowledge Base i frammenti di testo più rilevanti. Questi frammenti vengono "iniettati" nella memoria dell'AI, permettendole di rispondere basandosi sui <em>tuoi</em> documenti invece che solo sulle sue conoscenze generali.</p>
     </div>
 
     <hr>
 
-    <!-- Comandi Finestra di Output -->
-    <p class="center">Comandi Finestra di Output (in alto a destra)</p>
+    <p class="center">Interfaccia e Feedback</p>
     <div>
-        <strong>Copia Output</strong>
-        <p>Il pulsante in alto a destra copia l'intero contenuto della finestra di output negli appunti.</p>
+        <strong>HelpPopup (Tooltip Grigio)</strong>
+        <p>Passando il mouse sui pulsanti d'azione (1, 2, 3), sui comandi della cronologia o sulla gestione API, apparirà una finestra descrittiva con dettagli specifici.</p>
+    </div>
+    <div>
+        <strong>Indicatori di Stato</strong>
+        <p>In alto a sinistra è sempre visibile la <strong>KB attiva</strong>. Se leggi "BASE CORRENTE", significa che stai usando i documenti appena indicizzati ma non ancora archiviati con un nome specifico.</p>
     </div>
 
+    <hr>
+
+    <p class="center">Barra Superiore (Header)</p>
+    <div style="display: grid; grid-template-columns: 100px 1fr; gap: 10px; margin-bottom: 10px;">
+        <strong>Icona Menu</strong> <span>Apre il pannello laterale per la gestione avanzata di KB, Chat e API Key.</span>
+        <strong>? (Help)</strong> <span>Mostra questa documentazione.</span>
+        <strong>Nuvola</strong> <span>Upload di file (PDF, DOCX, TXT) per la Knowledge Base.</span>
+        <strong>LLM</strong> <span>Configurazione Provider (Gemini, Mistral, OpenRouter) e scelta del modello.</span>
+        <strong>Log</strong> <span>Apre la console tecnica per monitorare le fasi di chunking e ricerca.</span>
+        <strong>Sole/Luna</strong> <span>Cambia il tema visivo (Chiaro/Scuro).</span>
+    </div>
+
+    <hr>
+
+    <p class="center">Controlli Output e Sessione</p>
+    <div>
+        <strong>Copia (Icona fogli)</strong> <span>Copia l'intero contenuto della finestra di output.</span>
+    </div>
     <div>
         <strong>Nuova Conversazione (Giallo)</strong>
-        <p>Il pulsante giallo cancella la cronologia della conversazione attiva. Mantiene il Contesto attuale per permettere di ricominciare a parlare degli stessi argomenti.</p>
+        <p>Cancella la storia della chat ma <strong>mantiene il contesto</strong> estratto. Utile per fare una nuova domanda sugli stessi documenti senza "confondere" l'AI con i messaggi precedenti.</p>
     </div>
     <div>
-        <strong>Nuovo Contesto & Conversazione (Rosso)</strong>
-        <p>Il pulsante rosso resetta completamente la sessione di lavoro: cancella il Contesto estratto e la cronologia della conversazione attiva.</p>
-    </div>
-
-    <hr>
-
-    <!-- Pulsanti del Flusso RAG -->
-    <p class="center">Pulsanti d'Azione (a destra dell'input)</p>
-    <div>
-        <strong>(1) Crea Knowledge Base (Rosso)</strong>
-        <p>Il pulsante rosso in alto nella colonna di input analizza i documenti caricati e crea l'indice di ricerca.</p>
-    </div>
-    <div>
-        <strong>(2) Inizia Conversazione (Giallo)</strong>
-        <p>Il pulsante giallo centrale usa la domanda per cercare nella KB e avvia il dialogo con l'LLM.</p>
-    </div>
-    <div>
-        <strong>(3) Continua Conversazione (Verde)</strong>
-        <p>Il pulsante verde alla base della colonna prosegue il dialogo basandosi sulla storia precedente.</p>
-    </div>
-    <div>
-        <strong>Controlli Contestuali</strong>
-        <p>I pulsanti a destra della textarea (ingranditi per una facile selezione) permettono di cancellare l'input o ripristinare l'ultima domanda.</p>
-    </div>
-    <hr>
-
-    <!-- Menu Laterale -->
-    <p class="center">Menu Laterale</p>
-    <div>
-        <strong>Informazioni</strong>
-        <ul>
-            <li><strong>README:</strong> Approfondimento tecnico sul funzionamento del sistema.</li>
-            <li><strong>Quick Start:</strong> Guida rapida ai 3 passi fondamentali.</li>
-        </ul>
-    </div>
-    <div>
-        <strong>Knowledge Base</strong>
-        <ul>
-            <li><strong>Archivia:</strong> Salva la KB corrente con un nome personalizzato (gli spazi verranno convertiti in underscore internamente).</li>
-            <li><strong>Gestisci:</strong> Elenco delle KB salvate per caricamento, eliminazione o <strong>Backup (Export JSON)</strong>. I nomi vengono mostrati senza underscore per una migliore leggibilità.</li>
-            <li><strong>Ripristina:</strong> Carica una KB da file JSON. Una volta scelto il nome, la KB viene <strong>attivata automaticamente</strong> aggiornando l'intestazione superiore.</li>
-        </ul>
-    </div>
-    <div>
-        <strong>Conversazione</strong>
-        <ul>
-            <li><strong>Visualizza:</strong> Mostra la cronologia testuale del dialogo corrente.</li>
-            <li><strong>Archivia:</strong> Salva la sessione attiva (Contesto + Cronologia).</li>
-            <li><strong>Gestisci:</strong> Elenco delle conversazioni salvate con opzioni di <strong>Backup (Export JSON)</strong>.</li>
-            <li><strong>Ripristina:</strong> Carica una conversazione da file JSON con <strong>attivazione automatica immediata</strong>.</li>
-            <li><strong>Visualizza Contesto:</strong> Mostra i frammenti di testo estratti dalla KB che l'AI sta usando per rispondere.</li>
-        </ul>
-    </div>
-    <div>
-        <strong>Gestione Dati</strong>
-        <ul>
-            <li><strong>Elenco Documenti:</strong> Gestione dei file caricati in memoria.</li>
-            <li><strong>Elenco Dati Archiviati:</strong> Panoramica tecnica di tutte le chiavi e dimensioni dei dati salvati in IndexedDB e LocalStorage.</li>
-            <li><strong>Cancella Dati:</strong> Reset totale dello storage del browser.</li>
-        </ul>
-    </div>
-    <div>
-        <strong>Gestione API Key</strong>
-        <ul>
-            <li><strong>Privacy e Sicurezza:</strong> Le tue chiavi API sono memorizzate esclusivamente nel database <strong>IndexedDB</strong> del tuo browser.</li>
-            <li><strong>Multi-Key Support:</strong> Puoi salvare più chiavi e passare dall'una all'altra istantaneamente.</li>
-        </ul>
-    </div>
-    <div>
-        <strong>Documenti Esempio:</strong> Carica rapidamente testi predefiniti per testare il sistema.
-    </div>
-    <div>
-        <strong>Logout:</strong> Termina la sessione utente e torna alla pagina di login.
+        <strong>Reset Totale (Rosso)</strong>
+        <p>Pulisce sia la chat che il contesto. È il comando da usare quando vuoi cambiare completamente argomento o caricare una nuova KB.</p>
     </div>
 </div>
 `;
@@ -144,7 +69,7 @@ export const help1_html = `
 <div class="text">
     <p class="center" style="font-size: 1.2em; font-weight: bold;">RagIndex: RAG 100% Client-Side</p>
     <p>
-        <strong>RagIndex</strong> è un'applicazione web che implementa un'architettura RAG (Retrieval-Augmented Generation) completa, operando interamente nel browser dell'utente. Nessun dato viene inviato a un server, garantendo massima privacy e autonomia.
+        <strong>RagIndex</strong> è un'applicazione web che implementa un'architettura RAG (Retrieval-Augmented Generation) completa, operando interamente nel browser dell'utente.
     </p>
 
     <hr>
@@ -152,65 +77,29 @@ export const help1_html = `
     <div>
         <strong>🚀 Obiettivi del Progetto</strong>
         <ul>
-            <li><strong>Privacy Assoluta:</strong> Tutta l'elaborazione dei documenti, dall'indicizzazione alla costruzione del contesto, avviene localmente. I documenti non lasciano mai il computer dell'utente.</li>
-            <li><strong>Zero Backend:</strong> L'applicazione è un puro front-end che sfrutta le API degli LLM direttamente dal client.</li>
-            <li><strong>Efficienza:</strong> Sfrutta un indice di ricerca lessicale (Lunr.js con BM25) ottimizzato per il browser.</li>
-            <li><strong>Portabilità:</strong> Funzioni di Backup/Restore per spostare KB e chat tra diversi dispositivi via JSON.</li>
+            <li><strong>Privacy Assoluta:</strong> Tutta l'elaborazione avviene localmente via Web Worker.</li>
+            <li><strong>Zero Backend:</strong> Sfrutta la potenza del browser (IndexedDB) e API LLM dirette.</li>
+            <li><strong>Efficienza:</strong> Utilizza <strong>Lunr.js</strong> con algoritmo <strong>BM25</strong> per ricerche lessicali ultra-rapide e precise su nomi tecnici e codici.</li>
         </ul>
     </div>
 
     <hr>
-
-    <div>
-        <strong>🏗️ Architettura del Sistema</strong>
-        <p>L'architettura separa le operazioni UI da quelle intensive (eseguite in Web Worker) e utilizza <strong>IndexedDB</strong> per la persistenza.</p>
-        <ol>
-            <li><strong>Presentation Layer:</strong> Interfaccia reattiva basata su LESS.</li>
-            <li><strong>Business Logic:</strong> <code>rag_engine.js</code> coordina il flusso RAG.</li>
-            <li><strong>Background Processing:</strong> <code>rag_worker.js</code> gestisce chunking e indicizzazione senza bloccare la UI.</li>
-            <li><strong>Service Layer:</strong> Astrazione per DB (Dexie.js), Parser (Marked.js) e LLM Client.</li>
-        </ol>
-    </div>
 
     <div>
         <strong>🧠 Innovazione: Chunking Parent-Child</strong>
-        <p>RagIndex utilizza una segmentazione gerarchica per bilanciare precisione e contesto:</p>
+        <p>RagIndex bilancia precisione e ricchezza di informazioni:</p>
         <ul>
-            <li><strong>Parent Chunks:</strong> Unità di contesto (paragrafi completi) inviate all'LLM per la risposta.</li>
-            <li><strong>Child Chunks:</strong> Unità di ricerca (singole frasi) indicizzate per una ricerca granulare e precisa.</li>
+            <li><strong>Child Chunks (Ricerca):</strong> Piccoli segmenti (frasi) indicizzati per trovare esattamente il punto rilevante.</li>
+            <li><strong>Parent Chunks (Contesto):</strong> Blocchi più ampi (paragrafi) che vengono inviati all'AI per fornire il senso completo dell'informazione trovata.</li>
         </ul>
     </div>
 
     <hr>
 
     <div>
-        <strong>🔍 Un Paradigma Alternativo: La Scelta Lessicale (BM25)</strong>
+        <strong>⚙️ Persistenza e Sicurezza</strong>
         <p>
-            A differenza del RAG standard basato su <em>embeddings</em> semantici, RagIndex utilizza la <strong>ricerca lessicale BM25</strong>.
-        </p>
-        <ul>
-            <li><strong>Perché BM25?</strong> È estremamente leggero per il browser, non richiede modelli vettoriali pesanti e offre una precisione chirurgica su termini tecnici, nomi e codici.</li>
-            <li><strong>Privacy:</strong> L'indicizzazione avviene istantaneamente sul tuo dispositivo senza inviare testi a servizi di embedding esterni.</li>
-        </ul>
-    </div>
-
-    <hr>
-
-    <div>
-        <strong>🤖 Supporto Multi-Provider</strong>
-        <p>RagIndex supporta i principali modelli allo stato dell'arte:</p>
-        <ul>
-            <li><strong>Google Gemini:</strong> Modelli Flash e Pro (2.5, 3.0).</li>
-            <li><strong>Mistral:</strong> Large, Medium, Small e la serie Pixtral/Ministral.</li>
-        </ul>
-    </div>
-
-    <hr>
-
-    <div>
-        <strong>⚙️ Setup e Privacy</strong>
-        <p>
-            Le tue <strong>API Key</strong> sono salvate esclusivamente nell'IndexedDB del tuo browser. La comunicazione AI avviene direttamente dal tuo computer al provider, senza server intermedi. Il sistema è puramente statico e può essere eseguito con qualsiasi semplice web server locale.
+            Le <strong>API Key</strong> e i documenti sono salvati in <strong>IndexedDB</strong>, un database interno al tuo browser. I dati non scadono alla chiusura della scheda, ma possono essere cancellati tramite le impostazioni di pulizia del browser o il comando "Cancella Dati" nel menu.
         </p>
     </div>
 </div>
@@ -220,54 +109,60 @@ export const help1_html = `
 
 
 /**
- * HTML per il QuickStart.
- * Guida l'utente attraverso il flusso operativo 1-2-3.
+ * HTML per il QuickStart e Dettaglio Comandi.
+ * Spiega il flusso pipeline e la gestione della memoria.
  */
 export const help2_html = `
 <div class="text">
-    <p class="center">Guida Rapida: Il Flusso di Lavoro in 3 Azioni</p>
-    <p>
-        RagIndex segue un flusso lineare e intuitivo basato su tre fasi numerate. Ecco come procedere:
-    </p>
+    <p class="center" style="font-size: 1.2em; font-weight: bold;">Guida Operativa: Pipeline e Memoria</p>
+    
+    <div class="step">
+        <strong style="color: #e82323;">(1) Creazione Knowledge Base (Azione Rossa)</strong>
+        <p>Analizza i file caricati, esegue il chunking e crea l'indice di ricerca Lunr.</p>
+        <p><em>Nota:</em> Se carichi nuovi file dopo aver creato la KB, devi rieseguire questo passaggio per includerli nell'indice.</p>
+    </div>
 
     <div class="step">
-        <strong style="color: #e82323;">(1) Fase 1: Creazione Knowledge Base (Rosso)</strong>
-        <p>In questa fase il sistema analizza i tuoi documenti e crea l'indice di ricerca.</p>
-        <ul>
-            <li><strong>Input:</strong> Carica i file (PDF, TXT, DOCX) con l'icona <strong>Nuvola</strong>.</li>
-            <li><strong>Azione:</strong> Clicca il pulsante rosso <span style="font-weight: bold;">(1)</span>.</li>
-            <li><strong>Ripristino:</strong> Puoi anche usare <strong>Menu > KB > Ripristina</strong> per caricare una base dati salvata in precedenza.</li>
-        </ul>
+        <strong style="color: #f6e602;">(2) Inizio Conversazione (Azione Gialla)</strong>
+        <p>È il momento cruciale: il sistema usa la tua domanda per <strong>estrarre il contesto</strong> dalla KB e invia il primo messaggio all'AI.</p>
+        <p><em>Effetto:</em> Crea una "memoria di lavoro" che l'AI userà per tutta la conversazione.</p>
+    </div>
+
+    <div class="step">
+        <strong style="color: #00bd97;">(3) Continua Dialogo (Azione Verde)</strong>
+        <p>Invia nuove domande mantenendo sia la storia della chat che il contesto estratto inizialmente.</p>
     </div>
 
     <hr>
 
-    <div class="step">
-        <strong style="color: #f6e602;">(2) Fase 2: Inizia Conversazione (Giallo)</strong>
-        <p>In questa fase il sistema estrae il contesto pertinente alla tua domanda.</p>
+    <p class="center">Gestione Memoria e Archiviazione</p>
+    <div>
+        <strong>1. Memoria del Browser (IndexedDB)</strong>
+        <p>Quando usi i comandi <strong>Archivia</strong> nel Menu (per KB o Conversazioni), i dati vengono salvati permanentemente nel database interno del browser.</p>
         <ul>
-            <li><strong>Input:</strong> Scrivi la tua domanda nel campo di testo.</li>
-            <li><strong>Azione:</strong> Clicca il pulsante giallo centrale <span style="font-weight: bold;">(2)</span> (o premi Invio).</li>
-            <li><strong>Ripristino:</strong> Puoi riprendere una vecchia chat da <strong>Menu > Conversazione > Ripristina</strong>.</li>
+            <li><strong>KB > Gestisci:</strong> Permette di riattivare istantaneamente una vecchia base dati indicizzata.</li>
+            <li><strong>Chat > Gestisci:</strong> Permette di riprendere una conversazione passata caricando anche il contesto originale.</li>
         </ul>
     </div>
-
-    <hr>
-
-    <div class="step">
-        <strong style="color: #00bd97;">(3) Fase 3: Continua Conversazione (Verde)</strong>
-        <p>In questa fase puoi approfondire l'argomento senza perdere il filo del discorso.</p>
-        <ul>
-            <li><strong>Input:</strong> Scrivi nuove domande di approfondimento.</li>
-            <li><strong>Azione:</strong> Clicca il pulsante verde alla base <span style="font-weight: bold;">(3)</span>.</li>
-        </ul>
-    </div>
-
-    <hr>
 
     <div>
-        <strong>Nota Importante sulla Privacy</strong>
-        <p>Le tue API Key e i tuoi dati sono salvati esclusivamente nel tuo browser (IndexedDB). Nessun dato viene inviato a terze parti eccetto i prompt inviati direttamente al provider AI scelto.</p>
+        <strong>2. Memoria Locale (Backup su PC)</strong>
+        <p>Per una sicurezza extra o per spostare i dati su un altro computer, usa il <strong>Backup (Export JSON)</strong> presente nelle finestre di gestione.</p>
+        <ul>
+            <li><strong>Esportazione:</strong> Scarica un file .json sul tuo PC.</li>
+            <li><strong>Ripristino:</strong> Carica il file .json tramite il comando <strong>Ripristina</strong> nel menu per reinserirlo nel database del browser.</li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <p class="center">Comandi del Menu Laterale</p>
+    <div style="font-size: 0.9em;">
+        <strong>Informazioni:</strong> Leggi il README tecnico o questo Quick Start.<br>
+        <strong>Knowledge Base:</strong> Archivia la KB corrente, gestisci le salvate o importa da file.<br>
+        <strong>Conversazione:</strong> Esporta la chat, visualizza il testo puro o <strong>Vedi Contesto</strong> (per vedere cosa "legge" l'AI).<br>
+        <strong>Gestione Dati:</strong> Controlla i documenti caricati o esegui un reset totale dello storage.<br>
+        <strong>API Key:</strong> Gestisci le chiavi per i diversi provider (Gemini, Mistral, ecc).
     </div>
 </div>
 `;

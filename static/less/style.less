@@ -334,23 +334,23 @@ textarea,
     text-decoration: underline;
   }
 }
-.btn-theme {
+.btn-theme-toggle {
   position: fixed;
   top: 0.2vh;
   right: 1vw;
   height: 4vh;
   background: inherit;
   z-index: 110;
-  button {
-    border: none;
-    background: none;
-    cursor: pointer;
-    padding: 5px;
-    display: none;
-    svg {
-      width: 24px;
-      height: 24px;
-    }
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  svg {
+    width: 24px;
+    height: 24px;
   }
 }
 
@@ -2071,13 +2071,7 @@ textarea,
   // --- Applica Stili e Override ---
   .apply-theme();
 
-  .btn-theme .btn-light {
-    display: inline-block;
-  }
-  .btn-theme .btn-dark {
-    display: none;
-  }
-  .btn-theme .btn-light svg {
+  .btn-theme-toggle svg {
     fill: none;
     stroke: @dark-menu-fg;
   }
@@ -2214,13 +2208,7 @@ textarea,
   // --- Applica Stili e Override ---
   .apply-theme();
 
-  .btn-theme .btn-dark {
-    display: inline-block;
-  }
-  .btn-theme .btn-light {
-    display: none;
-  }
-  .btn-theme .btn-dark svg {
+  .btn-theme-toggle svg {
     stroke: @light-text;
     fill: none;
   }

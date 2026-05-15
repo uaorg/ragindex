@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RagIndex - AI, Privacy e Ricerca Intelligente</title>
-    <!-- Utilizzo di Marked.js per il rendering del markdown se necessario, 
-         ma qui scriverò l'HTML direttamente per avere pieno controllo sullo stile -->
     <style>
         :root {
             --bg-color: #0f172a;
@@ -60,15 +58,19 @@
             background: var(--secondary-bg);
             border: 1px solid var(--border-color);
             color: var(--text-color);
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
+            padding: 0.5rem;
+            border-radius: 50%;
             cursor: pointer;
-            font-size: 0.9rem;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             transition: all 0.2s;
         }
 
         .theme-toggle:hover {
-            opacity: 0.8;
+            background: var(--border-color);
         }
 
         .hero {
@@ -161,39 +163,45 @@
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
         }
 
-        code {
-            background: var(--secondary-bg);
-            padding: 0.2rem 0.4rem;
-            border-radius: 0.25rem;
-            font-family: 'Cascadia Code', 'Fira Code', monospace;
-        }
-
         .highlight {
             border-left: 4px solid var(--accent-color);
             padding-left: 1rem;
             font-style: italic;
+        }
+
+        .icon {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
         }
     </style>
 </head>
 <body data-theme="dark">
     <div class="container">
         <header>
-            <div class="logo"><strong>RagIndex</strong> 0.4.0</div>
-            <button class="theme-toggle" id="theme-btn">Passa al Tema Chiaro</button>
+            <div class="logo"><strong>RagIndex</strong> 0.4.1</div>
+            <button class="theme-toggle" id="theme-btn" title="Cambia Tema">
+                <svg class="icon icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="5" />
+                    <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+                </svg>
+                <svg class="icon icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                </svg>
+            </button>
         </header>
 
         <section class="hero">
             <h1>RagIndex</h1>
             <p style="font-size: 1.25rem; opacity: 0.9;">L'Intelligenza Artificiale che vive nel tuo browser.</p>
-            <p>Privacy Assoluta. Zero Server. Controllo Totale.</p>
+            <p>Privacy Assoluta. 100% Client-Side. Controllo Totale.</p>
         </section>
 
         <div class="section">
             <h2>Cos'è RagIndex?</h2>
             <p>
                 RagIndex è una piattaforma sperimentale che porta la potenza della <strong>Generazione Aumentata da Recupero (RAG)</strong> 
-                direttamente nel client. A differenza delle soluzioni tradizionali che richiedono server costosi e complessi, 
-                RagIndex trasforma il tuo browser in un motore di ricerca semantica e un assistente AI completo.
+                direttamente nel client. L'ingestione, l'indicizzazione e la ricerca del contesto avvengono localmente nel tuo browser.
             </p>
             <div class="card highlight">
                 "I tuoi documenti non lasciano mai il tuo computer. L'elaborazione avviene localmente, garantendo che i tuoi dati sensibili rimangano privati."
@@ -202,75 +210,47 @@
 
         <div class="section">
             <h2>L'Architettura 100% Client-Side</h2>
-            <p>L'intera pipeline di gestione della conoscenza è eseguita localmente sfruttando le moderne tecnologie web:</p>
             <div class="grid">
                 <div class="card">
-                    <h3>Persistenza</h3>
-                    <p>Utilizziamo <strong>IndexedDB</strong> tramite <code>Dexie.js</code> per gestire database di documenti e indici di grandi dimensioni direttamente nel browser.</p>
-                    <span class="tech-tag">Dexie.js</span> <span class="tech-tag">IndexedDB</span>
+                    <h3>Zero Backend</h3>
+                    <p>L'intera pipeline è eseguita localmente sfruttando <strong>Web Workers</strong> e <strong>IndexedDB</strong>. Nessun server intermedio legge i tuoi file.</p>
+                    <span class="tech-tag">Web Workers</span> <span class="tech-tag">IndexedDB</span>
                 </div>
                 <div class="card">
-                    <h3>Background Processing</h3>
-                    <p>Le operazioni pesanti come il chunking e l'indicizzazione girano su <strong>Web Workers</strong> per mantenere l'interfaccia fluida e reattiva.</p>
-                    <span class="tech-tag">Web Workers</span> <span class="tech-tag">Async JS</span>
-                </div>
-                <div class="card">
-                    <h3>Motore di Ricerca</h3>
-                    <p>Invece di pesanti database vettoriali, usiamo <code>Lunr.js</code> con algoritmo <strong>BM25</strong> per una ricerca lessicale ultra-veloce e precisa.</p>
+                    <h3>Ricerca Lessicale BM25</h3>
+                    <p>Utilizziamo <code>Lunr.js</code> con algoritmo <strong>BM25</strong> per una ricerca ultra-veloce e precisa, ideale per documenti tecnici e nomi propri.</p>
                     <span class="tech-tag">Lunr.js</span> <span class="tech-tag">BM25</span>
-                </div>
-                <div class="card">
-                    <h3>Rendering</h3>
-                    <p>L'output dell'AI viene formattato professionalmente in tempo reale grazie a <code>Marked.js</code> e un sistema di stili modulare in <strong>LESS</strong>.</p>
-                    <span class="tech-tag">Marked.js</span> <span class="tech-tag">LESS</span>
                 </div>
             </div>
         </div>
 
         <div class="section">
-            <h2>L'Innovativa Implementazione RAG</h2>
-            <p>RagIndex non si limita a cercare testo; utilizza una strategia raffinata per massimizzare la qualità delle risposte:</p>
-            
-            <h3>Strategia "Parent-Child"</h3>
-            <p>
-                La ricerca tradizionale spesso fatica perché frammenti troppo piccoli mancano di contesto, mentre frammenti troppo grandi sono imprecisi. RagIndex risolve questo problema:
-            </p>
+            <h2>La Pipeline RAG</h2>
+            <p>RagIndex utilizza una strategia <strong>Parent-Child</strong> per massimizzare la qualità delle risposte:</p>
             <ul class="feature-list">
-                <li><strong>Child Chunks (I Figli):</strong> Il documento viene diviso in singole frasi. Queste sono le unità di ricerca minime, garantendo che l'indice trovi esattamente il punto dove viene menzionato un concetto.</li>
-                <li><strong>Parent Chunks (I Genitori):</strong> Quando viene trovata una frase rilevante, il sistema recupera automaticamente l'intero paragrafo o sezione circostante per fornirlo all'LLM.</li>
+                <li><strong>Azione 1 (Crea KB):</strong> Esegue il chunking gerarchico e crea l'indice di ricerca.</li>
+                <li><strong>Azione 2 (Inizia Chat):</strong> Genera il contesto rilevante dalla KB e avvia il dialogo con l'LLM.</li>
+                <li><strong>Azione 3 (Continua):</strong> Approfondisce l'argomento mantenendo memoria della chat e del contesto.</li>
             </ul>
-
-            <h3>Query Distillation</h3>
-            <p>
-                Prima di effettuare la ricerca, il sistema utilizza l'AI per "distillare" la tua domanda naturale in un set di parole chiave ottimizzate per l'indice locale, superando i limiti della ricerca testuale semplice.
-            </p>
         </div>
 
         <div class="section">
-            <h2>Caratteristiche Principali</h2>
+            <h2>Gestione Memoria</h2>
             <div class="grid">
                 <div class="card">
-                    <h3>Multi-Provider AI</h3>
-                    <p>Supporto nativo per Google Gemini e Mistral. Inserisci la tua API Key e sei pronto a partire.</p>
+                    <h3>Browser Storage</h3>
+                    <p>I dati vengono salvati in <strong>IndexedDB</strong>. Puoi archiviare diverse Knowledge Base e conversazioni e riattivarle istantaneamente.</p>
                 </div>
                 <div class="card">
-                    <h3>Knowledge Base Portatili</h3>
-                    <p>Esporta e importa i tuoi indici già pronti. Cambia contesto di lavoro in pochi secondi senza ri-processare i file.</p>
-                </div>
-                <div class="card">
-                    <h3>Ispezione Trasparente</h3>
-                    <p>Puoi visualizzare in ogni momento il contesto esatto che viene inviato all'AI, per capire sempre il "perché" di una risposta.</p>
-                </div>
-                <div class="card">
-                    <h3>Design Moderno</h3>
-                    <p>Interfaccia pulita con supporto ai temi, log in tempo reale e gestione avanzata della cronologia.</p>
+                    <h3>Backup Locale</h3>
+                    <p>Esporta i tuoi indici e le tue chat in formato <strong>JSON</strong> per conservarli sul tuo PC o trasferirli su altri dispositivi.</p>
                 </div>
             </div>
         </div>
 
         <div class="launch-box">
-            <h2>Pronto a provare?</h2>
-            <p>Lancia l'applicazione e inizia a interrogare i tuoi documenti in totale sicurezza.</p>
+            <h2>Pronto a iniziare?</h2>
+            <p>Lancia l'applicazione e scopri il futuro della ricerca privata.</p>
             <br>
             <a href="index.html" class="btn-launch">Avvia RagIndex Now</a>
         </div>
@@ -283,24 +263,17 @@
     <script>
         const themeBtn = document.getElementById('theme-btn');
         const body = document.body;
+        const sunIcon = themeBtn.querySelector('.icon-sun');
+        const moonIcon = themeBtn.querySelector('.icon-moon');
 
         themeBtn.addEventListener('click', () => {
             const currentTheme = body.getAttribute('data-theme');
-            if (currentTheme === 'dark') {
-                body.setAttribute('data-theme', 'light');
-                themeBtn.textContent = 'Passa al Tema Scuro';
-            } else {
-                body.setAttribute('data-theme', 'dark');
-                themeBtn.textContent = 'Passa al Tema Chiaro';
-            }
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            body.setAttribute('data-theme', newTheme);
+            sunIcon.style.display = newTheme === 'light' ? 'none' : 'block';
+            moonIcon.style.display = newTheme === 'light' ? 'block' : 'none';
         });
-
-        // Controlla preferenze sistema
-        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
-            // Se l'utente preferisce il chiaro, ma noi vogliamo dark di default, 
-            // lasciamo dark a meno che non vogliamo forzare la preferenza.
-            // In questo caso, la richiesta dice "dark per default".
-        }
     </script>
 </body>
 </html>
