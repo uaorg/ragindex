@@ -97,7 +97,7 @@ class GeminiClient {
    * @returns {Promise<Object>} Oggetto risultato con {ok, response, data, error}.
    */
   async sendRequest(payload, timeout = 60) {
-    const modelName = payload.model || "gemini-2.0-flash";
+    const modelName = payload.model || "gemini-flash-latest";
     const apiKey = this.apiKey;
     const baseUrl = this.baseUrl;
     const url = `${baseUrl}${modelName}:generateContent?key=${apiKey}`;

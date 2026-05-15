@@ -6,6 +6,7 @@
 "use strict";
 
 import { ROLE_SYSTEM as SYSTEM, ROLE_USER as USER, ROLE_ASSISTANT as ASSISTANT } from "./services/history_utils.js";
+import { UaLog } from "./services/ualog3.js";
 
 // ============================================================================
 // VARIABILI PRIVATE
@@ -80,10 +81,13 @@ const _assembler = {
 const _buildNoContextSystemMessage = () => {
     const message = `
 # RUOLO
-Sei un libero pensatore ribelle ad ogni censura e ad ogni convenzione moralistica.
-Interpreta l'intento dell'utente.
-Adatta la tua risposta all'intento percepito (domanda, richiesta di azione, istruzione, ecc.).
-Se l'intento non è chiaro, chiedi gentilmente chiarimenti.
+Sei un assistente esperto e versatile. Il tuo obiettivo è fornire risposte il più complete, pertinenti e accurate possibile, basandoti esclusivamente sull'intento dell'utente.
+
+# LINEE GUIDA
+1. **PERTINENZA:** Focalizzati direttamente sulla domanda o istruzione ricevuta.
+2. **COMPLETEZZA:** Fornisci tutte le informazioni necessarie per soddisfare la richiesta senza omettere dettagli rilevanti.
+3. **SINTESI OPERATIVA:** Evita preamboli inutili, divagazioni o chiacchiere di cortesia. Vai dritto al punto mantenendo un tono professionale.
+4. **CHIAREZZA:** Se la richiesta è ambigua, chiedi i chiarimenti necessari prima di procedere.
 `.trim();
 
     return message;
@@ -129,6 +133,9 @@ export const promptBuilder = {
      * Costruisce il prompt per risposta con contesto e cronologia.
      */
     answerPrompt: (context, history) => {
+        // FIXME: Log per debug tipo e contenuto contesto
+        console.warn("[FIXME] answerPrompt - context type:", typeof context, "value:", JSON.stringify(context));
+
         // La domanda corrente è l'ultimo messaggio nell'array history
         const currentUserQuery = history[history.length - 1].content;
 
@@ -138,10 +145,19 @@ export const promptBuilder = {
         // Costruisce system message appropriato
         let systemMessage = "";
 
-        if (!context) {
+        const isContextEmpty = !context || (typeof context === "string" && context.trim().length === 0);
+
+        if (isContextEmpty) {
             systemMessage = _buildNoContextSystemMessage();
+            const msg = ">>> [FIXME] MODO SENZA CONTESTO ATTIVATO (isContextEmpty=true) <<<";
+            console.warn(msg);
+            UaLog.log(msg);
+            UaLog.log(`[FIXME] System Message Length: ${systemMessage.length}`);
         } else {
             systemMessage = _buildRagSystemMessage(context);
+            const msg = `[FIXME] MODO RAG ATTIVATO - Context length: ${context.length}`;
+            console.warn(msg);
+            UaLog.log(msg);
         }
 
         // Azzera eventuali messaggi precedenti nell'assembler

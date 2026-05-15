@@ -48,7 +48,7 @@ const _CLIENTS = {};
  */
 const _DEFAULT_PROVIDER_CONFIG = {
     provider: "gemini",
-    model: "gemini-flash-lite-latest",
+    model: "gemini-flash-latest",
     windowSize: 1024,
     client: "gemini"
 };

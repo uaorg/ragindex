@@ -584,6 +584,11 @@ export const TextInput = {
         if (query.length === 0) { await alert("Inserisci una domanda."); return; }
         const index = await idbMgr.read(DATA_KEYS.PHASE1_INDEX);
         const chunks = await idbMgr.read(DATA_KEYS.PHASE0_CHUNKS);
+        
+        // FIXME: Log stato indice
+        console.warn("[FIXME] startConversationAsync - index exists:", !!index);
+        UaLog.log(`[FIXME] Indice presente: ${!!index}`);
+
         if (!index) { await alert("Eseguire l'Azione 1 prima."); return; }
 
         _Spinner.show();
@@ -618,6 +623,11 @@ export const TextInput = {
                 const thread = await idbMgr.read(DATA_KEYS.KEY_THREAD) || [];
                 const index = await idbMgr.read(DATA_KEYS.PHASE1_INDEX);
                 const chunks = await idbMgr.read(DATA_KEYS.PHASE0_CHUNKS);
+
+                // FIXME: Log stato indice in continuazione
+                console.warn("[FIXME] continueConversationAsync - index exists:", !!index, "thread length:", thread.length);
+                UaLog.log(`[FIXME] Continuazione - Indice: ${!!index}, Messaggi: ${thread.length}`);
+
                 const kbData = { index, chunks };
                 thread.push({ role: "user", content: query });
                 await AppMgr.initConfig();
@@ -659,11 +669,19 @@ export const TextOutput = {
         }
     },
     clearHistoryAndContextAsync: async function() {
-        if (await confirm("Vuoi resettare sia il contesto che la conversazione attiva?")) {
+        if (await confirm("Vuoi resettare COMPLETAMENTE l'applicazione? (Verranno cancellati: Chat, Contesto e Knowledge Base attiva)")) {
+            // Cancella Contesto e Conversazione
             await idbMgr.delete(DATA_KEYS.PHASE2_CONTEXT);
             await idbMgr.delete(DATA_KEYS.KEY_THREAD);
+            
+            // Cancella la Knowledge Base attiva (Indice e Chunks)
+            await idbMgr.delete(DATA_KEYS.PHASE0_CHUNKS);
+            await idbMgr.delete(DATA_KEYS.PHASE1_INDEX);
+            await UaDb.delete(DATA_KEYS.ACTIVE_KB_NAME);
+
             await updateActiveKbDisplay();
             _setResponseHtml("");
+            UaLog.log(">>> Reset Totale completato: sistema riportato allo stato iniziale. <<<");
         }
     }
 };
@@ -917,7 +935,7 @@ export const bindEventListener = function() {
     HelpPopup.bind("btn-upload", "<strong>Caricamento Documenti</strong><br>Carica file PDF, TXT o DOCX dal tuo computer per la Knowledge Base.");
     HelpPopup.bind("btn-provider-settings", "<strong>Configurazione LLM</strong><br>Seleziona il provider AI e il modello specifico.");
     HelpPopup.bind("clear-history1", "<strong>Nuova Conversazione</strong><br>Cancella la cronologia ma mantiene il contesto dei documenti attivo.");
-    HelpPopup.bind("clear-history2", "<strong>Reset Totale</strong><br>Pulisce sia la chat che il contesto estratto per un nuovo argomento.");
+    HelpPopup.bind("clear-history2", "<strong>Reset Totale</strong><br>Pulisce chat, contesto estratto e Knowledge Base attiva per un reset completo.");
     HelpPopup.bind("btn-action1-knowledge", "<strong>(1) Crea Knowledge Base</strong><br>Analizza i documenti caricati e costruisce l'indice di ricerca locale.");
     HelpPopup.bind("btn-action2-start-convo", "<strong>(2) Inizia Conversazione</strong><br>Cerca il contesto nei documenti e interroga l'AI per la prima risposta.");
     HelpPopup.bind("btn-action3-continue-convo", "<strong>(3) Continua Dialogo</strong><br>Invia la nuova domanda mantenendo la memoria della chat e del contesto.");

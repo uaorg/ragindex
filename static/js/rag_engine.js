@@ -370,6 +370,8 @@ export const ragEngine = {
    * @returns {Promise<string>} Risposta generata e pulita.
    */
   generateResponse: async function (context, thread) {
+    // FIXME: Log valore contesto prima di generare risposta
+    console.warn("[FIXME] ragEngine.generateResponse - context length:", context ? context.length : 0);
     const messages = promptBuilder.answerPrompt(context, thread);
     const payload = {
       model: _model,
