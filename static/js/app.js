@@ -30,6 +30,11 @@ const APP_VERSION = "0.4.0";
 /** @type {string} URL del worker per l'invio eventi. */
 const WORKER_URL = "https://ragindex.workerua.workers.dev";
 
+// Disabilitazione log non necessari
+console.debug = () => {};
+console.info  = () => {};
+console.log   = () => {};
+
 
 // ============================================================================
 // GESTIONE ERRORI GLOBALE
