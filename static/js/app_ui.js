@@ -921,6 +921,7 @@ export const bindEventListener = function() {
     HelpPopup.bind("btn-action1-knowledge", "<strong>(1) Crea Knowledge Base</strong><br>Analizza i documenti caricati e costruisce l'indice di ricerca locale.");
     HelpPopup.bind("btn-action2-start-convo", "<strong>(2) Inizia Conversazione</strong><br>Cerca il contesto nei documenti e interroga l'AI per la prima risposta.");
     HelpPopup.bind("btn-action3-continue-convo", "<strong>(3) Continua Dialogo</strong><br>Invia la nuova domanda mantenendo la memoria della chat e del contesto.");
+    HelpPopup.bind("btn-theme-toggle", "<strong>Cambia Tema</strong><br>Alterna tra tema chiaro e tema scuro per un miglior comfort visivo.");
     HelpPopup.bind("menu-default-api-keys", "<strong>API Keys Default</strong><br>Ripristina le chiavi API predefinite dal file locale <code>api_x.json</code>.");
     HelpPopup.bind("menu-add-api-key", "<strong>Gestione API Key</strong><br>Aggiungi, attiva o elimina le tue chiavi API personali.");
 };

@@ -167,6 +167,25 @@ textarea,
       left: 83vw;
     }
   }
+  .btn-theme-toggle {
+    position: absolute;
+    top: 0.25vh;
+    right: 1vw;
+    height: 4vh;
+    background: inherit;
+    z-index: 110;
+    border: none;
+    background: none;
+    cursor: pointer;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    svg {
+      width: 24px;
+      height: 24px;
+    }
+  }
 }
 
 // --- 5.2 Menu Laterale ---
@@ -334,27 +353,6 @@ textarea,
     text-decoration: underline;
   }
 }
-.btn-theme-toggle {
-  position: fixed;
-  top: 0.2vh;
-  right: 1vw;
-  height: 4vh;
-  background: inherit;
-  z-index: 110;
-  border: none;
-  background: none;
-  cursor: pointer;
-  padding: 5px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  svg {
-    width: 24px;
-    height: 24px;
-  }
-}
-
-// --- 5.4 Finestre e Modali ---
 .window-text,
 .window-info {
   position: relative;
