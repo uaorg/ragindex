@@ -33,7 +33,6 @@ const WORKER_URL = "https://ragindex.workerua.workers.dev";
 // Disabilitazione log non necessari
 console.debug = () => {};
 console.info  = () => {};
-console.log   = () => {};
 
 
 // ============================================================================

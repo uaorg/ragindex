@@ -193,7 +193,7 @@ export const documentUploader = {
 
     const unsupportedCount = files.length - validFiles.length;
     if (unsupportedCount > 0) {
-      console.warn(`${unsupportedCount} file ignorati (formato non supportato)`);
+      console.debug(`${unsupportedCount} file ignorati (formato non supportato)`);
     }
 
     // Mostra barra di progresso

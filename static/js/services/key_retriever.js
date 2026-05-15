@@ -205,7 +205,7 @@ export async function fetchApiKeys() {
     try {
         const existingDb = await UaDb.readJson(STORAGE_KEY);
         if (existingDb && existingDb.providers && Object.keys(existingDb.providers).length > 0) {
-            console.log("*** API_KEYS db found.");
+            console.debug("*** API_KEYS db found.");
             return;
         }
         await _loadDefaultKeys(URL);
@@ -250,7 +250,7 @@ async function _loadDefaultKeys(url) {
         });
         data.last_updated = new Date().toISOString();
         await UaDb.saveJson(STORAGE_KEY, data);
-        console.log("API Keys caricate e salvate nel DB.");
+        console.debug("API Keys caricate e salvate nel DB.");
     }
 }
 

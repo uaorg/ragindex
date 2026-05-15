@@ -288,7 +288,7 @@ export const LlmProvider = {
     updateClient: async (clientName) => {
         const apiKey = await getApiKey(clientName);
         _createClientInstance(clientName, apiKey);
-        console.log(`[LlmProvider] Client '${clientName}' aggiornato con nuova API Key.`);
+        console.debug(`[LlmProvider] Client '${clientName}' aggiornato con nuova API Key.`);
     },
 
     /**
@@ -303,7 +303,7 @@ export const LlmProvider = {
 
         try {
             console.info("**** load models *******");
-            // AAA lista providers
+            //  lista providers
             const providers = ["gemini", "mistral"];
             for (const p of providers) {
                 try {

@@ -272,7 +272,7 @@ export const ragEngine = {
         delete _requestPromises[key];
       }
 
-      console.log("ragEngine.stop: Worker terminato.");
+      console.debug("ragEngine.stop: Worker terminato.");
     }
   },
 
@@ -370,8 +370,8 @@ export const ragEngine = {
    * @returns {Promise<string>} Risposta generata e pulita.
    */
   generateResponse: async function (context, thread) {
-    // FIXME: Valore contesto prima di generare risposta
-    console.warn("ragEngine.generateResponse - context length:", context ? context.length : 0);
+    // TODO: Valore contesto prima di generare risposta
+    console.debug("ragEngine.generateResponse - context length:", context ? context.length : 0);
     const messages = promptBuilder.answerPrompt(context, thread);
     const payload = {
       model: _model,
