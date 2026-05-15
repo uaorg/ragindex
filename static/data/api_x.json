@@ -20,13 +20,17 @@
                     "key": "mLEAxPXcOxVKfsyjCDa0qoeRe_aAHNAdhFaIIrR",
                     "notes": "giumaterni"
                 }
-
             ]
         },
         "mistral": {
             "api_key_env": "MISTRAL_API_KEY",
             "exported_key": "vibe1",
             "keys": [
+                {
+                    "name": "260414",
+                    "key": "qyqMNcyMydvxWeEA6PCo8QkLe5boT7dA",
+                    "notes": "giuseppe.materni"
+                },
                 {
                     "name": "260416",
                     "key": "VRd2FGMaeqvzGXHfsnQneD4bqPQi5qzi",
