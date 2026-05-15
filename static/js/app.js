@@ -31,8 +31,8 @@ const APP_VERSION = "0.4.0";
 const WORKER_URL = "https://ragindex.workerua.workers.dev";
 
 // Disabilitazione log non necessari
-console.debug = () => {};
-console.info  = () => {};
+console.debug = () => { };
+// console.info  = () => {};
 
 
 // ============================================================================
