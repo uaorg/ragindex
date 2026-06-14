@@ -1,0 +1,42 @@
+{
+    "last_updated": "2026-06-10T19:50:40.653681",
+    "providers": {
+        "gemini": {
+            "api_key_env": "GEMINI_API_KEY",
+            "exported_key": "ipotesi",
+            "keys": [
+                {
+                    "name": "ua260305",
+                    "key": "mLEAxPXkA9rPiLJcwYB_lHn7dqiyacdpQqsI1DW",
+                    "notes": "giuseppe.materni"
+                },
+                {
+                    "name": "gab",
+                    "key": "mLEAxPmoXRPFjtpMhpuQQdSrB0h6ocXleTxBbkL",
+                    "notes": "gabriele.tenebra"
+                },
+                {
+                    "name": "ipotesi",
+                    "key": "mLEAxPpx77REpFF6IHuA04GVVmwl2wZ--ouZqZL",
+                    "notes": "ipotesi2000"
+                }
+            ]
+        },
+         "mistral": {
+            "api_key_env": "MISTRAL_API_KEY",
+            "exported_key": "260416",
+            "keys": [
+                {
+                    "name": "260414",
+                    "key": "qyqMNcyMydvxWeEA6PCo8QkLe5boT7dA",
+                    "notes": "giuseppe.materni"
+                },
+                {
+                    "name": "260416",
+                    "key": "VRd2FGMaeqvzGXHfsnQneD4bqPQi5qzi",
+                    "notes": "ipotesi1000"
+                }
+            ]
+        }
+    }
+}
