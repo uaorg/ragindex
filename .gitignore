@@ -1,13 +1,6 @@
 AGENTS.md
-package.json
-playwright.config.cjs
-test-app.md
-test_formatting.html
-test-results
-test_runner.html
 .agents/
 backup/
-tests/
 data_src/
 dati/
 arg/
