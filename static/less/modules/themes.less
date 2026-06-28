@@ -170,7 +170,7 @@
               display: flex;
               align-items: center;
               justify-content: center;
-               z-index: @z-tree-btn;
+              z-index: @z-tree-btn;
               &:hover {
                 color: @color1;
                 background: @container-bg;
@@ -217,9 +217,6 @@
   .menu-h {
     background-color: @menu-h-bg;
     box-shadow: 0 0 0 2px @border-shadow;
-    .release {
-      color: @text;
-    }
     .menu-icon {
       &:hover .nav-icon::before {
         color: @menu-icon-hover;
@@ -232,7 +229,6 @@
       .log,
       .help,
       .provider-settings,
-      .doctype-settings,
       .upload {
         color: @text;
         background: @btn-bg;
@@ -303,9 +299,7 @@
   }
   .output-actions {
     .copy-output,
-    .wnd-output,
-    .clear-history,
-    .clear-output {
+    .clear-history {
       background-color: @btn-bg;
       .icon,
       .copy-icon {
@@ -317,15 +311,6 @@
         .copy-icon {
           fill: @btn-hover-fg;
         }
-      }
-    }
-    .delete-kb-btn {
-      background: @delete-btn-bg;
-      .icon {
-        fill: #ffffff;
-      }
-      &:hover {
-        background: @delete-btn-hover-bg;
       }
     }
     .clear-history {
@@ -457,21 +442,17 @@
     th {
       background-color: @menu-h-bg;
     }
-    .link-show-data,
     .link-show-doc {
       color: @table-link-fg;
       &:hover {
         color: @table-link-hover-fg;
       }
     }
-    .delete-doc-btn {
-      cursor: pointer;
-      border-radius: 5px;
-      padding: 1px 2px;
-      font-weight: normal;
-      &:hover {
-        text-decoration: underline;
-      }
+    tr:nth-child(even) {
+      background-color: @table-tr-even-bg;
+    }
+    tr:hover {
+      background-color: @table-tr-hover-bg;
     }
   }
 
@@ -506,32 +487,6 @@
     color: #ffffff;
     &:hover {
       background-color: lighten(@light-color1, 10%);
-    }
-  }
-
-  .table-data {
-    tr:nth-child(even) {
-      background-color: @table-tr-even-bg;
-    }
-    tr:hover {
-      background-color: @table-tr-hover-bg;
-    }
-  }
-
-  // --- Liste Dati (simili a tabelle) ---
-  .list-data {
-    li {
-      border-color: @menu-border;
-    }
-    li:first-child {
-      background-color: @menu-h-bg; // Apply header background color
-      font-weight: bold; // Make it bold like table headers
-    }
-    li:nth-child(even) {
-      background-color: @table-tr-even-bg;
-    }
-    li:hover {
-      background-color: @table-tr-hover-bg;
     }
   }
 
@@ -608,71 +563,6 @@
     }
   }
 
-  // --- Dialogo Cancellazione Dati ---
-  .delete-dialog {
-    background-color: @dialog-bg;
-    color: @dialog-text;
-    padding: 10px; // Ridotto da 1em (16px)
-    h4 {
-      color: @text;
-      margin: 0 0 10px 0; // Margine ridotto
-    }
-    .list-data {
-      margin-bottom: 8px; // Ridotto
-      li {
-        padding: 6px 10px; // Ridotto padding righe
-        label {
-          color: @text;
-          font-size: 0.9em; // Leggermente più piccolo
-        }
-      }
-    }
-    .table-data {
-      margin: 10px auto; // Ridotto margine tabella
-      td,
-      th {
-        padding: 6px 10px; // Ridotto padding celle
-        font-size: 0.9em;
-      }
-    }
-    .delete-actions {
-      display: flex;
-      flex-direction: row; // Cambiato da column per compattezza orizzontale
-      justify-content: center;
-      gap: 10px;
-      margin-top: 15px;
-
-      button {
-        padding: 8px 15px; // Più bilanciato
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        font-size: 0.85em; // Unificato
-        font-weight: bold;
-        width: auto; // Non più 80%
-        margin: 0;
-        white-space: nowrap;
-      }
-
-      .btn-delete-selected {
-        background-color: darken(@color2, 15%);
-        color: #ffffff;
-        &:hover {
-          background-color: darken(@color2, 5%);
-          text-decoration: underline;
-        }
-      }
-      .btn-delete-all {
-        background-color: @delete-btn-bg;
-        color: #ffffff;
-        &:hover {
-          background-color: @delete-btn-hover-bg;
-          text-decoration: underline;
-        }
-      }
-    }
-  }
-
   // --- Selettori Provider/DocType ---
   .provider-tree-container,
   .doctype-tree-container {
@@ -720,11 +610,6 @@
       color: @tree-subdoctype-node-hover-fg;
     }
   }
-  .active-doctype-display {
-    // background: @active-doctype-bg;
-    // border-color:@active-doctype-border;
-    color: @active-doctype-fg;
-  }
   .active-model-display {
     // background: @active-model-bg;
     // border-color:@active-model-border;
@@ -746,7 +631,6 @@
   // --- Mappatura Variabili Generiche ---
 
   @pulse-animation: pulse-dark;
-  @bg: @dark-bg;
   @log-bg: darken(@dark-color1, 20%);
   @log-fg: @dark-text;
   @log-hover-bg: darken(@dark-color1, 10%);
@@ -777,7 +661,6 @@
   @menu-box-bg: lighten(@dark-menu-bg, 5%);
   @menu-box-border: @dark-menu-border;
   @menu-box-fg: @dark-menu-fg;
-  @menu-icon-box-hover: @dark-menu-icon-hover;
   @border-box-shadow: @dark-border-shadow;
   @btn-send0-bg: @dark-btn-send0-bg;
   @btn-send0-hover-bg: @dark-btn-send0-hover-bg;
@@ -800,16 +683,8 @@
   @wnd-btn-hover-bg: lighten(@dark-wnd-bg, 15%);
   @table-tr-even-bg: lighten(@dark-wnd-bg, 5%);
   @table-tr-hover-bg: lighten(@dark-wnd-bg, 15%);
-  @spinner-stop-msg-fg: #e8f406;
-  @spinner-stop-msg-bg: #3e3e3e;
-  @spinner-stop-msg-border: #05cc80;
-  @spinner-stop-msg-hover-border: #fc0909;
   @table-link-fg: #efac37;
   @table-link-hover-fg: @dark-color1;
-  @table-delete-btn-fg: #ffffff;
-  @table-delete-btn-bg: #f30404fc;
-  @table-delete-btn-border: #8e0303fc;
-  @table-delete-btn-hover-bg: #e44c00;
   @drop-zone-border: #888;
   @drop-zone-fg: #888;
   @drop-zone-drag-over-bg: lighten(@dark-container-bg, 10%);
@@ -844,15 +719,8 @@
   @tree-subdoctype-node-fg: #bbb;
   @tree-subdoctype-node-hover-bg: #333;
   @tree-subdoctype-node-hover-fg: #ddd;
-  // @active-doctype-bg: @dark-color2;
-  // @active-doctype-border: @dark-color2;
-  @active-doctype-fg: lighten(@dark-color2, 5%);
-  // @active-model-bg: @dark-color2;
-  // @active-model-border: @dark-color2;
   @active-model-fg: lighten(@dark-color2, 5%);
   @kb-display-fg: @dark-kb-display-fg;
-  @dialog-bg: lighten(@dark-bg, 10%);
-  @dialog-text: @dark-text;
   @title-color: lighten(@dark-color3, 15%); // Titoli chiari su fondo scuro
 
   // --- Applica Stili e Override ---
@@ -870,7 +738,6 @@
 .theme-light {
   // --- Mappatura Variabili Generiche ---
   @pulse-animation: pulse-light;
-  @bg: @light-bg;
   @log-bg: @light-color1;
   @log-fg: @light-bg;
   @log-hover-bg: lighten(@light-color1, 10%);
@@ -907,7 +774,6 @@
   @menu-box-bg: @light-menu-box-bg;
   @menu-box-border: @light-menu-box-border;
   @menu-box-fg: @light-menu-box-fg;
-  @menu-icon-box-hover: @light-menu-icon-box-hover;
   @border-box-shadow: @light-border-box-shadow;
   // Modifica per usare gli stessi colori del tema scuro per i pulsanti di invio
   // @btn-send0-bg: @light-btn-send0-bg;
@@ -937,16 +803,8 @@
   @wnd-btn-hover-bg: darken(@light-wnd-bg, 5%);
   @table-tr-even-bg: darken(@light-wnd-bg, 3%);
   @table-tr-hover-bg: darken(@light-wnd-bg, 8%);
-  @spinner-stop-msg-fg: @light-text;
-  @spinner-stop-msg-bg: lighten(@light-color3, 20%);
-  @spinner-stop-msg-border: @light-color2;
-  @spinner-stop-msg-hover-border: @light-color1;
   @table-link-fg: #0303d3;
   @table-link-hover-fg: @light-color1;
-  @table-delete-btn-fg: #ffffff;
-  @table-delete-btn-bg: #d32f2f;
-  @table-delete-btn-border: #b71c1c;
-  @table-delete-btn-hover-bg: #e53935;
   @drop-zone-border: #aaa;
   @drop-zone-fg: #aaa;
   @drop-zone-drag-over-bg: darken(@light-container-bg, 5%);
@@ -981,15 +839,8 @@
   @tree-subdoctype-node-fg: #666;
   @tree-subdoctype-node-hover-bg: #eee;
   @tree-subdoctype-node-hover-fg: #333;
-  // @active-doctype-bg:@light-color2;
-  // @active-doctype-border: @light-color2;
-  @active-doctype-fg: darken(@light-color2, 10%);
-  // @active-model-bg:@light-color2;
-  // @active-model-border: @light-color2;
   @active-model-fg: darken(@light-color2, 10%);
   @kb-display-fg: @light-kb-display-fg;
-  @dialog-bg: @light-bg;
-  @dialog-text: @light-text;
   @title-color: @light-color3; // Titolo scuro (arancione bruciato) su fondo chiaro
 
   // --- Applica Stili e Override ---

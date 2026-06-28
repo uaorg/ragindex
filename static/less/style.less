@@ -50,13 +50,12 @@ textarea,
     top: 0;
     left: 5vw;
     height: 4vh;
-    .active-doctype-display,
     .active-model-display,
     .help,
     .upload,
-    .doctype-settings,
     .provider-settings,
     .log {
+      box-sizing: border-box;
       position: absolute;
       top: 0;
       margin: 2px 0;
@@ -83,6 +82,7 @@ textarea,
       }
     }
     .active-kb-display {
+      box-sizing: border-box;
       position: absolute;
       top: 0;
       left: 10vw;
@@ -100,19 +100,6 @@ textarea,
       font-style: italic;
       white-space: nowrap;
       overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .doctype-settings {
-      left: 25vw;
-    }
-    .active-doctype-display {
-      left: 28.5vw;
-      font-size: @fsize-out;
-      font-style: italic;
-      max-width: 20vw;
-      display: inline-block;
-      overflow: hidden;
-      white-space: nowrap;
       text-overflow: ellipsis;
     }
     .provider-settings {
@@ -140,6 +127,7 @@ textarea,
     }
   }
   .btn-theme-toggle {
+    box-sizing: border-box;
     position: absolute;
     top: 0.25vh;
     right: 1vw;
@@ -235,39 +223,6 @@ textarea,
   align-items: center;
   width: 100%;
   margin-bottom: 0.5em;
-
-  .docs-controls {
-    display: flex;
-    width: 100%;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 5px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-
-    .select-all-label {
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      font-size: 0.9em;
-
-      input {
-        margin-right: 5px;
-      }
-    }
-
-    .docs-btn-group {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-      align-items: flex-end;
-    }
-
-    .btn-small {
-      padding: 4px 10px;
-      font-size: 0.85em;
-    }
-  }
 }
 
 // Colore Warning (Giallo)

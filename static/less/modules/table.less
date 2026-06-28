@@ -16,6 +16,7 @@
 
   th,
   td {
+    box-sizing: border-box;
     border: none;
     border-bottom: 1px solid;
     padding: 4px 8px;
@@ -44,7 +45,6 @@
     border-bottom: none;
   }
 
-  .link-show-data,
   .link-show-doc {
     text-decoration: none;
     font-weight: 500;
@@ -52,12 +52,6 @@
     &:hover {
       text-decoration: underline;
     }
-  }
-
-  td.size {
-    text-align: right;
-    font-family: monospace;
-    opacity: 0.8;
   }
 
   button {
