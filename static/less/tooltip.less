@@ -18,11 +18,12 @@
  */
 
 /* ========= VARIABILI LESS ========= */
-@tt-bg: #cc3a05; // Colore di sfondo del tooltip
-@tt-text: #ffffff; // Colore testo del tooltip
-@tt-font: 20px "Arial", sans-serif; // Stile font
-@tt-radius: 4px; // Border-radius
-@tt-shadow: 0 3px 6px #e2ca0e29; // Ombra
+@help-accent: #00bd97;
+@tt-bg: #323232; // Colore di sfondo del tooltip (allineato help popup)
+@tt-text: #e0e0e0; // Colore testo del tooltip (allineato help popup)
+@tt-font: 13px/1.5 "Inter", "Segoe UI", Roboto, Arial, sans-serif; // Stile font (allineato help popup)
+@tt-radius: 6px; // Border-radius (allineato help popup)
+@tt-shadow: 0 8px 24px rgba(0,0,0,0.45), 0 2px 8px rgba(0,0,0,0.3); // Ombra (allineato help popup)
 @tt-transition: 0.3s opacity; // Transizione
 @border-width: 6px;
 
@@ -56,6 +57,7 @@
     padding: 4px 10px;
     border-radius: @tt-radius;
     box-shadow: @tt-shadow;
+    border: 1px solid lighten(@help-accent, 10%);
     white-space: nowrap;
   }
 
@@ -111,7 +113,6 @@
 /* ========= HELP POPUP (Dark Material Style) ========= */
 @help-popup-bg: #323232;
 @help-popup-text: #e0e0e0;
-@help-popup-accent: #00bd97;
 @help-popup-radius: 8px;
 @help-popup-shadow: 0 8px 24px rgba(0,0,0,0.45), 0 2px 8px rgba(0,0,0,0.3);
 @help-popup-font: 13px/1.5 "Inter", "Segoe UI", Roboto, Arial, sans-serif;
@@ -125,7 +126,7 @@
   font: @help-popup-font;
   padding: @help-popup-padding;
   border-radius: @help-popup-radius;
-  border: 1px solid lighten(@help-popup-accent, 10%);
+  border: 1px solid lighten(@help-accent, 10%);
   z-index: @z-tooltip;
   pointer-events: none;
   max-width: @help-popup-max-width;
@@ -136,7 +137,7 @@
   transform: translateY(4px);
 
   strong {
-    color: lighten(@help-popup-accent, 10%);
+    color: lighten(@help-accent, 10%);
   }
 
   code {
