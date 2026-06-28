@@ -175,9 +175,6 @@
   }
 
   // --- Pulsanti ---
-  .input-actions .clear-history .icon {
-    fill: @text;
-  }
   .clear-input {
     color: @btn-color;
     background: transparent;
@@ -186,8 +183,7 @@
     }
   }
   .output-actions {
-    .copy-output,
-    .clear-history {
+    .copy-output {
       background-color: @btn-bg;
       .icon,
       .copy-icon {
@@ -199,18 +195,6 @@
         .copy-icon {
           fill: @btn-hover-fg;
         }
-      }
-    }
-    .clear-history {
-      background: @btn-send0-bg; // Rosso (@dark-color1)
-      &:hover {
-        background: @btn-send0-hover-bg;
-      }
-    }
-    .clear-history1 {
-      background: @btn-send1-bg; // Giallo (@dark-color3)
-      &:hover {
-        background: @btn-send1-hover-bg;
       }
     }
     .copy-output.copied {

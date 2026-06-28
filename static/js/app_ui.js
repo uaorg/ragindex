@@ -416,6 +416,23 @@ const _actionDeleteKnowledgeBaseAsync = async function() {
     UaLog.log(">>> Knowledge Base cancellata. <<<");
 };
 
+const _actionClearContextAsync = async function() {
+    const hasContext = await idbMgr.exists(DATA_KEYS.PHASE2_CONTEXT);
+    if (!hasContext) { await alert("Nessun contesto da cancellare."); return; }
+    if (!await confirm("Cancellare il contesto estratto?")) return;
+    await idbMgr.delete(DATA_KEYS.PHASE2_CONTEXT);
+    UaLog.log(">>> Contesto cancellato. <<<");
+};
+
+const _actionClearConversazioneAsync = async function() {
+    const hasThread = await idbMgr.exists(DATA_KEYS.KEY_THREAD);
+    if (!hasThread) { await alert("Nessuna conversazione da cancellare."); return; }
+    if (!await confirm("Cancellare la conversazione attiva?")) return;
+    await idbMgr.delete(DATA_KEYS.KEY_THREAD);
+    _setResponseHtml("");
+    UaLog.log(">>> Conversazione cancellata. <<<");
+};
+
 const _actionSaveConversationAsync = async function() {
     const context = await idbMgr.read(DATA_KEYS.PHASE2_CONTEXT);
     const thread = await idbMgr.read(DATA_KEYS.KEY_THREAD);
@@ -734,16 +751,9 @@ export const bindEventListener = function() {
             }
         },
         "menu-view-convo": _actionViewConversationAsync,
-        "menu-save-convo": _actionSaveConversationAsync,
-        "menu-restore-convo": async () => { 
-            const n = await BackupMgr.importConvoAsync(); 
-            if (n) {
-                const key = `${DATA_KEYS.KEY_CONVO_PRE}${n}`;
-                await _actionLoadConversationAsync(key);
-                UaLog.log(`Conversazione "${n}" ripristinata e attivata.`);
-            }
-        },
         "menu-view-context": _actionViewContextAsync,
+        "menu-clear-context": _actionClearContextAsync,
+        "menu-clear-conversazione": _actionClearConversazioneAsync,
         "menu-delete-all": Commands.deleteAll,
         "menu-default-api-keys": restoreDefaultApiKeys,
         "menu-add-api-key": addApiKey,
@@ -753,9 +763,7 @@ export const bindEventListener = function() {
         "btn-action2-start-convo": TextInput.startConversationAsync,
         "btn-action3-continue-convo": TextInput.continueConversationAsync,
         "btn-edit-last-fixed": () => wnds.editLastQuestion(),
-        "btn-copy-output": TextOutput.copyAsync,
-        "clear-history1": TextOutput.clearHistoryAsync,
-        "clear-history2": TextOutput.clearHistoryAndContextAsync
+        "btn-copy-output": TextOutput.copyAsync
     };
 
     Object.entries(ids).forEach(([id, fn]) => {
@@ -825,50 +833,6 @@ export const bindEventListener = function() {
         };
     }
 
-    const menuElencoConvo = document.getElementById("menu-elenco-convo");
-    if (menuElencoConvo) {
-        menuElencoConvo.onclick = async function() {
-            const keys = await idbMgr.selectKeys(DATA_KEYS.KEY_CONVO_PRE);
-            const jfh = UaJtfh();
-            jfh.append('<div class="data-dialog"><h4>Gestione Conversazioni</h4>');
-            
-            if (keys.length > 0) {
-                jfh.append('<div class="docs-header" style="margin-bottom:10px">');
-                jfh.append('<label><input type="checkbox" onclick="document.querySelectorAll(\'.convo-checkbox\').forEach(cb => cb.checked = this.checked)"> Seleziona Tutto</label>');
-                jfh.append('<button class="btn-warning btn-small" style="margin-left:15px" onclick="wnds.deleteSelectedConvo()">Elimina Selezionate</button>');
-                jfh.append('</div>');
-
-                jfh.append('<table class="table-data"><thead><tr><th>Sel.</th><th>Nome</th><th>Azioni</th></tr></thead><tbody>');
-                keys.forEach(key => {
-                    const name = key.slice(DATA_KEYS.KEY_CONVO_PRE.length);
-                    const displayName = name.replace(/_/g, " ");
-                    jfh.append('<tr>');
-                    jfh.append(`<td><input type="checkbox" class="convo-checkbox" data-key="${key}"></td>`);
-                    jfh.append(`<td>${displayName}</td><td><button class="btn-load-item btn-success" onclick="wnds.loadConvo('${key}')">Attiva</button>`);
-                    jfh.append(`<button class="btn-warning btn-small" style="margin-left:5px" onclick="wnds.exportConvo('${key}')">Backup</button>`);
-                    jfh.append(`<button class="btn-delete-item btn-danger" style="margin-left:5px" onclick="wnds.deleteConvo('${key}')">Elimina</button></td></tr>`);
-                });
-                jfh.append('</tbody></table></div>');
-
-                wnds.loadConvo = async (k) => { await _actionLoadConversationAsync(k); wnds.winfo.close(); };
-                wnds.exportConvo = async (k) => { await BackupMgr.exportItemAsync(k, "CHAT"); };
-                
-                wnds.deleteSelectedConvo = async () => {
-                    const sel = document.querySelectorAll(".convo-checkbox:checked");
-                    if (sel.length && await confirm(`Eliminare le ${sel.length} conversazioni selezionate?`)) {
-                        for (const cb of sel) {
-                            await idbMgr.delete(cb.dataset.key);
-                        }
-                        wnds.winfo.close();
-                    }
-                };
-
-                wnds.deleteConvo = async (k) => { if (await confirm('Eliminare conversazione?')) { await idbMgr.delete(k); wnds.winfo.close(); } };
-            } else jfh.append('<p>Nessuna conversazione archiviata.</p></div>');
-            wnds.winfo.show(jfh.html());
-        };
-    }
-
     const menuElencoDocs = document.getElementById("menu-elenco-docs");
     if (menuElencoDocs) {
         menuElencoDocs.onclick = async function() {
@@ -929,9 +893,7 @@ export const bindEventListener = function() {
     // --- INIZIALIZZAZIONE POPUP INFORMATIVI ---
     HelpPopup.bind("btn-upload", "<strong>Caricamento Documenti</strong><br>Carica file PDF, TXT o DOCX dal tuo computer per la Knowledge Base.");
     HelpPopup.bind("btn-provider-settings", "<strong>Configurazione LLM</strong><br>Seleziona il provider AI e il modello specifico.");
-    HelpPopup.bind("clear-history1", "<strong>Nuova Conversazione</strong><br>Cancella la cronologia ma mantiene il contesto dei documenti attivo.");
-    HelpPopup.bind("clear-history2", "<strong>Reset Totale</strong><br>Pulisce chat, contesto estratto e Knowledge Base attiva per un reset completo.");
-    HelpPopup.bind("btn-action2-start-convo", "<strong>(2) Inizia Conversazione</strong><br>Cerca il contesto nei documenti e interroga l'AI per la prima risposta.");
+    HelpPopup.bind("btn-action2-start-convo", "<strong>(2) Avvia Conversazione</strong><br>Cerca il contesto nei documenti e interroga l'AI per la prima risposta.");
     HelpPopup.bind("btn-action3-continue-convo", "<strong>(3) Continua Dialogo</strong><br>Invia la nuova domanda mantenendo la memoria della chat e del contesto.");
     HelpPopup.bind("btn-theme-toggle", "<strong>Cambia Tema</strong><br>Alterna tra tema chiaro e tema scuro per un miglior comfort visivo.");
     HelpPopup.bind("menu-default-api-keys", "<strong>API Keys Default</strong><br>Ripristina le chiavi API predefinite dal file locale <code>api_x.json</code>.");
