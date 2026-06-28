@@ -141,7 +141,7 @@ const _buildTreeView = function() {
     let treeHtml = `
       <div class="provider-tree-header">
         <span>Seleziona Modello</span>
-        <button class="provider-tree-close-btn">&times;</button>
+        <button class="provider-tree-close-btn tt-left" data-tt="Chiudi">&times;</button>
       </div>
       <ul class="provider-tree">
     `;
