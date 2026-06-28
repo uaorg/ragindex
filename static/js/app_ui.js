@@ -964,7 +964,7 @@ export const bindEventListener = function() {
     HelpPopup.bind("btn-upload", "<strong>Caricamento Documenti</strong><br>Carica file PDF, TXT o DOCX dal tuo computer per la Knowledge Base.");
     HelpPopup.bind("id_log", "<strong>Registro Eventi</strong><br>Mostra i messaggi di log dell'applicazione in tempo reale.");
     HelpPopup.bind("btn-provider-settings", "<strong>Configurazione LLM</strong><br>Seleziona il provider AI e il modello specifico.");
-    HelpPopup.bind("btn-theme-toggle", "<strong>Cambia Tema</strong><br>Passa dal tema scuro a quello chiaro e viceversa.");
+    // btn-theme-toggle usa tooltip CSS (data-tt) — dinamico in _updateThemeAsync
 
     // Azioni
     HelpPopup.bind("btn-action2-start-convo", "<strong>Avvia Conversazione</strong><br>Cerca il contesto nei documenti e interroga l'AI per la prima risposta.");
