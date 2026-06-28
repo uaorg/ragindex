@@ -26,3 +26,4 @@ MANIFEST
 .env
 .gitignore
 static/tmp/
+static/css/style.min.css
