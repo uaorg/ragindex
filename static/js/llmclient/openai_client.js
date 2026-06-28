@@ -1,11 +1,12 @@
 /**
- * huggingface_client.js - Client per l'integrazione con le API di Hugging Face.
+ * openai_client.js - Client per l'integrazione con le API di OpenAI.
  *
- * Questo modulo gestisce la comunicazione con i modelli ospitati su Hugging Face,
- * inclusa la validazione dei payload, la gestione dei timeout e delle interruzioni.
+ * Questo modulo gestisce la comunicazione con i modelli OpenAI tramite API
+ * compatible OpenAI, inclusa la validazione dei payload, la gestione dei
+ * timeout e delle interruzioni.
  *
- * @module  HuggingFaceClient
- * @version 1.1.0
+ * @module  OpenAIClient
+ * @version 1.0.0
  * @date    2026-06-27
  * @author  Gemini CLI
  */
@@ -15,16 +16,16 @@
 import { BaseClient } from "./base_client.js";
 
 /**
- * Adatta il payload per le API Hugging Face.
+ * Adatta il payload per le API OpenAI.
  *
  * @param {Object} payload - Il payload originale.
  * @returns {Object} Il payload adattato.
  * @throws {Error} Se il parametro 'model' è mancante.
  */
-const adaptHuggingFacePayload = function(payload) {
+const adaptOpenAIPayload = function(payload) {
   if (!payload || !payload.model) {
-    console.error("adaptHuggingFacePayload: parametro 'model' mancante");
-    throw new Error("Il parametro 'model' è obbligatorio nel payload per HuggingFace.");
+    console.error("adaptOpenAIPayload: parametro 'model' mancante");
+    throw new Error("Il parametro 'model' è obbligatorio nel payload per OpenAI.");
   }
 
   const adapted = {
@@ -33,8 +34,16 @@ const adaptHuggingFacePayload = function(payload) {
     temperature: payload.temperature,
     max_tokens: payload.max_tokens,
     top_p: payload.top_p,
-    top_k: payload.top_k,
     stop: payload.stop,
+    presence_penalty: payload.presence_penalty,
+    frequency_penalty: payload.frequency_penalty,
+    n: payload.n,
+    seed: payload.seed,
+    user: payload.user,
+    response_format: payload.response_format,
+    tools: payload.tools,
+    tool_choice: payload.tool_choice,
+    parallel_tool_calls: payload.parallel_tool_calls,
   };
 
   for (const key in adapted) {
@@ -47,45 +56,47 @@ const adaptHuggingFacePayload = function(payload) {
   return result;
 };
 
-class HuggingFaceClient extends BaseClient {
+class OpenAIClient extends BaseClient {
   /**
-   * Inizializza il client con la chiave API.
+   * Inizializza il client con la chiave API e URL base opzionale.
    *
    * @param {string} apiKey - La chiave API per l'autenticazione.
+   * @param {string} [baseUrl=null] - URL base personalizzato (es. per provider API-compatibili).
    */
-  constructor(apiKey) {
-    super(apiKey, "https://router.huggingface.co/v1/chat/completions");
+  constructor(apiKey, baseUrl = null) {
+    const url = baseUrl || "https://api.openai.com/v1/chat/completions";
+    super(apiKey, url);
   }
 
   /**
-   * Invia una richiesta di generazione contenuto al modello Hugging Face.
+   * Invia una richiesta di generazione contenuto al modello OpenAI.
    *
    * @param {Object} payload - Dati della richiesta.
    * @param {number} [timeout=60] - Tempo massimo di attesa in secondi.
    * @returns {Promise<Object>} Oggetto risultato con {ok, response, data, error}.
    */
   async sendRequest(payload, timeout = 60) {
-    const apiKey = this.apiKey;
-    const authHeader = `Bearer ${apiKey}`;
+    const authHeader = `Bearer ${this.apiKey}`;
 
     const headers = {
       "Content-Type": "application/json",
       Authorization: authHeader,
+      "HTTP-Referer": "https://github.com/u-a/llm_test_js",
+      "X-Title": "LLM Model Tester",
     };
 
     let adaptedPayload;
 
     try {
-      adaptedPayload = adaptHuggingFacePayload(payload);
+      adaptedPayload = adaptOpenAIPayload(payload);
     } catch (error) {
-      console.error("HuggingFaceClient.sendRequest:", error);
+      console.error("OpenAIClient.sendRequest:", error);
       const valError = this._createError(error.message, "ValidationError");
       const res = this._createResult(false, null, null, valError);
       return res;
     }
 
-    const baseUrl = this.baseUrl;
-    const result = await this._fetch(baseUrl, adaptedPayload, headers, timeout);
+    const result = await this._fetch(this.baseUrl, adaptedPayload, headers, timeout);
 
     let finalResult = null;
 
@@ -102,7 +113,7 @@ class HuggingFaceClient extends BaseClient {
 
         finalResult = this._createResult(true, result.response, responseData);
       } catch (error) {
-        console.error("HuggingFaceClient.sendRequest:", error);
+        console.error("OpenAIClient.sendRequest:", error);
         const parseErr = this._createError(
           "Invalid response structure",
           "ParsingError",
@@ -119,4 +130,4 @@ class HuggingFaceClient extends BaseClient {
   }
 }
 
-export { HuggingFaceClient };
+export { OpenAIClient };

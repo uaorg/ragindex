@@ -1,11 +1,12 @@
 /**
- * huggingface_client.js - Client per l'integrazione con le API di Hugging Face.
+ * openrouter_client.js - Client per l'integrazione con le API di OpenRouter.
  *
- * Questo modulo gestisce la comunicazione con i modelli ospitati su Hugging Face,
- * inclusa la validazione dei payload, la gestione dei timeout e delle interruzioni.
+ * Questo modulo gestisce la comunicazione con i modelli OpenRouter tramite API
+ * compatible OpenAI, inclusa la validazione dei payload, la gestione dei
+ * timeout e delle interruzioni.
  *
- * @module  HuggingFaceClient
- * @version 1.1.0
+ * @module  OpenRouterClient
+ * @version 1.0.0
  * @date    2026-06-27
  * @author  Gemini CLI
  */
@@ -15,16 +16,16 @@
 import { BaseClient } from "./base_client.js";
 
 /**
- * Adatta il payload per le API Hugging Face.
+ * Adatta il payload per le API OpenRouter.
  *
  * @param {Object} payload - Il payload originale.
  * @returns {Object} Il payload adattato.
  * @throws {Error} Se il parametro 'model' è mancante.
  */
-const adaptHuggingFacePayload = function(payload) {
+const adaptOpenRouterPayload = function(payload) {
   if (!payload || !payload.model) {
-    console.error("adaptHuggingFacePayload: parametro 'model' mancante");
-    throw new Error("Il parametro 'model' è obbligatorio nel payload per HuggingFace.");
+    console.error("adaptOpenRouterPayload: parametro 'model' mancante");
+    throw new Error("Il parametro 'model' è obbligatorio nel payload per OpenRouter.");
   }
 
   const adapted = {
@@ -35,6 +36,8 @@ const adaptHuggingFacePayload = function(payload) {
     top_p: payload.top_p,
     top_k: payload.top_k,
     stop: payload.stop,
+    tools: payload.tools,
+    tool_choice: payload.tool_choice,
   };
 
   for (const key in adapted) {
@@ -47,18 +50,18 @@ const adaptHuggingFacePayload = function(payload) {
   return result;
 };
 
-class HuggingFaceClient extends BaseClient {
+class OpenRouterClient extends BaseClient {
   /**
    * Inizializza il client con la chiave API.
    *
    * @param {string} apiKey - La chiave API per l'autenticazione.
    */
   constructor(apiKey) {
-    super(apiKey, "https://router.huggingface.co/v1/chat/completions");
+    super(apiKey, "https://openrouter.ai/api/v1/chat/completions");
   }
 
   /**
-   * Invia una richiesta di generazione contenuto al modello Hugging Face.
+   * Invia una richiesta di generazione contenuto al modello OpenRouter.
    *
    * @param {Object} payload - Dati della richiesta.
    * @param {number} [timeout=60] - Tempo massimo di attesa in secondi.
@@ -71,14 +74,16 @@ class HuggingFaceClient extends BaseClient {
     const headers = {
       "Content-Type": "application/json",
       Authorization: authHeader,
+      "HTTP-Referer": "https://github.com/u-a/llm_test_js",
+      "X-Title": "LLM Model Tester",
     };
 
     let adaptedPayload;
 
     try {
-      adaptedPayload = adaptHuggingFacePayload(payload);
+      adaptedPayload = adaptOpenRouterPayload(payload);
     } catch (error) {
-      console.error("HuggingFaceClient.sendRequest:", error);
+      console.error("OpenRouterClient.sendRequest:", error);
       const valError = this._createError(error.message, "ValidationError");
       const res = this._createResult(false, null, null, valError);
       return res;
@@ -102,7 +107,7 @@ class HuggingFaceClient extends BaseClient {
 
         finalResult = this._createResult(true, result.response, responseData);
       } catch (error) {
-        console.error("HuggingFaceClient.sendRequest:", error);
+        console.error("OpenRouterClient.sendRequest:", error);
         const parseErr = this._createError(
           "Invalid response structure",
           "ParsingError",
@@ -119,4 +124,4 @@ class HuggingFaceClient extends BaseClient {
   }
 }
 
-export { HuggingFaceClient };
+export { OpenRouterClient };

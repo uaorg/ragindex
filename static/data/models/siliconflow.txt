@@ -1,0 +1,3 @@
+Qwen/Qwen2.5-72B-Instruct|131072|9|0.50
+THUDM/glm-4-9b-chat|131072|9|0.20
+deepseek-ai/DeepSeek-R1|131072|10|1.00

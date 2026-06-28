@@ -1,11 +1,12 @@
 /**
- * mistral_client.js - Client per l'integrazione con le API di Mistral AI.
+ * groq_client.js - Client per l'integrazione con le API di Groq.
  *
- * Questo modulo gestisce la comunicazione con i modelli Mistral, inclusa la
- * validazione dei payload, la gestione dei timeout e delle interruzioni.
+ * Questo modulo gestisce la comunicazione con i modelli Groq tramite API
+ * compatible OpenAI, inclusa la validazione dei payload, la gestione dei
+ * timeout e delle interruzioni.
  *
- * @module  MistralClient
- * @version 1.1.0
+ * @module  GroqClient
+ * @version 1.0.0
  * @date    2026-06-27
  * @author  Gemini CLI
  */
@@ -15,32 +16,55 @@
 import { BaseClient } from "./base_client.js";
 
 /**
- * Adatta il payload per le API Mistral, rimuovendo campi non supportati.
+ * Adatta il payload per le API Groq (formato OpenAI-compatibile).
  *
  * @param {Object} payload - Il payload originale.
  * @returns {Object} Il payload adattato.
  */
-const adaptMistralPayload = function(payload) {
-  const adapted = { ...payload };
+const adaptGroqPayload = function(payload) {
+  const adapted = {
+    model: payload.model,
+    messages: payload.messages,
+    temperature: payload.temperature !== undefined ? payload.temperature : 0.7,
+    max_tokens: payload.max_tokens !== undefined ? payload.max_tokens : 2000,
+    top_p: payload.top_p !== undefined ? payload.top_p : 1.0,
+    stream: payload.stream !== undefined ? payload.stream : false,
+    tools: payload.tools,
+    tool_choice: payload.tool_choice,
+  };
 
-  delete adapted.safe_prompt;
+  if (payload.frequency_penalty !== undefined) {
+    adapted.frequency_penalty = payload.frequency_penalty;
+  }
+
+  if (payload.presence_penalty !== undefined) {
+    adapted.presence_penalty = payload.presence_penalty;
+  }
+
+  if (payload.stop !== undefined) {
+    adapted.stop = payload.stop;
+  }
+
+  if (payload.response_format !== undefined) {
+    adapted.response_format = payload.response_format;
+  }
 
   const result = adapted;
   return result;
 };
 
-class MistralClient extends BaseClient {
+class GroqClient extends BaseClient {
   /**
    * Inizializza il client con la chiave API.
    *
    * @param {string} apiKey - La chiave API per l'autenticazione.
    */
   constructor(apiKey) {
-    super(apiKey, "https://api.mistral.ai/v1/chat/completions");
+    super(apiKey, "https://api.groq.com/openai/v1/chat/completions");
   }
 
   /**
-   * Invia una richiesta di generazione contenuto al modello Mistral.
+   * Invia una richiesta di generazione contenuto al modello Groq.
    *
    * @param {Object} payload - Dati della richiesta.
    * @param {number} [timeout=60] - Tempo massimo di attesa in secondi.
@@ -55,7 +79,7 @@ class MistralClient extends BaseClient {
       Authorization: authHeader,
     };
 
-    const adaptedPayload = adaptMistralPayload(payload);
+    const adaptedPayload = adaptGroqPayload(payload);
 
     const baseUrl = this.baseUrl;
     const result = await this._fetch(baseUrl, adaptedPayload, headers, timeout);
@@ -75,7 +99,7 @@ class MistralClient extends BaseClient {
 
         finalResult = this._createResult(true, result.response, responseData);
       } catch (error) {
-        console.error("MistralClient.sendRequest:", error);
+        console.error("GroqClient.sendRequest:", error);
         const errorDetails = this._createError(
           "Invalid response structure",
           "ParsingError",
@@ -92,4 +116,4 @@ class MistralClient extends BaseClient {
   }
 }
 
-export { MistralClient };
+export { GroqClient };

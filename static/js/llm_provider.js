@@ -11,8 +11,7 @@
 
 import { UaJtfh } from "./services/uajtfh.js";
 import { getApiKey, fetchApiKeys } from "./services/key_retriever.js";
-import { GeminiClient } from "./llmclient/gemini_client.js";
-import { MistralClient } from "./llmclient/mistral_client.js";
+import { GeminiClient, MistralClient, HuggingFaceClient, GroqClient, OpenAIClient, OpenRouterClient, CerebrasClient, SiliconFlowClient } from "./llmclient/index.js";
 import { UaWindowAdm } from "./services/uawindow.js";
 import { DATA_KEYS } from "./services/data_keys.js";
 import { UaDb } from "./services/uadb.js";
@@ -247,6 +246,24 @@ const _createClientInstance = function(clientName, apiKey) {
         case "mistral":
             _CLIENTS[clientName] = new MistralClient(apiKey);
             break;
+        case "huggingface":
+            _CLIENTS[clientName] = new HuggingFaceClient(apiKey);
+            break;
+        case "groq":
+            _CLIENTS[clientName] = new GroqClient(apiKey);
+            break;
+        case "openai":
+            _CLIENTS[clientName] = new OpenAIClient(apiKey);
+            break;
+        case "openrouter":
+            _CLIENTS[clientName] = new OpenRouterClient(apiKey);
+            break;
+        case "cerebras":
+            _CLIENTS[clientName] = new CerebrasClient(apiKey);
+            break;
+        case "siliconflow":
+            _CLIENTS[clientName] = new SiliconFlowClient(apiKey);
+            break;
         default:
             _CLIENTS[clientName] = null;
             console.warn(`LlmProvider._createClientInstance: client non supportato: ${clientName}`);
@@ -302,7 +319,7 @@ export const LlmProvider = {
         try {
             console.info("**** load models *******");
             //  lista providers
-            const providers = ["gemini", "mistral"];
+            const providers = ["gemini", "mistral", "huggingface", "groq", "openai", "openrouter", "cerebras", "siliconflow"];
             for (const p of providers) {
                 try {
                     const response = await fetch(`./data/models/${p}.txt`);

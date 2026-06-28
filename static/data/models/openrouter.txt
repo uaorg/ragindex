@@ -1,0 +1,4 @@
+anthropic/claude-3.5-sonnet|200000|10|3.00
+google/gemini-2.0-flash-001|1048576|10|0.15
+meta-llama/llama-3.3-70b-instruct|131072|8|0.59
+mistralai/mistral-large-2|131072|9|2.00
