@@ -394,7 +394,7 @@ const _rebuildLunrIndex = async function(indexEntries) {
         this.use(window.lunr.it);
         this.ref("id");
         this.field("body");
-        indexEntries.forEach(function(entry) {
+        indexEntries.forEach((entry) => {
             const keywordsStr = (entry.keywords || []).join(" ");
             const entitiesStr = (entry.entities || []).join(" ");
             const fullText = entry.body + " " + keywordsStr + " " + entitiesStr;
@@ -436,7 +436,9 @@ const _actionSaveKnowledgeBaseAsync = async function() {
 
     const sanitizedName = nameTrimmed.replace(REGEX_NAME_CLEANER, "_").replace(/_+/g, "_");
     const storageKey = `${DATA_KEYS.KEY_KB_PRE}${sanitizedName}`;
-    await idbMgr.create(storageKey, { chunks, serializedIndex: index });
+    const doclist = await idbMgr.read(DATA_KEYS.KB_DOCLIST) || [];
+    const childchunks = await idbMgr.read(DATA_KEYS.KB_CHILDCHUNKS) || {};
+    await idbMgr.create(storageKey, { chunks, serializedIndex: index, doclist, childchunks });
     await UaDb.save(DATA_KEYS.ACTIVE_KB_NAME, sanitizedName);
     await updateActiveKbDisplay();
     await alert(`Knowledge Base archiviata con successo: ${sanitizedName}`);
@@ -457,7 +459,7 @@ const _actionDeleteKnowledgeBaseAsync = async function() {
 
 const _actionClearContextAsync = async function() {
     const hasContext = await idbMgr.exists(DATA_KEYS.PHASE2_CONTEXT);
-    if (!hasContext) { await alert("Nessun contesto da cancellare."); return; }
+    if (!hasContext) { await alert("Nessun contesto da cancellare."); _setResponseHtml(""); return; }
     if (!await confirm("Cancellare contesto e l'intera conversazione (prima domanda inclusa)?")) return;
     await idbMgr.delete(DATA_KEYS.PHASE2_CONTEXT);
     await idbMgr.delete(DATA_KEYS.KEY_THREAD);
@@ -497,6 +499,12 @@ const _actionLoadKnowledgeBaseAsync = async function(key) {
     if (data && data.chunks && data.serializedIndex) {
         await idbMgr.create(DATA_KEYS.PHASE0_CHUNKS, data.chunks);
         await idbMgr.create(DATA_KEYS.PHASE1_INDEX, data.serializedIndex);
+        if (data.doclist) {
+            await idbMgr.create(DATA_KEYS.KB_DOCLIST, data.doclist);
+        }
+        if (data.childchunks) {
+            await idbMgr.create(DATA_KEYS.KB_CHILDCHUNKS, data.childchunks);
+        }
         const name = key.slice(DATA_KEYS.KEY_KB_PRE.length);
         await UaDb.save(DATA_KEYS.ACTIVE_KB_NAME, name);
         await updateActiveKbDisplay();
@@ -635,35 +643,111 @@ export const TextInput = {
         }
         const validDocs = documents.filter(doc => doc.text && doc.text.trim().length > 0);
         if (validDocs.length === 0) { await alert("Nessun documento valido trovato."); return; }
-        if (!await confirm(`Creare KB da ${validDocs.length} documenti?`)) return;
 
-        _Spinner.show();
-        await UaSender.sendEventAsync("ragindex", "createKnowledge");
-        setTimeout(async function() {
-            try {
-                const kbData = await ragEngine.createKnowledgeBase(validDocs);
-                const { chunks, serializedIndex, childEntries } = kbData;
-                await idbMgr.create(DATA_KEYS.PHASE0_CHUNKS, chunks);
-                await idbMgr.create(DATA_KEYS.PHASE1_INDEX, serializedIndex);
+        // Leggi KB esistente
+        const existingDoclist = await idbMgr.read(DATA_KEYS.KB_DOCLIST) || [];
+        const existingChildChunks = await idbMgr.read(DATA_KEYS.KB_CHILDCHUNKS) || {};
 
-                // Salva metadati per supporto incrementale futuro
-                const childChunksByDoc = {};
-                if (childEntries) {
-                    for (const entry of childEntries) {
-                        childChunksByDoc[entry.docName] = entry.children;
+        const existingSet = new Set(existingDoclist);
+        const newDocs = validDocs.filter(function(d) { return !existingSet.has(d.name); });
+        const newDocNames = newDocs.map(function(d) { return d.name; });
+
+        if (existingDoclist.length === 0) {
+            // --- FULL REBUILD (nessuna KB preesistente) ---
+            if (!await confirm(`Creare KB da ${validDocs.length} documenti?`)) return;
+            _Spinner.show();
+            await UaSender.sendEventAsync("ragindex", "createKnowledge");
+            setTimeout(async function() {
+                try {
+                    const kbData = await ragEngine.createKnowledgeBase(validDocs);
+                    const { chunks, serializedIndex, childEntries } = kbData;
+                    await idbMgr.create(DATA_KEYS.PHASE0_CHUNKS, chunks);
+                    await idbMgr.create(DATA_KEYS.PHASE1_INDEX, serializedIndex);
+
+                    const childChunksByDoc = {};
+                    if (childEntries) {
+                        for (const entry of childEntries) {
+                            childChunksByDoc[entry.docName] = entry.children;
+                        }
                     }
-                }
-                await idbMgr.create(DATA_KEYS.KB_CHILDCHUNKS, childChunksByDoc);
-                await idbMgr.create(DATA_KEYS.KB_DOCLIST, validDocs.map(function(d) { return d.name; }));
+                    await idbMgr.create(DATA_KEYS.KB_CHILDCHUNKS, childChunksByDoc);
 
-                await UaDb.delete(DATA_KEYS.ACTIVE_KB_NAME);
-                await updateActiveKbDisplay();
-                await alert(`Knowledge Base creata: ${chunks.length} frammenti.`);
-            } catch (error) {
-                if (error && error.code === 499) return;
-                await alert(`ERRORE CRITICO:\n${error.message || error}`);
-            } finally { _Spinner.hide(); }
-        }, 50);
+                    // KB_DOCLIST include tutti i doc processati
+                    const allDocNames = validDocs.map(function(d) { return d.name; });
+                    await idbMgr.create(DATA_KEYS.KB_DOCLIST, allDocNames);
+
+                    await UaDb.delete(DATA_KEYS.ACTIVE_KB_NAME);
+                    await updateActiveKbDisplay();
+                    await alert(`Knowledge Base creata: ${chunks.length} frammenti.`);
+                } catch (error) {
+                    if (error && error.code === 499) return;
+                    await alert(`ERRORE CRITICO:\n${error.message || error}`);
+                } finally { _Spinner.hide(); }
+            }, 50);
+        } else if (newDocs.length === 0) {
+            await alert("Tutti i documenti sono già stati elaborati nella KB esistente. Nessun nuovo documento da aggiungere.");
+            return;
+        } else {
+            // --- INCREMENTALE ---
+            if (!await confirm(`Aggiungere ${newDocs.length} nuovo/i documento/i alla KB esistente (${existingDoclist.length} doc processati)?`)) return;
+            _Spinner.show();
+            await UaSender.sendEventAsync("ragindex", "createKnowledge");
+            setTimeout(async function() {
+                try {
+                    // 1. Carica chunk esistenti
+                    const existingParents = await idbMgr.read(DATA_KEYS.PHASE0_CHUNKS) || [];
+
+                    // 2. Calcola startDocIndex oltre tutti gli indici esistenti
+                    let maxDocIdx = -1;
+                    for (const chunk of existingParents) {
+                        const match = chunk.id.match(/^d(\d+)p/);
+                        if (match) {
+                            const idx = parseInt(match[1], 10);
+                            if (idx > maxDocIdx) maxDocIdx = idx;
+                        }
+                    }
+                    const nextDocIndex = maxDocIdx + 1;
+
+                    // 3. Chunka solo i nuovi documenti
+                    const chunkResult = await ragEngine.chunkDocumentsAsync(newDocs, nextDocIndex);
+
+                    // 4. Unisci parent chunk
+                    const allParents = existingParents.concat(chunkResult.parents);
+
+                    // 5. Unisci child chunk (mantieni esistenti, aggiungi nuovi)
+                    const allChildChunks = Object.assign({}, existingChildChunks);
+                    for (const entry of chunkResult.childEntries) {
+                        allChildChunks[entry.docName] = entry.children;
+                    }
+
+                    // 6. Ricostruisci indice da TUTTI i child chunk
+                    const allIndexEntries = [];
+                    for (const docName of Object.keys(allChildChunks)) {
+                        const children = allChildChunks[docName];
+                        for (const child of children) {
+                            allIndexEntries.push(child);
+                        }
+                    }
+                    const serializedIndex = await _rebuildLunrIndex(allIndexEntries);
+
+                    // 7. Salva tutto
+                    await idbMgr.create(DATA_KEYS.PHASE0_CHUNKS, allParents);
+                    await idbMgr.create(DATA_KEYS.PHASE1_INDEX, serializedIndex);
+                    await idbMgr.create(DATA_KEYS.KB_CHILDCHUNKS, allChildChunks);
+
+                    // KB_DOCLIST: mantieni doc esistenti + aggiungi nuovi
+                    const allDocNames = existingDoclist.concat(newDocNames);
+                    await idbMgr.create(DATA_KEYS.KB_DOCLIST, allDocNames);
+
+                    await UaDb.delete(DATA_KEYS.ACTIVE_KB_NAME);
+                    await updateActiveKbDisplay();
+                    await alert(`Knowledge Base aggiornata: +${newDocs.length} documento/i, ${allParents.length} frammenti totali.`);
+                } catch (error) {
+                    if (error && error.code === 499) return;
+                    await alert(`ERRORE CRITICO:\n${error.message || error}`);
+                } finally { _Spinner.hide(); }
+            }, 50);
+        }
     },
     startConversationAsync: async function() {
         if (!TextInput._inputEl) return;

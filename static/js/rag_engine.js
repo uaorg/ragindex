@@ -396,43 +396,14 @@ export const ragEngine = {
     console.debug("ragEngine.generateResponse - context length:", context ? context.length : 0);
     const messages = promptBuilder.answerPrompt(context, thread);
 
-    // FIXME: Visualizzazione formattata e leggibile dei messaggi inviati nella request al LLM
-    console.debug("%c🚀 LLM REQUEST", "color: #00ff00; font-weight: bold; font-size: 1.4em; text-decoration: underline;");
+    console.debug("%c🚀 LLM REQUEST — %d messaggi", "color:#00bd97;font-weight:bold;font-size:1.1em", messages.length);
 
-    messages.forEach((msg, index) => {
-      const isSystem = msg.role === "system";
-      const isUser = msg.role === "user";
-      const isAssistant = msg.role === "assistant";
-
-      let label = "❓ UNKNOWN";
-      let style = "background: #333; color: #fff; padding: 2px 5px; border-radius: 3px;";
-
-      if (isSystem) {
-        label = "⚙️ SYSTEM (Context & Rules)";
-        style = "background: #ff5555; color: #000; font-weight: bold; padding: 2px 5px; border-radius: 3px;";
-      } else if (isUser) {
-        label = "👤 USER";
-        style = "background: #55ff55; color: #000; font-weight: bold; padding: 2px 5px; border-radius: 3px;";
-      } else if (isAssistant) {
-        label = "🤖 ASSISTANT";
-        style = "background: #5555ff; color: #fff; font-weight: bold; padding: 2px 5px; border-radius: 3px;";
-      }
-
-      console.groupCollapsed(`%c${label} [Msg #${index}]`, style);
-      console.log("%cCONTENT:", "color: #888; font-weight: bold;");
-
-      // Pulizia per la visualizzazione nel log: sostituisce backtick con <<< >>> per evitare compressioni o problemi di rendering
-      const displayContent = msg.content.replace(/```/g, (match, offset, string) => {
-        // Alterna tra <<< e >>> per i blocchi di codice
-        const count = (string.slice(0, offset).match(/```/g) || []).length;
-        return count % 2 === 0 ? "<<<" : ">>>";
-      });
-
-      console.log(displayContent);
-      console.groupEnd();
+    messages.forEach(function(msg, i) {
+      const role = msg.role;
+      const color = role === "system" ? "#ff5555" : role === "user" ? "#f1c40f" : "#2ecc71";
+      const snippet = msg.content.slice(0, 120) + (msg.content.length > 120 ? "..." : "");
+      console.debug("%c%s [%d] %s", "color:" + color + ";font-weight:bold;text-transform:uppercase", role, i, snippet);
     });
-
-    console.debug("%c--- END OF REQUEST ---", "color: #00ff00; font-weight: bold;");
 
     const payload = {
       model: _model,

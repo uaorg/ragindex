@@ -9,7 +9,6 @@
 
 /** 
  * Se true, impedisce l'invio degli eventi al worker di analytics in ambiente locale.
- * Sostituisce la vecchia DISABLE_ON_LOCAL.
  */
 export const DISABLE_SENDER_ON_LOCAL = true;
 

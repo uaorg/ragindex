@@ -8,11 +8,30 @@ import { DATA_KEYS } from "./data_keys.js";
 const STORAGE_KEY = DATA_KEYS.KEY_API_KEYS;
 
 /**
- * Lista dei provider supportati.
+ * Whitelist dei provider con client LLM implementato.
  * @type {Array<string>}
  * @private
  */
-const _SUPPORTED_PROVIDERS = ["gemini", "mistral"];
+const _IMPLEMENTED_CLIENTS = ["gemini", "mistral", "huggingface", "groq", "openai", "openrouter", "cerebras", "siliconflow"];
+
+/**
+ * Recupera la lista dinamica dei provider supportati da _PROVIDER_CONFIG.
+ * @returns {Promise<Array<string>>}
+ * @private
+ */
+const _getSupportedProviders = async function() {
+    const { getProviderConfig } = await import("../llm_provider.js");
+    const config = getProviderConfig();
+
+    if (Object.keys(config).length > 0) {
+        const result = Object.keys(config);
+        return result;
+    }
+
+    // Fallback se _PROVIDER_CONFIG non è ancora caricato
+    const result = ["gemini", "mistral"];
+    return result;
+};
 
 /**
  * Recupera la chiave attiva per un determinato provider.
@@ -64,8 +83,9 @@ export async function addApiKey() {
         const jfh = UaJtfh();
 
         // Uniamo i provider supportati con quelli già nel DB
+        const supported = await _getSupportedProviders();
         const allProviders = new Set([
-            ..._SUPPORTED_PROVIDERS,
+            ...supported,
             ...Object.keys(db.providers || {})
         ]);
         const sortedAllProviders = Array.from(allProviders).sort();
@@ -194,6 +214,17 @@ export async function addApiKey() {
 
 
 
+/**
+ * Decodifica le chiavi API offuscate con substitution cipher.
+ *
+ * NOTA: Questo è un semplice offuscamento (substitution cipher), non vera
+ * crittografia. Serve solo a evitare la memorizzazione in chiaro delle chiavi
+ * nel file JSON statico. Per sicurezza reale servirebbe cifratura asimmetrica
+ * o Web Crypto API con chiave derivata da autenticazione utente.
+ *
+ * @param {Object} data - Dati con chiavi offuscate.
+ * @returns {Object} Dati con chiavi decodificate.
+ */
 const decodeApiKeysJson = (data) => {
     if (!data?.providers) return data;
 
@@ -259,6 +290,12 @@ async function _loadDefaultKeys(url) {
     const rsp = await response.json();
     const data = decodeApiKeysJson(rsp);
     if (data && data.providers) {
+        // Filtra solo i provider con client implementato
+        Object.keys(data.providers).forEach(providerName => {
+            if (!_IMPLEMENTED_CLIENTS.includes(providerName)) {
+                delete data.providers[providerName];
+            }
+        });
         Object.values(data.providers).forEach(provider => {
             if (provider.keys && provider.keys.length > 0) {
                 provider.exported_key = provider.keys[0].name;

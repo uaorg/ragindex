@@ -26,6 +26,7 @@ const PROMPT_OVERHEAD_PERCENT = 0.1;
 let _configLLM = null;
 let _clientLLM = null;
 let _promptSize = 0;
+let _configLoaded = false;
 
 // ============================================================================
 // FUNZIONI PRIVATE
@@ -61,6 +62,10 @@ export const AppMgr = {
      * Inizializza la configurazione LLM.
      */
     initConfig: async function() {
+        if (_configLoaded) {
+            return;
+        }
+
         await LlmProvider.initConfig();
 
         _configLLM = LlmProvider.getConfig();
@@ -75,8 +80,16 @@ export const AppMgr = {
         console.info(`Provider: ${_configLLM.provider} | Model: ${_configLLM.model}`);
         console.info(`Window: ${_configLLM.windowSize}k | Prompt: ${_promptSize} bytes`);
 
-        _clientLLM = LlmProvider.getclient();
+        _clientLLM = await LlmProvider.getclient();
         ragEngine.init(_clientLLM, _configLLM.model, _promptSize);
+        _configLoaded = true;
+    },
+
+    /**
+     * Resetta la configurazione forzando un reload al prossimo initConfig.
+     */
+    resetConfig: function() {
+        _configLoaded = false;
     },
 
     /**

@@ -304,6 +304,12 @@ export const LlmProvider = {
         const apiKey = await getApiKey(clientName);
         _createClientInstance(clientName, apiKey);
         console.debug(`[LlmProvider] Client '${clientName}' aggiornato con nuova API Key.`);
+
+        // Se è il provider attivo, forza il reload della configurazione
+        if (_config.client === clientName) {
+            const { AppMgr } = await import("./app_mgr.js");
+            AppMgr.resetConfig();
+        }
     },
 
     /**
@@ -360,15 +366,6 @@ export const LlmProvider = {
     init: async () => {
         await LlmProvider.loadModels();
         await fetchApiKeys();
-
-        // Popola dinamicamente i client in base alla configurazione
-        for (const providerName in _PROVIDER_CONFIG) {
-            const provider = _PROVIDER_CONFIG[providerName];
-            const clientName = provider.client;
-            const apiKey = await getApiKey(clientName);
-            if (!apiKey) continue;
-            _createClientInstance(clientName, apiKey);
-        }
     },
 
     /**
@@ -397,8 +394,14 @@ export const LlmProvider = {
      * @returns {Object|null} Istanza del client o null
      * @public
      */
-    getclient: function() {
+    getclient: async function() {
         const clientName = _config.client;
+        if (!_CLIENTS[clientName]) {
+            const apiKey = await getApiKey(clientName);
+            if (apiKey) {
+                _createClientInstance(clientName, apiKey);
+            }
+        }
         const result = _CLIENTS[clientName] || null;
         return result;
     },
