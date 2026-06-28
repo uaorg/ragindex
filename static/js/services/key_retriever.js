@@ -90,65 +90,68 @@ export async function addApiKey() {
         ]);
         const sortedAllProviders = Array.from(allProviders).sort();
 
-        jfh.append('<div class="api-keys-manager" style="display: flex; flex-direction: column; gap: 5px; height: 100%;">');
+        jfh.append('<div class="ak-manager">');
 
         // 1. Form Aggiunta
-        jfh.append('<div class="add-key-form" style="margin-top: 5px; padding: 10px; border: 1px solid #555; border-radius: 5px; background: #252526;">');
-        jfh.append('<div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end;">');
-        
-        jfh.append('<div><label style="display: block; font-size: 0.8em; margin-bottom: 2px;">Provider</label>');
-        jfh.append('<select id="key-sel-provider" style="padding: 5px; background: #333; color: white; border: 1px solid #555; border-radius: 3px;">');
+        jfh.append('<div class="ak-form">');
+
+        // Riga 1: etichette + bottone
+        jfh.append('<div class="ak-form-row">');
+        jfh.append('<div><label class="ak-label">Provider</label></div>');
+        jfh.append('<div><label class="ak-label">Nome (es. work)</label></div>');
+        jfh.append('<div class="ak-grow"><label class="ak-label">API Key</label></div>');
+        jfh.append('<button class="ak-btn-add" onclick="wnds.handleAddKey()">Aggiungi</button>');
+        jfh.append('</div>');
+
+        // Riga 2: input
+        jfh.append('<div class="ak-form-row-inputs">');
+        jfh.append('<div><select id="key-sel-provider" class="ak-select">');
         sortedAllProviders.forEach(p => jfh.append(`<option value="${p}">${p}</option>`));
         jfh.append('</select></div>');
+        jfh.append('<div><input type="text" id="key-inp-name" placeholder="work" class="ak-input-name"></div>');
+        jfh.append('<div class="ak-grow-min"><input type="text" id="key-inp-key" placeholder="Inserisci API key" class="ak-input-key"></div>');
+        jfh.append('</div>');
 
-        jfh.append('<div><label style="display: block; font-size: 0.8em; margin-bottom: 2px;">Nome (es. work)</label>');
-        jfh.append('<input type="text" id="key-inp-name" style="padding: 5px; width: 120px;"></div>');
-
-        jfh.append('<div style="flex-grow: 1;"><label style="display: block; font-size: 0.8em; margin-bottom: 2px;">API Key</label>');
-        jfh.append('<input type="text" id="key-inp-key" style="padding: 5px; width: 100%;"></div>');
-
-        jfh.append('<button class="btn-success" style="padding: 6px 15px; height: 32px; background-color: #00e676; border: none; font-weight: bold;" onclick="wnds.handleAddKey()">Aggiungi</button>');
-        jfh.append('</div></div>');
+        jfh.append('</div>');
 
         // 2. Elenco
-        jfh.append('<div style="flex-grow: 1; overflow-y: auto; border: 1px solid #444; border-radius: 5px; margin-top: 5px;">');
-        jfh.append('<table class="table-data" style="width: 100%; margin: 0; border-collapse: collapse;">');
-        jfh.append('<thead style="position: sticky; top: 0; background: #252526; z-index: 1;"><tr>');
-        jfh.append('<th style="width: 40px; text-align: center; padding: 4px;">Attiva</th>');
-        jfh.append('<th style="padding: 4px;">Nome</th>');
-        jfh.append('<th style="padding: 4px;">Chiave</th>');
-        jfh.append('<th style="width: 30px; text-align: center; padding: 4px;">Del</th>');
+        jfh.append('<div class="ak-list-wrap">');
+        jfh.append('<table class="ak-table">');
+        jfh.append('<thead class="ak-thead"><tr>');
+        jfh.append('<th class="ak-th-radio">Attiva</th>');
+        jfh.append('<th class="ak-th-name">Nome</th>');
+        jfh.append('<th class="ak-th-key">Chiave</th>');
+        jfh.append('<th class="ak-th-del">Del</th>');
         jfh.append('</tr></thead><tbody>');
 
         const sortedProviders = Object.keys(db.providers || {}).sort();
         if (sortedProviders.length === 0) {
-            jfh.append('<tr><td colspan="4" style="text-align: center; padding: 20px; color: #888;">Nessuna chiave configurata.</td></tr>');
+            jfh.append('<tr><td colspan="4" class="ak-empty">Nessuna chiave configurata.</td></tr>');
         } else {
             sortedProviders.forEach(pName => {
                 const providerData = db.providers[pName];
                 const keys = providerData.keys || [];
                 const activeKey = providerData.exported_key;
 
-                jfh.append(`<tr style="background: #1e1e1e;"><td colspan="4" style="padding: 4px 8px; color: #81c784; font-weight: bold; font-size: 0.85em; text-transform: uppercase; border-bottom: 1px solid #333;">${pName}</td></tr>`);
+                jfh.append(`<tr class="ak-provider-row"><td colspan="4" class="ak-provider-name">${pName}</td></tr>`);
 
                 if (keys.length === 0) {
-                    jfh.append('<tr><td colspan="4" style="padding: 4px 15px; font-style: italic; color: #555; font-size: 0.8em;">Nessuna chiave.</td></tr>');
+                    jfh.append('<tr><td colspan="4" class="ak-no-keys">Nessuna chiave.</td></tr>');
                 } else {
                     keys.forEach(k => {
                         const isChecked = activeKey === k.name;
-                        const rowBg = isChecked ? "background: #2a352a; border-left: 3px solid #ffb74d;" : "";
-                        const rowStyle = `border-bottom: 1px solid #2d2d2d; ${rowBg}`;
+                        const rowClass = isChecked ? "ak-key-row ak-key-row-active" : "ak-key-row";
+                        const nameClass = isChecked ? "ak-cell-name ak-cell-name-active" : "ak-cell-name";
+                        const keyClass = isChecked ? "ak-cell-key ak-cell-key-active" : "ak-cell-key ak-cell-key-inactive";
                         const checkedAttr = isChecked ? 'checked' : '';
-                        const nameStyle = isChecked ? "color: #ffb74d; font-weight: bold;" : "";
-                        const keyStyle = isChecked ? "color: #fff;" : "color: #888;";
                         const keyPrefix = k.key.substring(0, 8);
                         const keySuffix = k.key.substring(k.key.length - 4);
                         const keyDisplay = `${keyPrefix}...${keySuffix}`;
-                        jfh.append(`<tr style="${rowStyle}">`);
-                        jfh.append(`<td style="text-align: center; padding: 2px;"><input type="radio" name="group_${pName}" ${checkedAttr} onclick="wnds.handleSetActiveKey('${pName}', '${k.name}')" style="cursor: pointer;"></td>`);
-                        jfh.append(`<td style="padding: 2px 8px; font-size: 0.9em; ${nameStyle}">${k.name}</td>`);
-                        jfh.append(`<td style="padding: 2px 8px; font-family: monospace; font-size: 0.85em; ${keyStyle}">${keyDisplay}</td>`);
-                        jfh.append(`<td style="text-align: center; padding: 2px;"><button class="btn-danger" style="padding: 0px 5px; font-size: 10px; line-height: 18px; height: 20px; min-width: 20px;" onclick="wnds.handleDeleteKey('${pName}', '${k.name}')">X</button></td>`);
+                        jfh.append(`<tr class="${rowClass}">`);
+                        jfh.append(`<td class="ak-cell-center"><input type="radio" name="group_${pName}" ${checkedAttr} class="ak-radio" onclick="wnds.handleSetActiveKey('${pName}', '${k.name}')"></td>`);
+                        jfh.append(`<td class="${nameClass}">${k.name}</td>`);
+                        jfh.append(`<td class="${keyClass}">${keyDisplay}</td>`);
+                        jfh.append(`<td class="ak-cell-center"><button class="btn-danger ak-btn-del" onclick="wnds.handleDeleteKey('${pName}', '${k.name}')">X</button></td>`);
                         jfh.append('</tr>');
                     });
                 }
