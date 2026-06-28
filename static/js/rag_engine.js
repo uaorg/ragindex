@@ -400,9 +400,9 @@ export const ragEngine = {
 
     messages.forEach(function(msg, i) {
       const role = msg.role;
-      const color = role === "system" ? "#ff5555" : role === "user" ? "#f1c40f" : "#2ecc71";
-      const snippet = msg.content.slice(0, 120) + (msg.content.length > 120 ? "..." : "");
-      console.debug("%c%s [%d] %s", "color:" + color + ";font-weight:bold;text-transform:uppercase", role, i, snippet);
+      const color = role === "system" ? "#e82323" : role === "user" ? "#f6e602" : "#00bd97";
+      const label = role.toUpperCase();
+      console.info("%c[%s]%c %s", "color:" + color + ";font-weight:bold", "color:#e0e0e0", label, msg.content);
     });
 
     const payload = {
