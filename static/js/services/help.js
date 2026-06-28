@@ -16,96 +16,52 @@ export const help0_html = `
 
     <div>
         <strong>Generazione del Contesto (La Chiave del RAG)</strong>
-        <p>Il cuore del sistema è la <strong>generazione del contesto</strong>: quando poni la prima domanda (Azione 2), il sistema cerca nella Knowledge Base i frammenti di testo più rilevanti. Questi frammenti vengono "iniettati" nella memoria dell'AI, permettendole di rispondere basandosi sui <em>tuoi</em> documenti invece che solo sulle sue conoscenze generali.</p>
+        <p>Il cuore del sistema è la <strong>generazione del contesto</strong>: quando premi <strong>Avvia Conversazione</strong>, il sistema cerca nella Knowledge Base i frammenti di testo pi&ugrave; rilevanti. Questi frammenti vengono "iniettati" nella memoria dell'AI, permettendole di rispondere basandosi sui <em>tuoi</em> documenti invece che solo sulle sue conoscenze generali.</p>
     </div>
 
     <hr>
 
     <p class="center">Interfaccia e Feedback</p>
     <div>
-        <strong>HelpPopup (Tooltip Grigio)</strong>
-        <p>Passando il mouse sui pulsanti d'azione (1, 2, 3), sui comandi della cronologia o sulla gestione API, apparirà una finestra descrittiva con dettagli specifici.</p>
+        <strong>HelpPopup</strong>
+        <p>Passando il mouse sui pulsanti d'azione o sulle voci del menu laterale appare una finestra descrittiva con dettagli specifici sul comando.</p>
     </div>
     <div>
         <strong>Indicatori di Stato</strong>
-        <p>In alto a sinistra è sempre visibile la <strong>KB attiva</strong>. Se leggi "BASE CORRENTE", significa che stai usando i documenti appena indicizzati ma non ancora archiviati con un nome specifico.</p>
+        <p>In alto a sinistra sono sempre visibili la <strong>KB attiva</strong> e il <strong>modello LLM</strong> in uso. Se la KB mostra "BASE CORRENTE", significa che stai usando i documenti appena indicizzati ma non ancora archiviati con un nome specifico.</p>
     </div>
 
     <hr>
 
     <p class="center">Barra Superiore (Header)</p>
     <div style="display: grid; grid-template-columns: 100px 1fr; gap: 10px; margin-bottom: 10px;">
-        <strong>Icona Menu</strong> <span>Apre il pannello laterale per la gestione avanzata di KB, Chat e API Key.</span>
+        <strong>Icona Menu</strong> <span>Apre il pannello laterale per la gestione di KB, Conversazioni, API Key e dati.</span>
         <strong>? (Help)</strong> <span>Mostra questa documentazione.</span>
-        <strong>Nuvola</strong> <span>Upload di file (PDF, DOCX, TXT) per la Knowledge Base.</span>
-        <strong>LLM</strong> <span>Configurazione Provider (Gemini, Mistral, OpenRouter) e scelta del modello.</span>
-        <strong>Log</strong> <span>Apre la console tecnica per monitorare le fasi di chunking e ricerca.</span>
-        <strong>Sole/Luna</strong> <span>Cambia il tema visivo (Chiaro/Scuro).</span>
+        <strong>Upload</strong> <span>Carica file PDF, DOCX o TXT per la Knowledge Base.</span>
+        <strong>LLM</strong> <span>Configura il provider AI (Gemini, Mistral, OpenRouter, ecc.) e scegli il modello.</span>
+        <strong>Log</strong> <span>Apre la console tecnica per monitorare chunking e ricerca.</span>
+        <strong>Tema</strong> <span>Alterna tra tema scuro e tema chiaro.</span>
     </div>
 
     <hr>
 
-    <p class="center">Controlli Output e Sessione</p>
+    <p class="center">Pulsanti di Controllo</p>
     <div>
-        <strong>Copia (Icona fogli)</strong> <span>Copia l'intero contenuto della finestra di output.</span>
+        <strong>Cancella Input</strong> <span>Elimina il testo scritto nella casella di input.</span>
     </div>
     <div>
-        <strong>Nuova Conversazione (Giallo)</strong>
-        <p>Cancella la storia della chat ma <strong>mantiene il contesto</strong> estratto. Utile per fare una nuova domanda sugli stessi documenti senza "confondere" l'AI con i messaggi precedenti.</p>
+        <strong>Copia Output</strong> <span>Copia il contenuto della finestra di risposta negli appunti.</span>
     </div>
     <div>
-        <strong>Reset Totale (Rosso)</strong>
-        <p>Pulisce sia la chat che il contesto. È il comando da usare quando vuoi cambiare completamente argomento o caricare una nuova KB.</p>
+        <strong>Avvia Conversazione (Giallo)</strong>
+        <p>Cerca il contesto nei documenti della KB e invia la prima domanda all'AI. Crea una nuova "memoria di lavoro".</p>
+    </div>
+    <div>
+        <strong>Continua Dialogo (Verde)</strong>
+        <p>Invia la nuova domanda mantenendo la cronologia della chat e il contesto gi&agrave; estratto.</p>
     </div>
 </div>
 `;
-
-
-/**
- * HTML per il README tecnico.
- * Spiega la filosofia del progetto, l'architettura e l'uso di BM25.
- */
-export const help1_html = `
-<div class="text">
-    <p class="center" style="font-size: 1.2em; font-weight: bold;">RagIndex: RAG 100% Client-Side</p>
-    <p>
-        <strong>RagIndex</strong> è un'applicazione web che implementa un'architettura RAG (Retrieval-Augmented Generation) completa, operando interamente nel browser dell'utente.
-    </p>
-
-    <hr>
-
-    <div>
-        <strong>🚀 Obiettivi del Progetto</strong>
-        <ul>
-            <li><strong>Privacy Assoluta:</strong> Tutta l'elaborazione avviene localmente via Web Worker.</li>
-            <li><strong>Zero Backend:</strong> Sfrutta la potenza del browser (IndexedDB) e API LLM dirette.</li>
-            <li><strong>Efficienza:</strong> Utilizza <strong>Lunr.js</strong> con algoritmo <strong>BM25</strong> per ricerche lessicali ultra-rapide e precise su nomi tecnici e codici.</li>
-        </ul>
-    </div>
-
-    <hr>
-
-    <div>
-        <strong>🧠 Innovazione: Chunking Parent-Child</strong>
-        <p>RagIndex bilancia precisione e ricchezza di informazioni:</p>
-        <ul>
-            <li><strong>Child Chunks (Ricerca):</strong> Piccoli segmenti (frasi) indicizzati per trovare esattamente il punto rilevante.</li>
-            <li><strong>Parent Chunks (Contesto):</strong> Blocchi più ampi (paragrafi) che vengono inviati all'AI per fornire il senso completo dell'informazione trovata.</li>
-        </ul>
-    </div>
-
-    <hr>
-
-    <div>
-        <strong>⚙️ Persistenza e Sicurezza</strong>
-        <p>
-            Le <strong>API Key</strong> e i documenti sono salvati in <strong>IndexedDB</strong>, un database interno al tuo browser. I dati non scadono alla chiusura della scheda, ma possono essere cancellati tramite le impostazioni di pulizia del browser o il comando "Cancella Dati" nel menu.
-        </p>
-    </div>
-</div>
-`;
-
-
 
 
 /**
@@ -116,21 +72,14 @@ export const help2_html = `
 <div class="text">
     <p class="center" style="font-size: 1.2em; font-weight: bold;">Guida Operativa: Pipeline e Memoria</p>
     
-    <div class="step">
-        <strong style="color: #e82323;">(1) Creazione Knowledge Base (Azione Rossa)</strong>
-        <p>Analizza i file caricati, esegue il chunking e crea l'indice di ricerca Lunr.</p>
-        <p><em>Nota:</em> Se carichi nuovi file dopo aver creato la KB, devi rieseguire questo passaggio per includerli nell'indice.</p>
-    </div>
-
-    <div class="step">
-        <strong style="color: #f6e602;">(2) Inizio Conversazione (Azione Gialla)</strong>
-        <p>È il momento cruciale: il sistema usa la tua domanda per <strong>estrarre il contesto</strong> dalla KB e invia il primo messaggio all'AI.</p>
-        <p><em>Effetto:</em> Crea una "memoria di lavoro" che l'AI userà per tutta la conversazione.</p>
-    </div>
-
-    <div class="step">
-        <strong style="color: #00bd97;">(3) Continua Dialogo (Azione Verde)</strong>
-        <p>Invia nuove domande mantenendo sia la storia della chat che il contesto estratto inizialmente.</p>
+    <div>
+        <strong style="color: #f6e602;">Flusso di Lavoro</strong>
+        <ol>
+            <li><strong>Carica</strong> documenti (PDF, DOCX, TXT) tramite il pulsante Upload nell'header.</li>
+            <li><strong>Crea KB</strong> dal menu laterale: analizza i file, esegue il chunking e crea l'indice Lunr BM25. Necessario dopo ogni caricamento.</li>
+            <li><strong>Avvia Conversazione</strong> (pulsante giallo): estrae il contesto dai documenti e interroga l'AI per la prima risposta.</li>
+            <li><strong>Continua Dialogo</strong> (pulsante verde): prosegui la chat mantenendo la memoria della conversazione.</li>
+        </ol>
     </div>
 
     <hr>
@@ -138,19 +87,19 @@ export const help2_html = `
     <p class="center">Gestione Memoria e Archiviazione</p>
     <div>
         <strong>1. Memoria del Browser (IndexedDB)</strong>
-        <p>Quando usi i comandi <strong>Archivia</strong> nel Menu (per KB o Conversazioni), i dati vengono salvati permanentemente nel database interno del browser.</p>
+        <p>I comandi <strong>Archivia</strong> nel menu salvano KB e Conversazioni nel database interno del browser.</p>
         <ul>
-            <li><strong>KB > Gestisci:</strong> Permette di riattivare istantaneamente una vecchia base dati indicizzata.</li>
-            <li><strong>Chat > Gestisci:</strong> Permette di riprendere una conversazione passata caricando anche il contesto originale.</li>
+            <li><strong>KB &gt; Gestisci:</strong> Riattiva una Knowledge Base archiviata.</li>
+            <li><strong>Chat &gt; Gestisci:</strong> Riprende una conversazione passata con il contesto originale.</li>
         </ul>
     </div>
 
     <div>
-        <strong>2. Memoria Locale (Backup su PC)</strong>
-        <p>Per una sicurezza extra o per spostare i dati su un altro computer, usa il <strong>Backup (Export JSON)</strong> presente nelle finestre di gestione.</p>
+        <strong>2. Backup su File (Export JSON)</strong>
+        <p>Per sicurezza o per spostare i dati su un altro computer, usa le finestre di gestione:</p>
         <ul>
-            <li><strong>Esportazione:</strong> Scarica un file .json sul tuo PC.</li>
-            <li><strong>Ripristino:</strong> Carica il file .json tramite il comando <strong>Ripristina</strong> nel menu per reinserirlo nel database del browser.</li>
+            <li><strong>Esporta:</strong> Scarica un file .json sul PC.</li>
+            <li><strong>Ripristina:</strong> Carica il file .json tramite il menu per reinserirlo in IndexedDB.</li>
         </ul>
     </div>
 
@@ -158,11 +107,11 @@ export const help2_html = `
 
     <p class="center">Comandi del Menu Laterale</p>
     <div style="font-size: 0.9em;">
-        <strong>Informazioni:</strong> Leggi il README tecnico o questo Quick Start.<br>
-        <strong>Knowledge Base:</strong> Archivia la KB corrente, gestisci le salvate o importa da file.<br>
-        <strong>Conversazione:</strong> Esporta la chat, visualizza il testo puro o <strong>Vedi Contesto</strong> (per vedere cosa "legge" l'AI).<br>
-        <strong>Gestione Dati:</strong> Controlla i documenti caricati o esegui un reset totale dello storage.<br>
-        <strong>API Key:</strong> Gestisci le chiavi per i diversi provider (Gemini, Mistral, ecc).
+        <strong>Informazioni:</strong> Questo Quick Start.<br>
+        <strong>Knowledge Base:</strong> Crea, Cancella, Archivia, Gestisci o Ripristina una KB.<br>
+        <strong>Conversazione:</strong> Visualizza Contesto (cosa "legge" l'AI), Visualizza Cronologia, Cancella Contesto, Cancella solo i messaggi, Archivia, Gestisci o Ripristina.<br>
+        <strong>Gestione Dati:</strong> Elenca i documenti caricati, i dati in IndexedDB o esegui un <strong>Reset</strong> totale.<br>
+        <strong>API Key:</strong> Ripristina le chiavi predefinite o aggiungi/gestisci chiavi personali.
     </div>
 </div>
 `;
