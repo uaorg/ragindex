@@ -99,20 +99,80 @@ export const help0_html = `
 
 /**
  * HTML per il QuickStart.
- * Guida sintetica al workflow: upload -> KB -> conversazione.
+ * Guida passo-passo al flusso completo.
  */
 export const help2_html = `
 <div class="text">
-    <p class="center" style="font-size: 1.2em; font-weight: bold;">Guida Rapida</p>
-    
+    <p class="center" style="font-size: 1.2em; font-weight: bold;">Guida Passo-Passo</p>
+
     <div>
-        <strong style="color: #f6e602;">Workflow</strong>
-        <ol>
-            <li><strong>Carica</strong> i documenti (PDF, DOCX, TXT) con il pulsante Upload nell'header.</li>
-            <li><strong>Crea KB</strong> dal menu laterale (Knowledge Base &gt; Crea) per indicizzare i documenti.</li>
-            <li><strong>Avvia Conversazione</strong> (pulsante giallo): estrae il contesto e interroga l'AI.</li>
-            <li><strong>Continua Dialogo</strong> (pulsante verde): prosegui la chat senza perdere il contesto.</li>
-        </ol>
+        <strong style="color: #e82323;">Fase 1 &mdash; Caricare i Documenti</strong>
+        <p>Premi il pulsante <strong>Upload</strong> (icona nuvola) nella barra superiore. Puoi caricare file PDF, DOCX e TXT, anche pi&ugrave; alla volta. I file vengono elaborati subito nel browser.</p>
+    </div>
+
+    <div>
+        <strong style="color: #e82323;">Fase 2 &mdash; Creare la Knowledge Base</strong>
+        <p>Apri il <strong>menu laterale</strong> (icona hamburger in alto a sinistra) e vai su <strong>Knowledge Base &gt; Crea</strong>. Avvia l'indicizzazione: il sistema esegue il chunking Parent-Child e crea l'indice Lunr BM25 sui tuoi documenti.</p>
+        <p><em>Nota:</em> Dopo ogni nuovo caricamento devi rieseguire questo passaggio per aggiornare l'indice.</p>
+    </div>
+
+    <div>
+        <strong style="color: #f6e602;">Fase 3 &mdash; Avviare la Conversazione</strong>
+        <p>Premi il pulsante giallo <strong>Avvia Conversazione</strong>. Il sistema cerca nella KB i frammenti pi&ugrave; rilevanti per la tua domanda, li inietta nel prompt e interroga l'AI. Questa &egrave; la prima risposta.</p>
+    </div>
+
+    <div>
+        <strong style="color: #00bd97;">Fase 4 &mdash; Continuare il Dialogo</strong>
+        <p>Per ogni domanda successiva premi il pulsante verde <strong>Continua Dialogo</strong>. La cronologia della chat e il contesto estratto vengono mantenuti.</p>
+    </div>
+
+    <hr>
+
+    <p class="center" style="font-weight: bold;">Gestione &mdash; Menu Laterale</p>
+
+    <div>
+        <strong>Knowledge Base</strong>
+        <ul>
+            <li><strong>Archivia</strong>: Salva la KB corrente con un nome per riutilizzarla in futuro.</li>
+            <li><strong>Gestisci</strong>: Elenca, attiva, esporta (backup JSON) o elimina le KB archiviate.</li>
+            <li><strong>Ripristina</strong>: Carica una KB da un file JSON salvato in precedenza.</li>
+            <li><strong>Cancella</strong>: Elimina la KB attiva e i suoi indici.</li>
+        </ul>
+    </div>
+
+    <div>
+        <strong>Conversazione</strong>
+        <ul>
+            <li><strong>Visualizza Contesto</strong>: Mostra i frammenti di documento usati dall'AI per la risposta.</li>
+            <li><strong>Visualizza Conversazione</strong>: Mostra l'intero storico della chat in formato testo.</li>
+            <li><strong>Cancella Contesto</strong>: Azzera tutto (contesto, prima domanda, cronologia).</li>
+            <li><strong>Cancella Conversazione</strong>: Elimina solo i messaggi successivi alla prima domanda.</li>
+            <li><strong>Archivia / Gestisci / Ripristina</strong>: Come per la KB, per salvare e riprendere chat.</li>
+        </ul>
+    </div>
+
+    <div>
+        <strong>Gestione Dati</strong>
+        <ul>
+            <li><strong>Elenco Documenti</strong>: Vedi e cancella i file caricati.</li>
+            <li><strong>Dati Archiviati</strong>: Mostra tutto ci&ograve; che c'&egrave; in IndexedDB.</li>
+            <li><strong>Reset</strong>: Elimina ogni dato (KB, chat, documenti, chiavi). L'app torna allo stato iniziale.</li>
+        </ul>
+    </div>
+
+    <div>
+        <strong>API Key</strong>
+        <ul>
+            <li><strong>API Keys Default</strong>: Ripristina le chiavi predefinite da <code>api_x.json</code>.</li>
+            <li><strong>Gestisci API Key</strong>: Aggiungi, attiva o elimina le tue chiavi personali.</li>
+        </ul>
+    </div>
+
+    <div>
+        <strong>Sistema</strong>
+        <ul>
+            <li><strong>Logout</strong>: Esci e torna alla schermata di login.</li>
+        </ul>
     </div>
 </div>
 `;
