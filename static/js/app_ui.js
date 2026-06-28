@@ -15,7 +15,7 @@
 import { UaWindowAdm } from "./services/uawindow.js";
 import { UaJtfh } from "./services/uajtfh.js";
 import { UaLog } from "./services/ualog3.js";
-import { help0_html, help1_html, help2_html } from "./services/help.js";
+import { help0_html, help2_html } from "./services/help.js";
 import { documentUploader } from "./uploader.js";
 import { AppMgr } from "./app_mgr.js";
 import { UaDb } from "./services/uadb.js";
@@ -26,8 +26,6 @@ import { ragEngine } from "./rag_engine.js";
 import { DATA_KEYS, getDescriptionForKey, REGEX_NAME_CLEANER } from "./services/data_keys.js";
 import { idbMgr } from "./services/idb_mgr.js";
 import { BackupMgr } from "./services/backup_mgr.js";
-import { requestGet } from "./services/http_request.js";
-import { cleanDoc } from "./services/text_cleaner.js";
 import { addApiKey, restoreDefaultApiKeys } from "./services/key_retriever.js";
 import { UaSender } from "./services/sender.js";
 import { WebId } from "./services/webuser_id.js";
@@ -374,7 +372,7 @@ const toggleThemeAsync = async function() {
 // GESTORI AZIONI MENU (Privati)
 // ============================================================================
 
-const _actionShowReadme = function() { wnds.wdiv.show(help1_html); };
+const _actionShowReadme = function() { window.open("./readme.html", "_blank"); };
 const _actionShowQuickstart = function() { wnds.wdiv.show(help2_html); };
 
 const _actionViewConversationAsync = async function() {
@@ -452,31 +450,6 @@ const _actionLoadConversationAsync = async function(key) {
 };
 
 const _actionLogout = function() { WebId.clear(); window.location.replace("login.html"); };
-
-const _actionShowExampleDocsAsync = async function() {
-    const htmlContent = await requestGet("./data/help_test.html");
-    wnds.winfo.show(htmlContent);
-    const winElement = wnds.winfo.getElement();
-    if (!winElement) return;
-    const links = winElement.querySelectorAll(".doc-esempio");
-    links.forEach(function(link) {
-        link.onclick = async function(event) {
-            event.preventDefault();
-            const fileName = event.currentTarget.dataset.exampleName;
-            if (fileName) {
-                const textContent = await requestGet(`data/${fileName}`);
-                const isAlreadyPresent = await DocsMgr.exists(fileName);
-                if (!isAlreadyPresent) {
-                    const cleanedText = cleanDoc(textContent);
-                    await DocsMgr.add(fileName, cleanedText);
-                    wnds.winfo.close();
-                } else {
-                    await alert(`Il documento ${fileName} è già presente.`);
-                }
-            }
-        };
-    });
-};
 
 
 // ============================================================================
@@ -761,7 +734,6 @@ export const bindEventListener = function() {
         },
         "menu-view-context": _actionViewContextAsync,
         "menu-delete-all": Commands.deleteAll,
-        "menu-help-esempi": _actionShowExampleDocsAsync,
         "menu-default-api-keys": restoreDefaultApiKeys,
         "menu-add-api-key": addApiKey,
         "menu-logout": _actionLogout,
