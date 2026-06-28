@@ -44,107 +44,15 @@
           box-shadow: 0 0 0 2px @color1; // IDENTICO A INPUT
         }
         .div-text {
-          .user,
-          .assistant,
-          .system {
-            position: relative; // INDISPENSABILE per la matita
-            padding: 8px 12px; // Ridotto
-            margin-bottom: 8px; // Ridotto
-            border-radius: 4px;
-
-            // Stile Markdown interpretato
-            b {
-              font-weight: bold;
-              color: inherit; // Sovrascrive lo stile del titolo se necessario
-              border-bottom: none !important;
-              display: inline !important;
-              margin-bottom: 0 !important;
-              padding-bottom: 0 !important;
-            }
-
-            i {
-              font-style: italic;
-            }
-
-            code {
-              font-family: monospace;
-              background: rgba(0, 0, 0, 0.1);
-              padding: 2px 4px;
-              border-radius: 4px;
-              font-size: 0.9em;
-            }
-
-            // Stile Titoli Markdown
+          .user, .assistant, .system {
             h1, h2, h3 {
-              margin: 4px 0 0 0 !important; // Ridotto da 12px a 4px
-              padding: 0 !important;
               color: @title-color;
-              font-weight: bold;
-              line-height: 1.0 !important;
-              &:first-child { margin-top: 0 !important; }
             }
-            h1 { font-size: 1.3em; border-bottom: 1px solid fade(@text, 20%); }
-            h2 { font-size: 1.2em; }
-            h3 { font-size: 1.1em; }
-
-            // Contenuto del messaggio (generato da marked)
-            .msg-content {
-              margin: 0 !important;
-              padding: 0 !important;
-              line-height: 1.1 !important; // Ridotto da 1.3 a 1.1
-
-              // Azzeramento totale di default per tutti i figli
-              & > * {
-                margin-bottom: 0 !important;
-                margin-top: 0 !important;
-              }
-
-              // Paragrafi: spazio ridotto al minimo indispensabile
-              p {
-                margin: 0 !important;
-                padding: 0 !important;
-                & + p { margin-top: 2px !important; } // Ridotto da 4px a 2px
-              }
-
-              // Liste: azzerato lo spazio sopra per incollarle al testo
-              ul, ol {
-                margin-top: 0 !important; // Azzerato
-                margin-bottom: 0 !important;
-                padding: 0 0 0 25px !important;
-                
-                li {
-                  display: list-item;
-                  margin-top: 0 !important; // Azzerato
-                  margin-bottom: 0 !important;
-                  padding: 0 !important;
-                  
-                  // Incolla il testo al numero
-                  p {
-                    display: inline !important;
-                    margin: 0 !important;
-                    padding: 0 !important;
-                  }
-                }
-              }
-              ul { list-style-type: disc !important; }
-              ol { list-style-type: decimal !important; }
-
-              // Se un elemento di blocco segue un titolo, lo incolliamo (spazio sotto titolo = 0)
-              h1 + *, h2 + *, h3 + * {
-                margin-top: 0 !important;
-              }
+            h1 {
+              border-bottom: 1px solid fade(@text, 20%);
             }
-
-            // Intestazione messaggio (User:, Assistant:, etc.)
             & > b:first-child {
               border-bottom: 1px solid fade(@text, 10%) !important;
-              font-size: 0.9em;
-              text-transform: uppercase;
-              letter-spacing: 1.2px;
-              opacity: 0.9;
-              display: block;
-              margin: 0 !important; // Azzerato totale
-              padding: 0 !important;
             }
           }
           .user {
@@ -153,7 +61,7 @@
             border-left: 6px solid @color2 !important;
             & > b:first-child {
               color: @color3;
-            } // Usiamo il colore base (scuro in light, giallo in dark)
+            }
             .btn-edit-last {
               background: fade(@container-bg, 80%);
               border: 1px solid fade(@text, 10%);
@@ -170,14 +78,14 @@
             border-left: 6px solid @color1 !important;
             & > b:first-child {
               color: @color3;
-            } // Usiamo il colore base
+            }
           }
           .system {
             background: fade(@color3, 5%);
             border: 1px dashed fade(@color3, 30%) !important;
             & > b:first-child {
               color: @color3;
-            } // Usiamo il colore base
+            }
           }
         }
       }

@@ -14,12 +14,97 @@
         .pre-text, .div-text { box-sizing: border-box; white-space: pre-wrap; word-wrap: break-word; font-family: @fsans; font-size: @fsize-out; line-height: 1.6; padding: 10px; margin: 0; height: 100%; overflow-y: auto; scroll-behavior: smooth; }
         .div-text {
           width: 100%; overflow-x: hidden;
-          .user, .assistant, .system { 
+          .user, .assistant, .system {
             display: block;
+            position: relative;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            border-radius: 4px;
           }
-          .user { margin-left: 12%; width: auto; }
-          .assistant { margin-right: 12%; text-align: left; width: auto; }
-          .system { margin-right: 5%; margin-left: 5%; width: auto; font-style: italic; opacity: 0.8; }
+          .user { margin-left: 12%; }
+          .assistant { margin-right: 12%; text-align: left; }
+          .system { margin-right: 5%; margin-left: 5%; font-style: italic; opacity: 0.8; }
+
+          .user, .assistant, .system {
+            b {
+              font-weight: bold;
+              color: inherit;
+              border-bottom: none !important;
+              display: inline !important;
+              margin-bottom: 0 !important;
+              padding-bottom: 0 !important;
+            }
+            i { font-style: italic; }
+            code {
+              font-family: monospace;
+              background: rgba(0, 0, 0, 0.1);
+              padding: 2px 4px;
+              border-radius: 4px;
+              font-size: 0.9em;
+            }
+            h1, h2, h3 {
+              margin: 4px 0 0 0 !important;
+              padding: 0 !important;
+              font-weight: bold;
+              line-height: 1.0 !important;
+              &:first-child { margin-top: 0 !important; }
+            }
+            h1 { font-size: 1.3em; }
+            h2 { font-size: 1.2em; }
+            h3 { font-size: 1.1em; }
+
+            .msg-content {
+              margin: 0 !important;
+              padding: 0 !important;
+              line-height: 1.1 !important;
+
+              & > * {
+                margin-bottom: 0 !important;
+                margin-top: 0 !important;
+              }
+
+              p {
+                margin: 0 !important;
+                padding: 0 !important;
+                & + p { margin-top: 2px !important; }
+              }
+
+              ul, ol {
+                margin-top: 0 !important;
+                margin-bottom: 0 !important;
+                padding: 0 0 0 25px !important;
+
+                li {
+                  display: list-item;
+                  margin-top: 0 !important;
+                  margin-bottom: 0 !important;
+                  padding: 0 !important;
+
+                  p {
+                    display: inline !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                  }
+                }
+              }
+              ul { list-style-type: disc !important; }
+              ol { list-style-type: decimal !important; }
+
+              h1 + *, h2 + *, h3 + * {
+                margin-top: 0 !important;
+              }
+            }
+
+            & > b:first-child {
+              font-size: 0.9em;
+              text-transform: uppercase;
+              letter-spacing: 1.2px;
+              opacity: 0.9;
+              display: block;
+              margin: 0 !important;
+              padding: 0 !important;
+            }
+          }
         }
       }
     }
