@@ -372,7 +372,7 @@ const toggleThemeAsync = async function() {
 // GESTORI AZIONI MENU (Privati)
 // ============================================================================
 
-const _actionShowReadme = function() { window.open("./readme.html", "_blank"); };
+const _actionShowReadme = function() { window.open("readme.html", "_blank"); };
 const _actionShowQuickstart = function() { wnds.wdiv.show(help2_html); };
 
 const _actionViewConversationAsync = async function() {

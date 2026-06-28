@@ -204,7 +204,7 @@
         </div>
     </div>
 
-    <script src="static/js/services/vendor/marked.min.js"></script>
+    <script src="js/services/vendor/marked.min.js"></script>
     <script>
         const themeBtn = document.getElementById('theme-btn');
         const body = document.body;
@@ -222,7 +222,7 @@
         (async () => {
             const contentEl = document.getElementById('content');
             try {
-                const res = await fetch('./README.md');
+                const res = await fetch('../README.md');
                 if (!res.ok) throw new Error('HTTP ' + res.status);
                 const md = await res.text();
                 contentEl.innerHTML = marked.parse(md);
