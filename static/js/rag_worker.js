@@ -225,6 +225,7 @@ const _createKnowledgeBase = async function (documents) {
 
   const allParents = [];
   const allIndexEntries = [];
+  const allChildEntries = [];
 
   // Elabora ogni documento
   for (let i = 0; i < documents.length; i++) {
@@ -241,6 +242,11 @@ const _createKnowledgeBase = async function (documents) {
     const result = await _chunkDocument(doc.text, i);
     allParents.push(...result.parents);
     allIndexEntries.push(...result.indexEntries);
+    allChildEntries.push({
+      docName: docName,
+      children: result.indexEntries,
+      docIndex: i,
+    });
   }
 
   // Fase 1: Indicizzazione
@@ -256,12 +262,49 @@ const _createKnowledgeBase = async function (documents) {
   const index = _buildIndex(allIndexEntries);
   const serializedIndex = JSON.stringify(index);
 
-  // Restituisce chunks (Parent) e indice serializzato
+  // Restituisce chunks (Parent), indice serializzato e child entries
   const finalResult = {
     chunks: allParents,
     serializedIndex: serializedIndex,
+    childEntries: allChildEntries,
   };
 
+  return finalResult;
+};
+
+/**
+ * Esegue chunking su array di documenti senza creare indice Lunr.
+ * Usato per aggiornamenti incrementali della KB.
+ *
+ * @param {Array<Object>} documents - Array di {name, text}.
+ * @param {number} startDocIndex - Indice di partenza per ID univoci.
+ * @returns {Promise<Object>} {parents: [], childEntries: [{docName, children, docIndex}]}.
+ * @private
+ */
+const _chunkDocuments = async function (documents, startDocIndex) {
+  const allParents = [];
+  const allChildEntries = [];
+
+  for (let i = 0; i < documents.length; i++) {
+    const doc = documents[i];
+    const docIdx = startDocIndex + i;
+
+    self.postMessage({
+      status: "progress",
+      command: "chunkDocuments",
+      progress: ` -> Chunking ${doc.name} (doc ${docIdx})...`,
+    });
+
+    const result = await _chunkDocument(doc.text, docIdx);
+    allParents.push(...result.parents);
+    allChildEntries.push({
+      docName: doc.name,
+      children: result.indexEntries,
+      docIndex: docIdx,
+    });
+  }
+
+  const finalResult = { parents: allParents, childEntries: allChildEntries };
   return finalResult;
 };
 
@@ -283,6 +326,10 @@ self.onmessage = async function (e) {
     switch (command) {
       case "createKnowledgeBase":
         result = await _createKnowledgeBase(data);
+        break;
+
+      case "chunkDocuments":
+        result = await _chunkDocuments(data.documents, data.startDocIndex);
         break;
 
       default: {

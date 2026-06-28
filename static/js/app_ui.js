@@ -382,6 +382,30 @@ const toggleThemeAsync = async function() {
 
 
 // ============================================================================
+/**
+ * Ricostruisce l'indice Lunr nel main thread da child chunk già pronti.
+ * Usato per rebuild indice senza rieseguire NLP (chunking) sui documenti.
+ *
+ * @param {Array<Object>} indexEntries - Array di {id, body, keywords, entities}.
+ * @returns {Promise<string>} Indice Lunr serializzato in JSON.
+ */
+const _rebuildLunrIndex = async function(indexEntries) {
+    const idx = window.lunr(function() {
+        this.use(window.lunr.it);
+        this.ref("id");
+        this.field("body");
+        indexEntries.forEach(function(entry) {
+            const keywordsStr = (entry.keywords || []).join(" ");
+            const entitiesStr = (entry.entities || []).join(" ");
+            const fullText = entry.body + " " + keywordsStr + " " + entitiesStr;
+            this.add({ id: entry.id, body: fullText });
+        });
+    });
+    const serialized = JSON.stringify(idx);
+    return serialized;
+};
+
+// ============================================================================
 // GESTORI AZIONI MENU (Privati)
 // ============================================================================
 
@@ -424,6 +448,8 @@ const _actionDeleteKnowledgeBaseAsync = async function() {
     if (!await confirm("Cancellare completamente la Knowledge Base attiva?")) return;
     await idbMgr.delete(DATA_KEYS.PHASE0_CHUNKS);
     await idbMgr.delete(DATA_KEYS.PHASE1_INDEX);
+    await idbMgr.delete(DATA_KEYS.KB_DOCLIST);
+    await idbMgr.delete(DATA_KEYS.KB_CHILDCHUNKS);
     await UaDb.delete(DATA_KEYS.ACTIVE_KB_NAME);
     await updateActiveKbDisplay();
     UaLog.log(">>> Knowledge Base cancellata. <<<");
@@ -494,6 +520,28 @@ const _actionLoadConversationAsync = async function(key) {
 };
 
 const _actionLogout = function() { WebId.clear(); window.location.replace("login.html"); };
+
+const _actionShowProcessedDocs = async function() {
+    const kbDoclist = await idbMgr.read(DATA_KEYS.KB_DOCLIST) || [];
+    const allDocNames = await DocsMgr.names() || [];
+    const jfh = UaJtfh();
+    jfh.append('<div><h4>Documenti Processati nella KB</h4>');
+    if (kbDoclist.length === 0) {
+        jfh.append('<p>Nessuna Knowledge Base ancora costruita.</p>');
+    } else {
+        jfh.append('<table class="table-data"><tbody>');
+        kbDoclist.forEach(function(name) {
+            const stillPresent = allDocNames.includes(name);
+            const status = stillPresent
+                ? '<span style="color:#00bd97;">presente</span>'
+                : '<span style="color:#e82323;">rimosso</span>';
+            jfh.append('<tr><td>' + name + '</td><td>' + status + '</td></tr>');
+        });
+        jfh.append('</tbody></table>');
+    }
+    jfh.append('</div>');
+    wnds.winfo.show(jfh.html());
+};
 
 
 // ============================================================================
@@ -594,9 +642,20 @@ export const TextInput = {
         setTimeout(async function() {
             try {
                 const kbData = await ragEngine.createKnowledgeBase(validDocs);
-                const { chunks, serializedIndex } = kbData;
+                const { chunks, serializedIndex, childEntries } = kbData;
                 await idbMgr.create(DATA_KEYS.PHASE0_CHUNKS, chunks);
                 await idbMgr.create(DATA_KEYS.PHASE1_INDEX, serializedIndex);
+
+                // Salva metadati per supporto incrementale futuro
+                const childChunksByDoc = {};
+                if (childEntries) {
+                    for (const entry of childEntries) {
+                        childChunksByDoc[entry.docName] = entry.children;
+                    }
+                }
+                await idbMgr.create(DATA_KEYS.KB_CHILDCHUNKS, childChunksByDoc);
+                await idbMgr.create(DATA_KEYS.KB_DOCLIST, validDocs.map(function(d) { return d.name; }));
+
                 await UaDb.delete(DATA_KEYS.ACTIVE_KB_NAME);
                 await updateActiveKbDisplay();
                 await alert(`Knowledge Base creata: ${chunks.length} frammenti.`);
@@ -702,6 +761,8 @@ export const TextOutput = {
             // Cancella la Knowledge Base attiva (Indice e Chunks)
             await idbMgr.delete(DATA_KEYS.PHASE0_CHUNKS);
             await idbMgr.delete(DATA_KEYS.PHASE1_INDEX);
+            await idbMgr.delete(DATA_KEYS.KB_DOCLIST);
+            await idbMgr.delete(DATA_KEYS.KB_CHILDCHUNKS);
             await UaDb.delete(DATA_KEYS.ACTIVE_KB_NAME);
 
             await updateActiveKbDisplay();
@@ -766,6 +827,7 @@ export const bindEventListener = function() {
                 UaLog.log(`Knowledge Base "${n}" ripristinata e attivata.`);
             }
         },
+        "menu-processed-docs": _actionShowProcessedDocs,
         "menu-view-convo": _actionViewConversationAsync,
         "menu-view-context": _actionViewContextAsync,
         "menu-clear-context": _actionClearContextAsync,
@@ -906,8 +968,8 @@ export const bindEventListener = function() {
         menuElencoDocs.onclick = async function() {
             const arr = await DocsMgr.names();
             const jfh = UaJtfh();
-            jfh.append('<div class="docs-dialog"><div class="docs-header"><label><input type="checkbox" onclick="document.querySelectorAll(\'.doc-checkbox\').forEach(cb => cb.checked = this.checked)"> Tutto</label>');
-            jfh.append('<button class="btn-warning btn-small" onclick="wnds.delDocs()">Elimina</button></div>');
+            jfh.append('<div class="docs-dialog"><div class="docs-header" style="justify-content: flex-start;"><label><input type="checkbox" onclick="document.querySelectorAll(\'.doc-checkbox\').forEach(cb => cb.checked = this.checked)"> Tutto</label>');
+            jfh.append('<button class="btn-danger btn-small" style="margin-left:8px" onclick="wnds.delDocs()">Elimina</button></div>');
             if (arr.length > 0) {
                 jfh.append('<table class="table-data"><tbody>');
                 arr.forEach((name, i) => jfh.append(`<tr><td><input type="checkbox" class="doc-checkbox" data-doc-name="${name}"></td><td>${name}</td><td><button class="btn-success" onclick="wnds.viewDoc(${i})">Visualizza</button></td></tr>`));
@@ -977,6 +1039,7 @@ export const bindEventListener = function() {
     HelpPopup.bind("menu-save-kb", "<strong>Archivia KB</strong><br>Salva la Knowledge Base corrente con un nome personalizzato per usi futuri.");
     HelpPopup.bind("menu-elenco-kb", "<strong>Gestisci KB</strong><br>Elenca, attiva, esporta o elimina le Knowledge Base archiviate.");
     HelpPopup.bind("menu-restore-kb", "<strong>Ripristina KB</strong><br>Carica una Knowledge Base da un file di backup salvato in precedenza.");
+    HelpPopup.bind("menu-processed-docs", "<strong>Documenti Processati</strong><br>Mostra l'elenco dei documenti usati nell'ultima costruzione della Knowledge Base, con indicazione di quali sono ancora presenti tra i caricati.");
 
     // Menu — Conversazione
     HelpPopup.bind("menu-view-context", "<strong>Visualizza Contesto</strong><br>Mostra il contenuto estratto usato dall'AI per rispondere.");

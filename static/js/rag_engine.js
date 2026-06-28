@@ -294,6 +294,22 @@ export const ragEngine = {
   },
 
   /**
+   * Esegue solo chunking su documenti, senza creare indice Lunr.
+   * Usato per aggiornamenti incrementali della KB.
+   *
+   * @param {Array<Object>} documents - Lista di documenti {name, text}.
+   * @param {number} startDocIndex - Indice di partenza per ID univoci.
+   * @returns {Promise<Object>} {parents: [], childEntries: [{docName, children, docIndex}]}.
+   */
+  chunkDocumentsAsync: function (documents, startDocIndex) {
+    const promise = _postCommandToWorker("chunkDocuments", {
+      documents: documents,
+      startDocIndex: startDocIndex,
+    });
+    return promise;
+  },
+
+  /**
    * Costruisce il contesto rilevante per una query tramite ricerca Lunr.
    *
    * @param {string} serializedIndex - Indice Lunr serializzato in JSON.

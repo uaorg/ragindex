@@ -56,6 +56,18 @@ export const DATA_KEYS = {
      */
     ACTIVE_KB_NAME: "active_kb",
 
+    /**
+     * Elenco nomi documenti usati nell'ultimo build della KB
+     * Struttura: Array di stringhe (nomi documenti)
+     */
+    KB_DOCLIST: "kb_doclist",
+
+    /**
+     * Child chunk per documento, usati per rebuild indice incrementale
+     * Struttura: { "docName": [{id, body, keywords, entities}] }
+     */
+    KB_CHILDCHUNKS: "kb_childchunks",
+
     // =========================================================================
     // INDEXEDDB KEYS
     // Usate per strutture dati pesanti e stato applicazione
@@ -146,6 +158,8 @@ const KEY_DESCRIPTIONS = {
     [DATA_KEYS.KEY_DOCS]: "Elenco Documenti Caricati",
     [DATA_KEYS.KEY_API_KEYS]: "Chiavi API LLM",
     [DATA_KEYS.ACTIVE_KB_NAME]: "Nome KB Attiva",
+    [DATA_KEYS.KB_DOCLIST]: "Elenco Documenti Processati KB",
+    [DATA_KEYS.KB_CHILDCHUNKS]: "Child Chunk KB per Rebuild Incrementale",
     [DATA_KEYS.KEY_WEB_ID]: "ID Utente Web",
     [DATA_KEYS.KEY_BUILD_STATE]: "Stato Costruzione KB"
 };
