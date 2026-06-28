@@ -754,6 +754,15 @@ export const bindEventListener = function() {
         "menu-view-context": _actionViewContextAsync,
         "menu-clear-context": _actionClearContextAsync,
         "menu-clear-conversazione": _actionClearConversazioneAsync,
+        "menu-save-convo": _actionSaveConversationAsync,
+        "menu-restore-convo": async () => { 
+            const n = await BackupMgr.importConvoAsync(); 
+            if (n) {
+                const key = `${DATA_KEYS.KEY_CONVO_PRE}${n}`;
+                await _actionLoadConversationAsync(key);
+                UaLog.log(`Conversazione "${n}" ripristinata e attivata.`);
+            }
+        },
         "menu-delete-all": Commands.deleteAll,
         "menu-default-api-keys": restoreDefaultApiKeys,
         "menu-add-api-key": addApiKey,
@@ -829,6 +838,50 @@ export const bindEventListener = function() {
                     }
                 };
             } else jfh.append('<p>Nessuna KB archiviata.</p></div>');
+            wnds.winfo.show(jfh.html());
+        };
+    }
+
+    const menuElencoConvo = document.getElementById("menu-elenco-convo");
+    if (menuElencoConvo) {
+        menuElencoConvo.onclick = async function() {
+            const keys = await idbMgr.selectKeys(DATA_KEYS.KEY_CONVO_PRE);
+            const jfh = UaJtfh();
+            jfh.append('<div class="data-dialog"><h4>Gestione Conversazioni</h4>');
+
+            if (keys.length > 0) {
+                jfh.append('<div class="docs-header" style="margin-bottom:10px">');
+                jfh.append('<label><input type="checkbox" onclick="document.querySelectorAll(\'.convo-checkbox\').forEach(cb => cb.checked = this.checked)"> Seleziona Tutto</label>');
+                jfh.append('<button class="btn-warning btn-small" style="margin-left:15px" onclick="wnds.deleteSelectedConvo()">Elimina Selezionate</button>');
+                jfh.append('</div>');
+
+                jfh.append('<table class="table-data"><thead><tr><th>Sel.</th><th>Nome</th><th>Azioni</th></tr></thead><tbody>');
+                keys.forEach(key => {
+                    const name = key.slice(DATA_KEYS.KEY_CONVO_PRE.length);
+                    const displayName = name.replace(/_/g, " ");
+                    jfh.append('<tr>');
+                    jfh.append(`<td><input type="checkbox" class="convo-checkbox" data-key="${key}"></td>`);
+                    jfh.append(`<td>${displayName}</td><td><button class="btn-load-item btn-success" onclick="wnds.loadConvo('${key}')">Attiva</button>`);
+                    jfh.append(`<button class="btn-warning btn-small" style="margin-left:5px" onclick="wnds.exportConvo('${key}')">Backup</button>`);
+                    jfh.append(`<button class="btn-delete-item btn-danger" style="margin-left:5px" onclick="wnds.deleteConvo('${key}')">Elimina</button></td></tr>`);
+                });
+                jfh.append('</tbody></table></div>');
+
+                wnds.loadConvo = async (k) => { await _actionLoadConversationAsync(k); wnds.winfo.close(); };
+                wnds.exportConvo = async (k) => { await BackupMgr.exportItemAsync(k, "CHAT"); };
+
+                wnds.deleteSelectedConvo = async () => {
+                    const sel = document.querySelectorAll(".convo-checkbox:checked");
+                    if (sel.length && await confirm(`Eliminare le ${sel.length} conversazioni selezionate?`)) {
+                        for (const cb of sel) {
+                            await idbMgr.delete(cb.dataset.key);
+                        }
+                        wnds.winfo.close();
+                    }
+                };
+
+                wnds.deleteConvo = async (k) => { if (await confirm('Eliminare conversazione?')) { await idbMgr.delete(k); wnds.winfo.close(); } };
+            } else jfh.append('<p>Nessuna conversazione archiviata.</p></div>');
             wnds.winfo.show(jfh.html());
         };
     }
