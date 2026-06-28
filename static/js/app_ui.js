@@ -405,6 +405,17 @@ const _actionSaveKnowledgeBaseAsync = async function() {
     await alert(`Knowledge Base archiviata con successo: ${sanitizedName}`);
 };
 
+const _actionDeleteKnowledgeBaseAsync = async function() {
+    const hasChunks = await idbMgr.exists(DATA_KEYS.PHASE0_CHUNKS);
+    if (!hasChunks) { await alert("Nessuna Knowledge Base attiva da cancellare."); return; }
+    if (!await confirm("Cancellare completamente la Knowledge Base attiva?")) return;
+    await idbMgr.delete(DATA_KEYS.PHASE0_CHUNKS);
+    await idbMgr.delete(DATA_KEYS.PHASE1_INDEX);
+    await UaDb.delete(DATA_KEYS.ACTIVE_KB_NAME);
+    await updateActiveKbDisplay();
+    UaLog.log(">>> Knowledge Base cancellata. <<<");
+};
+
 const _actionSaveConversationAsync = async function() {
     const context = await idbMgr.read(DATA_KEYS.PHASE2_CONTEXT);
     const thread = await idbMgr.read(DATA_KEYS.KEY_THREAD);
@@ -738,6 +749,7 @@ export const bindEventListener = function() {
         "menu-add-api-key": addApiKey,
         "menu-logout": _actionLogout,
         "menu-create-kb": TextInput.createKnowledgeAsync,
+        "menu-delete-kb": _actionDeleteKnowledgeBaseAsync,
         "btn-action2-start-convo": TextInput.startConversationAsync,
         "btn-action3-continue-convo": TextInput.continueConversationAsync,
         "btn-edit-last-fixed": () => wnds.editLastQuestion(),
