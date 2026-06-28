@@ -98,53 +98,21 @@ export const help0_html = `
 
 
 /**
- * HTML per il QuickStart e Dettaglio Comandi.
- * Spiega il flusso pipeline e la gestione della memoria.
+ * HTML per il QuickStart.
+ * Guida sintetica al workflow: upload -> KB -> conversazione.
  */
 export const help2_html = `
 <div class="text">
-    <p class="center" style="font-size: 1.2em; font-weight: bold;">Guida Operativa: Pipeline e Memoria</p>
+    <p class="center" style="font-size: 1.2em; font-weight: bold;">Guida Rapida</p>
     
     <div>
-        <strong style="color: #f6e602;">Flusso di Lavoro</strong>
+        <strong style="color: #f6e602;">Workflow</strong>
         <ol>
-            <li><strong>Carica</strong> documenti (PDF, DOCX, TXT) tramite il pulsante Upload nell'header.</li>
-            <li><strong>Crea KB</strong> dal menu laterale: analizza i file, esegue il chunking e crea l'indice Lunr BM25. Necessario dopo ogni caricamento.</li>
-            <li><strong>Avvia Conversazione</strong> (pulsante giallo): estrae il contesto dai documenti e interroga l'AI per la prima risposta.</li>
-            <li><strong>Continua Dialogo</strong> (pulsante verde): prosegui la chat mantenendo la memoria della conversazione.</li>
+            <li><strong>Carica</strong> i documenti (PDF, DOCX, TXT) con il pulsante Upload nell'header.</li>
+            <li><strong>Crea KB</strong> dal menu laterale (Knowledge Base &gt; Crea) per indicizzare i documenti.</li>
+            <li><strong>Avvia Conversazione</strong> (pulsante giallo): estrae il contesto e interroga l'AI.</li>
+            <li><strong>Continua Dialogo</strong> (pulsante verde): prosegui la chat senza perdere il contesto.</li>
         </ol>
-    </div>
-
-    <hr>
-
-    <p class="center">Gestione Memoria e Archiviazione</p>
-    <div>
-        <strong>1. Memoria del Browser (IndexedDB)</strong>
-        <p>I comandi <strong>Archivia</strong> nel menu salvano KB e Conversazioni nel database interno del browser.</p>
-        <ul>
-            <li><strong>KB &gt; Gestisci:</strong> Riattiva una Knowledge Base archiviata.</li>
-            <li><strong>Chat &gt; Gestisci:</strong> Riprende una conversazione passata con il contesto originale.</li>
-        </ul>
-    </div>
-
-    <div>
-        <strong>2. Backup su File (Export JSON)</strong>
-        <p>Per sicurezza o per spostare i dati su un altro computer, usa le finestre di gestione:</p>
-        <ul>
-            <li><strong>Esporta:</strong> Scarica un file .json sul PC.</li>
-            <li><strong>Ripristina:</strong> Carica il file .json tramite il menu per reinserirlo in IndexedDB.</li>
-        </ul>
-    </div>
-
-    <hr>
-
-    <p class="center">Comandi del Menu Laterale</p>
-    <div style="font-size: 0.9em;">
-        <strong>Informazioni:</strong> Questo Quick Start.<br>
-        <strong>Knowledge Base:</strong> Crea, Cancella, Archivia, Gestisci o Ripristina una KB.<br>
-        <strong>Conversazione:</strong> Visualizza Contesto (cosa "legge" l'AI), Visualizza Cronologia, Cancella Contesto, Cancella solo i messaggi, Archivia, Gestisci o Ripristina.<br>
-        <strong>Gestione Dati:</strong> Elenca i documenti caricati, i dati in IndexedDB o esegui un <strong>Reset</strong> totale.<br>
-        <strong>API Key:</strong> Ripristina le chiavi predefinite o aggiungi/gestisci chiavi personali.
     </div>
 </div>
 `;
