@@ -959,16 +959,43 @@ export const bindEventListener = function() {
     }
 
     // --- INIZIALIZZAZIONE POPUP INFORMATIVI ---
+    // Header
+    HelpPopup.bind("btn-help", "<strong>Istruzioni</strong><br>Apre il manuale utente con architettura, guida operativa e specifiche dell'app.");
     HelpPopup.bind("btn-upload", "<strong>Caricamento Documenti</strong><br>Carica file PDF, TXT o DOCX dal tuo computer per la Knowledge Base.");
+    HelpPopup.bind("id_log", "<strong>Registro Eventi</strong><br>Mostra i messaggi di log dell'applicazione in tempo reale.");
     HelpPopup.bind("btn-provider-settings", "<strong>Configurazione LLM</strong><br>Seleziona il provider AI e il modello specifico.");
+    HelpPopup.bind("btn-theme-toggle", "<strong>Cambia Tema</strong><br>Passa dal tema scuro a quello chiaro e viceversa.");
+
+    // Azioni
     HelpPopup.bind("btn-action2-start-convo", "<strong>Avvia Conversazione</strong><br>Cerca il contesto nei documenti e interroga l'AI per la prima risposta.");
     HelpPopup.bind("btn-action3-continue-convo", "<strong>Continua Dialogo</strong><br>Invia la nuova domanda mantenendo la memoria della chat e del contesto.");
+    HelpPopup.bind("btn-copy-output", "<strong>Copia Output</strong><br>Copia il testo dell'output della chat negli appunti.");
 
+    // Menu — Knowledge Base
+    HelpPopup.bind("menu-create-kb", "<strong>Crea Knowledge Base</strong><br>Genera l'indice di ricerca dai documenti caricati. Necessario prima di avviare una conversazione.");
+    HelpPopup.bind("menu-delete-kb", "<strong>Cancella KB</strong><br>Elimina la Knowledge Base attiva e i relativi indici di ricerca.");
+    HelpPopup.bind("menu-save-kb", "<strong>Archivia KB</strong><br>Salva la Knowledge Base corrente con un nome personalizzato per usi futuri.");
+    HelpPopup.bind("menu-elenco-kb", "<strong>Gestisci KB</strong><br>Elenca, attiva, esporta o elimina le Knowledge Base archiviate.");
+    HelpPopup.bind("menu-restore-kb", "<strong>Ripristina KB</strong><br>Carica una Knowledge Base da un file di backup salvato in precedenza.");
+
+    // Menu — Conversazione
     HelpPopup.bind("menu-view-context", "<strong>Visualizza Contesto</strong><br>Mostra il contenuto estratto usato dall'AI per rispondere.");
     HelpPopup.bind("menu-view-convo", "<strong>Visualizza Conversazione</strong><br>Mostra l'intero storico della chat in formato testo.");
     HelpPopup.bind("menu-clear-context", "<strong>Cancella Contesto</strong><br>Azzeramento totale: cancella il contesto, la prima domanda e l'intera conversazione. La chat torna come appena avviata.");
     HelpPopup.bind("menu-clear-conversazione", "<strong>Cancella Conversazione</strong><br>Elimina solo i messaggi successivi alla prima domanda, mantenendo intatti il contesto e la domanda iniziale.");
+    HelpPopup.bind("menu-save-convo", "<strong>Archivia Conversazione</strong><br>Salva la cronologia della chat corrente con un nome personalizzato.");
+    HelpPopup.bind("menu-elenco-convo", "<strong>Gestisci Conversazioni</strong><br>Elenca, attiva, esporta o elimina le conversazioni archiviate.");
+    HelpPopup.bind("menu-restore-convo", "<strong>Ripristina Conversazione</strong><br>Carica una conversazione da un file di backup salvato in precedenza.");
+
+    // Menu — Dati e Sistema
+    HelpPopup.bind("menu-elenco-docs", "<strong>Elenco Documenti</strong><br>Mostra l'elenco dei documenti caricati nel sistema con opzioni di visualizzazione ed eliminazione.");
+    HelpPopup.bind("menu-elenco-dati", "<strong>Dati Archiviati</strong><br>Mostra tutti i dati salvati in IndexedDB: chunk, indici, contesto e thread.");
     HelpPopup.bind("menu-delete-all", "<strong>Reset</strong><br>Elimina ogni dato: Knowledge Base, contesto, conversazioni, documenti e chiavi salvate. L'app torna allo stato iniziale.");
     HelpPopup.bind("menu-default-api-keys", "<strong>API Keys Default</strong><br>Ripristina le chiavi API predefinite dal file locale <code>api_x.json</code>, sovrascrivendo quelle attuali.");
     HelpPopup.bind("menu-add-api-key", "<strong>Gestione API Key</strong><br>Aggiungi, attiva o elimina le tue chiavi API personali.");
+    HelpPopup.bind("menu-logout", "<strong>Logout</strong><br>Esci dall'applicazione e torna alla schermata di login.");
+
+    // Menu — Info
+    HelpPopup.bind("menu-readme", "<strong>README</strong><br>Apre il README tecnico del progetto in una nuova finestra.");
+    HelpPopup.bind("menu-quickstart", "<strong>Guida Rapida</strong><br>Mostra le istruzioni essenziali per iniziare subito con l'app.");
 };
