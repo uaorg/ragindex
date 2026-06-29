@@ -2,7 +2,7 @@
 
 # RagIndex: Generazione Aumentata da Recupero (RAG) 100% Client-Side
 
-**Versione:** 0.4.5
+**Versione:** 0.4.6
 
 **RagIndex** è un'applicazione web che implementa un'architettura RAG (Retrieval-Augmented Generation) completa, operando interamente nel browser dell'utente. Nessun dato lascia mai il client, garantendo massima privacy e autonomia.
 
@@ -17,7 +17,7 @@ Essendo un'applicazione puramente statica, non richiede build system complessi (
 3.  **Configurazione API**: 
     - Apri il menu laterale.
     - Seleziona **"API Keys Default"** per caricare le chiavi di prova predefinite dal file locale.
-    - Oppure seleziona **"Gestisci API Key"** per inserire la tua chiave personale (**Gemini** o **Mistral**).
+    - Oppure seleziona **"Gestisci API Key"** per inserire la tua chiave personale (Gemini, Mistral, Groq, OpenRouter, Cerebras, SiliconFlow).
     > 🛡️ **Privacy**: Le chiavi sono salvate esclusivamente nell'**IndexedDB** del tuo browser. La comunicazione AI avviene direttamente dal tuo computer al provider, senza server intermedi.
 
 ## Caratteristiche Principali
@@ -42,8 +42,9 @@ L'applicazione è progettata per essere utilizzata seguendo tre fasi sequenziali
 - **UI Controller**: `static/js/app_ui.js` (Gestione DOM ed eventi).
 - **RAG Engine**: `static/js/rag_engine.js` (Orchestratore del flusso RAG).
 - **Worker**: `static/js/rag_worker.js` (Elaborazione intensiva in background).
-- **LLM Clients**: `static/js/llmclient/` (Integrazione diretta con Google Gemini e Mistral AI).
+- **LLM Clients**: `static/js/llmclient/` (6 provider: Gemini, Mistral, Groq, OpenRouter, Cerebras, SiliconFlow).
 - **Database Locale**: `static/js/services/idb_mgr.js` (Persistenza via Dexie.js).
+- **Test**: `test/test_providers.js` (Node.js, test manuale di tutti i provider con chiavi reali).
 
 ---
 *RagIndex è un progetto focalizzato sulla privacy e sull'efficienza dell'AI lato client.*

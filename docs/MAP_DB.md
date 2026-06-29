@@ -44,7 +44,7 @@ Né locale né login (guest):
 |--------|-----------|-------------|----------------|
 | `theme` | `"dark"` \| `"light"` | Tema UI persistente | `app_ui.js:374` |
 | `active_kb` | `string` | Nome sanitizzato della KB attualmente selezionata | `app_ui.js:442,509` |
-| `llm_provider` | `{provider, model, ...}` | Configurazione provider LLM attivo | `llm_provider.js:386,443` |
+| `llm_provider` | `{provider, model, ...}` | Configurazione provider LLM attivo | `llm_provider.js:loadConfig(), saveConfig()` |
 | `api_keys` | `Object<provider, string>` | Mappa provider → chiave API. **Solo offuscate, non cifrate** | `key_retriever.js:211,308` |
 | `docs` | `Array<DocDescriptor>` | Elenco documenti caricati. Ogni entry: `{name, size?, type?, date?}` | `docs_mgr.js:36,74,87` |
 | `knbase_build_state` | `{status, docNames, currentDocIndex, currentChunkIndex}` | Stato della costruzione KB incrementale | `build_state_mgr.js:16,27` |

@@ -172,6 +172,7 @@ export const LlmProvider = {
 
     /**
      * Carica la configurazione dei modelli dai file su disco.
+     * @param {boolean} [force=false] - Se true, ricarica da file anche se già caricati.
      * @returns {Promise<void>}
      */
     loadModels: async (force = false) => {
