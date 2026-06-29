@@ -423,6 +423,7 @@ export const ragEngine = {
 
     const rawData = rr.data;
     const cleanedData = cleanLlmResponse(rawData);
+    console.info("%c[%s]%c %s", "color:#00bd97;font-weight:bold", "ASSISTANT", "color:#e0e0e0", cleanedData);
     const result = cleanedData;
     return result;
   },
