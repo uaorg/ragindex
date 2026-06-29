@@ -1502,7 +1502,7 @@ export const bindEventListener = function() {
     // Menu — Dati e Sistema
     HelpPopup.bind("menu-elenco-docs", "<strong>Elenco Documenti</strong><br>Mostra l'elenco dei documenti caricati nel sistema con opzioni di visualizzazione ed eliminazione.");
     HelpPopup.bind("menu-elenco-dati", "<strong>Dati Archiviati</strong><br>Mostra tutti i dati in IndexedDB raggruppati per tipologia: KB attiva/archiviata, conversazioni, documenti, configurazione e build temporanei.");
-    HelpPopup.bind("menu-default-api-keys", "<strong>API Keys Default</strong><br>Ripristina le chiavi API predefinite dal file locale <code>api_x.json</code>, sovrascrivendo quelle attuali.");
+    HelpPopup.bind("menu-default-api-keys", "<strong>API Keys Default</strong><br>Ripristina le chiavi API predefinite, sovrascrivendo quelle attuali.");
     HelpPopup.bind("menu-add-api-key", "<strong>Gestione API Key</strong><br>Aggiungi, attiva o elimina le tue chiavi API personali.");
     HelpPopup.bind("menu-reset", "<strong>Reset</strong><br>Cancella TUTTI i dati: KB, conversazioni, documenti, chiavi API e configurazione. Due conferme richieste.");
     HelpPopup.bind("menu-logout", "<strong>Logout</strong><br>Esci dall'applicazione e torna alla schermata di login.");

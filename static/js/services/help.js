@@ -82,7 +82,7 @@ export const help0_html = `
     <div>
         <strong class="help-section-title">Menu Laterale &mdash; API Key</strong>
         <div class="help-grid">
-            <strong>API Keys Default</strong> <span>Ripristina le chiavi API predefinite dal file api_x.json.</span>
+            <strong>API Keys Default</strong> <span>Ripristina le chiavi API predefinite.</span>
             <strong>Gestisci API Key</strong> <span>Aggiungi, attiva o elimina le tue chiavi API personali.</span>
         </div>
     </div>
@@ -163,7 +163,7 @@ export const help2_html = `
     <div>
         <strong>API Key</strong>
         <ul>
-            <li><strong>API Keys Default</strong>: Ripristina le chiavi predefinite da <code>api_x.json</code>.</li>
+            <li><strong>API Keys Default</strong>: Ripristina le chiavi predefinite.</li>
             <li><strong>Gestisci API Key</strong>: Aggiungi, attiva o elimina le tue chiavi personali.</li>
         </ul>
     </div>

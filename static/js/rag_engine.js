@@ -433,7 +433,7 @@ export const ragEngine = {
 
     console.debug("PAYLOAD:", JSON.stringify(payload, null, 2));
 
-    UaLog.log("✍️ Generazione risposta LLM...");
+    UaLog.log(`✍️ LLM: ${_model} | Contesto: ${context ? context.length : 0} caratteri`);
     const rr = await _sendRequest(_client, payload, "ERR_GENERATE_RESPONSE");
 
     if (!rr || !rr.ok) {
