@@ -110,7 +110,6 @@ async function testModel(provider, modelName, apiKey, config) {
         body: JSON.stringify(payload),
         signal: controller.signal,
       });
-      clearTimeout(timeoutId);
       const elapsed = ((Date.now() - start) / 1000).toFixed(1);
       if (!res.ok) {
         const text = await res.text().catch(() => "");
@@ -141,7 +140,6 @@ async function testModel(provider, modelName, apiKey, config) {
       body: JSON.stringify(payload),
       signal: controller.signal,
     });
-    clearTimeout(timeoutId);
     const elapsed = ((Date.now() - start) / 1000).toFixed(1);
     if (!res.ok) {
       const text = await res.text().catch(() => "");
@@ -157,9 +155,10 @@ async function testModel(provider, modelName, apiKey, config) {
     const text = data?.choices?.[0]?.message?.content || "";
     return { ok: true, elapsed, preview: text.substring(0, 60).replace(/\n/g, " ") };
   } catch (err) {
-    clearTimeout(timeoutId);
     const elapsed = ((Date.now() - start) / 1000).toFixed(1);
     return { ok: false, elapsed, error: err.name === "AbortError" ? "Timeout (30s)" : err.message };
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
 
