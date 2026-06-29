@@ -53,7 +53,7 @@ export const help0_html = `
             <strong>Cancella</strong> <span>Elimina la Knowledge Base attiva e i suoi indici.</span>
             <strong>Archivia</strong> <span>Salva la KB corrente con un nome personalizzato per usi futuri.</span>
             <strong>Gestisci</strong> <span>Elenca, attiva, esporta o elimina le KB archiviate.</span>
-            <strong>Ripristina</strong> <span>Carica una KB da un file di backup JSON.</span>
+            <strong>Carica</strong> <span>Carica una KB da un file di backup JSON.</span>
         </div>
     </div>
 
@@ -66,7 +66,7 @@ export const help0_html = `
             <strong>Cancella Conversazione</strong> <span>Elimina solo i messaggi successivi alla prima domanda.</span>
             <strong>Archivia</strong> <span>Salva la cronologia della chat corrente con un nome personalizzato.</span>
             <strong>Gestisci</strong> <span>Elenca, attiva, esporta o elimina le conversazioni archiviate.</span>
-            <strong>Ripristina</strong> <span>Carica una conversazione da un file di backup JSON.</span>
+            <strong>Carica</strong> <span>Carica una conversazione da un file di backup JSON.</span>
         </div>
     </div>
 
@@ -135,7 +135,7 @@ export const help2_html = `
         <ul>
             <li><strong>Archivia</strong>: Salva la KB corrente con un nome per riutilizzarla in futuro.</li>
             <li><strong>Gestisci</strong>: Elenca, attiva, esporta (backup JSON) o elimina le KB archiviate.</li>
-            <li><strong>Ripristina</strong>: Carica una KB da un file JSON salvato in precedenza.</li>
+            <li><strong>Carica</strong>: Carica una KB da un file JSON salvato in precedenza.</li>
             <li><strong>Cancella</strong>: Elimina la KB attiva e i suoi indici.</li>
         </ul>
     </div>
@@ -147,7 +147,7 @@ export const help2_html = `
             <li><strong>Visualizza Conversazione</strong>: Mostra l'intero storico della chat in formato testo.</li>
             <li><strong>Cancella Contesto</strong>: Azzera tutto (contesto, prima domanda, cronologia).</li>
             <li><strong>Cancella Conversazione</strong>: Elimina solo i messaggi successivi alla prima domanda.</li>
-            <li><strong>Archivia / Gestisci / Ripristina</strong>: Come per la KB, per salvare e riprendere chat.</li>
+            <li><strong>Archivia / Gestisci / Carica</strong>: Come per la KB, per salvare e riprendere chat.</li>
         </ul>
     </div>
 

@@ -615,22 +615,7 @@ export const Commands = {
             btn.setAttribute("data-tt", UaLog.active ? "Close" : "Open");
         }
     },
-    providerSettings: function() { LlmProvider.toggleTreeView(); },
-    deleteAll: async function() {
-        const msg = "Attenzione: verranno cancellati Knowledge Base, contesto, conversazioni e documenti.\n\nLe chiavi API e l'account restano preservati. Confermi?";
-        if (await confirm(msg)) {
-            const apiKeys = await UaDb.readJson(DATA_KEYS.KEY_API_KEYS);
-            const providerConfig = await UaDb.readJson(DATA_KEYS.KEY_PROVIDER);
-            await idbMgr.clearAll();
-            if (apiKeys && Object.keys(apiKeys).length > 0) {
-                await UaDb.saveJson(DATA_KEYS.KEY_API_KEYS, apiKeys);
-            }
-            if (providerConfig && Object.keys(providerConfig).length > 0) {
-                await UaDb.saveJson(DATA_KEYS.KEY_PROVIDER, providerConfig);
-            }
-            location.reload();
-        }
-    }
+    providerSettings: function() { LlmProvider.toggleTreeView(); }
 };
 
 
@@ -939,7 +924,6 @@ export const bindEventListener = function() {
                 UaLog.log(`Conversazione "${n}" ripristinata e attivata.`);
             }
         },
-        "menu-delete-all": Commands.deleteAll,
         "menu-default-api-keys": restoreDefaultApiKeys,
         "menu-add-api-key": addApiKey,
         "menu-logout": _actionLogout,
@@ -1283,7 +1267,7 @@ export const bindEventListener = function() {
     HelpPopup.bind("menu-delete-kb", "<strong>Cancella KB</strong><br>Elimina la Knowledge Base attiva e i relativi indici di ricerca.");
     HelpPopup.bind("menu-save-kb", "<strong>Archivia KB</strong><br>Salva la Knowledge Base corrente con un nome personalizzato per usi futuri.");
     HelpPopup.bind("menu-elenco-kb", "<strong>Gestisci KB</strong><br>Elenca, attiva, esporta o elimina le Knowledge Base archiviate.");
-    HelpPopup.bind("menu-restore-kb", "<strong>Ripristina KB</strong><br>Carica una Knowledge Base da un file di backup salvato in precedenza.");
+    HelpPopup.bind("menu-restore-kb", "<strong>Carica KB</strong><br>Carica una Knowledge Base da un file di backup salvato in precedenza.");
     HelpPopup.bind("menu-processed-docs", "<strong>Documenti Processati</strong><br>Mostra l'elenco dei documenti usati nell'ultima costruzione della Knowledge Base, con indicazione di quali sono ancora presenti tra i caricati.");
 
     // Menu — Conversazione
@@ -1293,12 +1277,11 @@ export const bindEventListener = function() {
     HelpPopup.bind("menu-clear-conversazione", "<strong>Cancella Conversazione</strong><br>Elimina solo i messaggi successivi alla prima domanda, mantenendo intatti il contesto e la domanda iniziale.");
     HelpPopup.bind("menu-save-convo", "<strong>Archivia Conversazione</strong><br>Salva la cronologia della chat corrente con un nome personalizzato.");
     HelpPopup.bind("menu-elenco-convo", "<strong>Gestisci Conversazioni</strong><br>Elenca, attiva, esporta o elimina le conversazioni archiviate.");
-    HelpPopup.bind("menu-restore-convo", "<strong>Ripristina Conversazione</strong><br>Carica una conversazione da un file di backup salvato in precedenza.");
+    HelpPopup.bind("menu-restore-convo", "<strong>Carica Conversazione</strong><br>Carica una conversazione da un file di backup salvato in precedenza.");
 
     // Menu — Dati e Sistema
     HelpPopup.bind("menu-elenco-docs", "<strong>Elenco Documenti</strong><br>Mostra l'elenco dei documenti caricati nel sistema con opzioni di visualizzazione ed eliminazione.");
     HelpPopup.bind("menu-elenco-dati", "<strong>Dati Archiviati</strong><br>Mostra tutti i dati in IndexedDB raggruppati per tipologia: KB attiva/archiviata, conversazioni, documenti, configurazione e build temporanei.");
-    HelpPopup.bind("menu-delete-all", "<strong>Reset</strong><br>Elimina Knowledge Base, contesto, conversazioni e documenti.<br>Chiavi API e account rimangono invariati.");
     HelpPopup.bind("menu-default-api-keys", "<strong>API Keys Default</strong><br>Ripristina le chiavi API predefinite dal file locale <code>api_x.json</code>, sovrascrivendo quelle attuali.");
     HelpPopup.bind("menu-add-api-key", "<strong>Gestione API Key</strong><br>Aggiungi, attiva o elimina le tue chiavi API personali.");
     HelpPopup.bind("menu-logout", "<strong>Logout</strong><br>Esci dall'applicazione e torna alla schermata di login.");
