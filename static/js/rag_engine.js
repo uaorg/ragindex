@@ -413,6 +413,8 @@ export const ragEngine = {
       max_tokens: GENERATION_MAX_TOKENS,
     };
 
+    console.debug("PAYLOAD:", JSON.stringify(payload, null, 2));
+
     UaLog.log("✍️ Generazione risposta LLM...");
     const rr = await _sendRequest(_client, payload, "ERR_GENERATE_RESPONSE");
 
