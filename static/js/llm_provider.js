@@ -184,14 +184,11 @@ export const LlmProvider = {
     // ========================================================================
 
     /**
-     * Carica la configurazione dei modelli dai file su disco.
-     * @param {boolean} [force=false] - Se true, ricarica da file anche se già caricati.
+     * Carica i modelli da file su disco. Ogni chiamata ricarica da zero.
      * @returns {Promise<void>}
      */
-    loadModels: async (force = false) => {
-        if (force || Object.keys(_providerModels).length > 0) {
-            _providerModels = {};
-        }
+    loadModels: async () => {
+        _providerModels = {};
 
         for (const p of SUPPORTED_PROVIDERS) {
             try {
@@ -237,7 +234,7 @@ export const LlmProvider = {
     // ========================================================================
 
     /**
-     * Restituisce l'oggetto configurazione corrente (provider, model, windowSize, client).
+     * Restituisce l'oggetto configurazione corrente (provider, model, windowSize).
      * @returns {Object}
      */
     getConfig: function() {
@@ -304,8 +301,7 @@ export const LlmProvider = {
 
     /**
      * Restituisce il client LLM per il provider attivo.
-     * Crea una nuova istanza se _activeClient è null o se
-     * il provider attivo è cambiato dopo l'ultima creazione.
+     * Crea una nuova istanza a ogni chiamata leggendo la chiave dal DB.
      * @returns {Promise<Object|null>}
      */
     getClient: async function() {
