@@ -921,7 +921,7 @@ export const updateActiveModelDisplay = function() {
     }
 
     const config = LlmProvider.getConfig();
-    const displayText = `${config.model} (${config.windowSize}k)`;
+    const displayText = config.model ? `${config.model} (${config.windowSize}k)` : "Nessun provider selezionato";
     displayElement.textContent = displayText;
 };
 
