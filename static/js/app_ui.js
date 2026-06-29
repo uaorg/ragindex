@@ -772,13 +772,10 @@ export const TextInput = {
                 await idbMgr.delete(DATA_KEYS.KEY_THREAD);
                 const kbData = { index, chunks };
                 const thread = [{ role: "user", content: query }];
-                console.info("%c[SYSTEM]%c Avvio nuova conversazione", "color:#e82323;font-weight:bold", "color:#e0e0e0");
-                console.info("%c[USER]%c %s", "color:#f6e602;font-weight:bold", "color:#e0e0e0", query);
                 await AppMgr.initConfig();
                 const context = await ragEngine.getOptimizedContext(query, kbData, thread);
                 await idbMgr.create(DATA_KEYS.PHASE2_CONTEXT, context);
                 const answer = await ragEngine.generateResponse(context, thread);
-                console.info("%c[ASSISTANT]%c %s", "color:#00bd97;font-weight:bold", "color:#e0e0e0", answer);
                 thread.push({ role: "assistant", content: answer });
                 await idbMgr.create(DATA_KEYS.KEY_THREAD, thread);
                 await showHtmlThread();
@@ -799,8 +796,6 @@ export const TextInput = {
             try {
                 const thread = await idbMgr.read(DATA_KEYS.KEY_THREAD) || [];
                 const context = await idbMgr.read(DATA_KEYS.PHASE2_CONTEXT) || "";
-
-                console.info("%c[USER]%c %s", "color:#f6e602;font-weight:bold", "color:#e0e0e0", query);
 
                 thread.push({ role: "user", content: query });
                 await AppMgr.initConfig();
