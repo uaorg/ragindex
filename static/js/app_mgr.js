@@ -23,10 +23,7 @@ const PROMPT_OVERHEAD_PERCENT = 0.1;
 // VARIABILI PRIVATE
 // ============================================================================
 
-let _configLLM = null;
 let _clientLLM = null;
-let _promptSize = 0;
-let _configLoaded = false;
 
 // ============================================================================
 // FUNZIONI PRIVATE
@@ -60,62 +57,33 @@ export const AppMgr = {
 
     /**
      * Inizializza la configurazione LLM.
+     * Viene eseguita ogni volta senza cache: carica la configurazione corrente
+     * da LlmProvider e aggiorna ragEngine col client e modello attivo.
      */
     initConfig: async function() {
-        if (_configLoaded) {
-            return;
-        }
-
         await LlmProvider.loadConfig();
 
-        _configLLM = LlmProvider.getConfig();
-        if (!_configLLM || !_configLLM.windowSize) {
+        const config = LlmProvider.getConfig();
+        if (!config || !config.windowSize) {
             console.error("AppMgr.initConfig: configurazione LLM mancante o non valida");
             return;
         }
 
-        _promptSize = _tokensToBytes(_configLLM.windowSize);
+        const promptSize = _tokensToBytes(config.windowSize);
 
         console.info("AppMgr.initConfig: configurazione caricata.");
-        console.info(`Provider: ${_configLLM.provider} | Model: ${_configLLM.model}`);
-        console.info(`Window: ${_configLLM.windowSize}k | Prompt: ${_promptSize} bytes`);
+        console.info(`Provider: ${config.provider} | Model: ${config.model}`);
+        console.info(`Window: ${config.windowSize}k | Prompt: ${promptSize} bytes`);
 
         _clientLLM = await LlmProvider.getClient();
-        ragEngine.init(_clientLLM, _configLLM.model, _promptSize);
-        _configLoaded = true;
+        ragEngine.init(_clientLLM, config.model, promptSize);
     },
 
     /**
-     * Resetta la configurazione forzando un reload al prossimo initConfig.
-     */
-    resetConfig: function() {
-        _configLoaded = false;
-    },
-
-    /**
-     * Ottiene la configurazione LLM.
-     * @returns {Object|null}
-     */
-    getConfigLLM: function() {
-        const result = _configLLM;
-        return result;
-    },
-
-    /**
-     * Ottiene il client LLM.
+     * Ottiene il client LLM attivo.
      * @returns {Object|null}
      */
     getClientLLM: function() {
-        const result = _clientLLM;
-        return result;
-    },
-
-    /**
-     * Ottiene la dimensione del prompt.
-     * @returns {number}
-     */
-    getPromptSize: function() {
-        const result = _promptSize;
-        return result;
+        return _clientLLM;
     }
 };

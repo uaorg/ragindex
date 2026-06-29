@@ -494,8 +494,7 @@ Solo `nome` e `windowSize` (primi due campi) sono usati dall'app.
 Quando l'utente aggiunge/cambia una chiave API via UI:
 1. `key_retriever.js` salva la nuova chiave in IndexedDB
 2. Chiama `LlmProvider.updateClient(provider)` → invalida `_activeClient`
-3. Chiama `AppMgr.resetConfig()` → setta `_configLoaded = false`
-4. Prossima richiesta LLM → `AppMgr.initConfig()` → ricarica tutto
+3. Prossima richiesta LLM → `AppMgr.initConfig()` → ricarica tutto (senza cache)
 
 ---
 

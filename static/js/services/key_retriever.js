@@ -176,9 +176,7 @@ export async function addApiKey() {
                 providerData.exported_key = name;
                 // Aggiorna il client LLM "a caldo"
                 const { LlmProvider } = await import("../llm_provider.js");
-                const { AppMgr } = await import("../app_mgr.js");
                 await LlmProvider.updateClient(provider);
-                AppMgr.resetConfig();
             }
 
             await saveDb();
@@ -194,9 +192,7 @@ export async function addApiKey() {
 
             // Aggiorna il client LLM "a caldo"
             const { LlmProvider } = await import("../llm_provider.js");
-            const { AppMgr } = await import("../app_mgr.js");
             await LlmProvider.updateClient(provider);
-            AppMgr.resetConfig();
         };
 
         wnds.handleDeleteKey = async (provider, keyName) => {
