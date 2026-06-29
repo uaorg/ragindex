@@ -607,10 +607,13 @@ export const Commands = {
     },
     providerSettings: function() { LlmProvider.toggleTreeView(); },
     deleteAll: async function() {
-        const msg = "ATTENZIONE: Questa azione cancellerà OGNI DATO in modo irreversibile. Confermi?";
+        const msg = "Attenzione: verranno cancellati Knowledge Base, contesto, conversazioni e documenti.\n\nLe chiavi API e l'account restano preservati. Confermi?";
         if (await confirm(msg)) {
+            const apiKeys = await UaDb.readJson(DATA_KEYS.KEY_API_KEYS);
             await idbMgr.clearAll();
-            localStorage.clear();
+            if (apiKeys && Object.keys(apiKeys).length > 0) {
+                await UaDb.saveJson(DATA_KEYS.KEY_API_KEYS, apiKeys);
+            }
             location.reload();
         }
     }
@@ -1077,21 +1080,174 @@ export const bindEventListener = function() {
     const menuElencoDati = document.getElementById("menu-elenco-dati");
     if (menuElencoDati) {
         menuElencoDati.onclick = async function() {
-            const idbKeys = [];
-            const staticIdb = [DATA_KEYS.PHASE0_CHUNKS, DATA_KEYS.PHASE1_INDEX, DATA_KEYS.PHASE2_CONTEXT, DATA_KEYS.KEY_THREAD];
-            for (const k of staticIdb) if (await idbMgr.exists(k)) idbKeys.push({ k, d: getDescriptionForKey(k), s: JSON.stringify(await idbMgr.read(k)).length });
-            const prefixes = [DATA_KEYS.KEY_KB_PRE, DATA_KEYS.KEY_CONVO_PRE];
-            for (const pre of prefixes) {
-                const keys = await idbMgr.selectKeys(pre);
-                for (const k of keys) idbKeys.push({ k, d: getDescriptionForKey(k), s: JSON.stringify(await idbMgr.read(k)).length });
-            }
             const jfh = UaJtfh();
-            jfh.append('<div><h4>Dati DB</h4><table class="table-data"><tbody>');
-            for (const i of idbKeys) {
-                const sizeKb = (i.s / 1024).toFixed(1);
-                jfh.append(`<tr><td>${i.k}</td><td>${i.d}</td><td>${sizeKb} KB</td></tr>`);
+            const kvRecords = await idbMgr.getAllRecords();
+            const settingIds = await UaDb.getAllIds();
+
+            const _kv = (k) => kvRecords.find(r => r.key === k);
+
+            const _size = (v) => {
+                if (v === null || v === undefined) return '-';
+                const s = typeof v === 'string' ? v.length : JSON.stringify(v).length;
+                return s > 1024 ? `${(s / 1024).toFixed(1)} KB` : `${s} B`;
+            };
+
+            const _row = (k, d, v) => {
+                jfh.append(`<tr><td>${k}</td><td>${d}</td><td>${_size(v)}</td></tr>`);
+            };
+
+            jfh.append('<div class="ed-wrap" style="max-height:70vh;overflow-y:auto;">'
+                + '<style>'
+                + '.ed-wrap h4{color:#38bdf8;margin:0.4em 0 0.1em;font-size:0.9em;}'
+                + '.ed-wrap .table-data{margin:0.2em auto 0.6em;}'
+                + '.ed-wrap .table-data td{padding:2px 6px;font-size:0.85em;}'
+                + '.ed-wrap .table-data tr td:first-child{font-family:monospace;font-size:0.8em;color:#94a3b8;}'
+                + '</style>');
+
+            // --- Knowledge Base Attiva (kvStore) ---
+            const activeChunks = _kv(DATA_KEYS.PHASE0_CHUNKS);
+            if (activeChunks) {
+                jfh.append('<h4>Knowledge Base Attiva</h4><table class="table-data"><tbody>');
+                const docList = _kv(DATA_KEYS.KB_DOCLIST);
+                const docCount = docList ? docList.value.length : 0;
+                _row(DATA_KEYS.KB_DOCLIST, `Documenti: ${docCount}`, docList ? docList.value : null);
+                _row(DATA_KEYS.PHASE0_CHUNKS, `Chunks: ${activeChunks.value.length}`, activeChunks.value);
+                _row(DATA_KEYS.PHASE1_INDEX, 'Indice di ricerca', _kv(DATA_KEYS.PHASE1_INDEX)?.value);
+                const childMap = _kv(DATA_KEYS.KB_CHILDCHUNKS);
+                const childDocCount = childMap ? Object.keys(childMap.value).length : 0;
+                _row(DATA_KEYS.KB_CHILDCHUNKS, `Child chunk (${childDocCount} documenti)`, childMap?.value);
+                jfh.append('</tbody></table>');
             }
-            jfh.append('</tbody></table></div>');
+
+            // --- Conversazione Attiva (kvStore) ---
+            const thread = _kv(DATA_KEYS.KEY_THREAD);
+            const context = _kv(DATA_KEYS.PHASE2_CONTEXT);
+            if (thread || context) {
+                jfh.append('<h4>Conversazione Attiva</h4><table class="table-data"><tbody>');
+                _row(DATA_KEYS.KEY_THREAD, `Messaggi: ${thread ? thread.value.length : 0}`, thread?.value);
+                _row(DATA_KEYS.PHASE2_CONTEXT, 'Contesto estratto', context?.value);
+                jfh.append('</tbody></table>');
+            }
+
+            // --- Knowledge Base Archiviate (kvStore) ---
+            const kbArchived = kvRecords.filter(r => r.key.startsWith(DATA_KEYS.KEY_KB_PRE));
+            if (kbArchived.length > 0) {
+                jfh.append('<h4>Knowledge Base Archiviate</h4><table class="table-data"><tbody>');
+                for (const r of kbArchived) {
+                    const name = r.key.slice(DATA_KEYS.KEY_KB_PRE.length);
+                    const chunks = r.value?.chunks?.length ?? 0;
+                    _row(r.key, `"${name}" (${chunks} chunks)`, r.value);
+                }
+                jfh.append('</tbody></table>');
+            }
+
+            // --- Conversazioni Archiviate (kvStore) ---
+            const convoArchived = kvRecords.filter(r => r.key.startsWith(DATA_KEYS.KEY_CONVO_PRE));
+            if (convoArchived.length > 0) {
+                jfh.append('<h4>Conversazioni Archiviate</h4><table class="table-data"><tbody>');
+                for (const r of convoArchived) {
+                    const name = r.key.slice(DATA_KEYS.KEY_CONVO_PRE.length);
+                    const threadArr = r.value?.thread ?? r.value ?? [];
+                    const msgs = Array.isArray(threadArr) ? threadArr.length : 0;
+                    _row(r.key, `"${name}" (${msgs} messaggi)`, r.value);
+                }
+                jfh.append('</tbody></table>');
+            }
+
+            // --- Documenti (settings: docs + kvStore: idoc_*) ---
+            const docsArr = settingIds.includes(DATA_KEYS.KEY_DOCS) ? await UaDb.readJson(DATA_KEYS.KEY_DOCS) : [];
+            const idocKeys = kvRecords.filter(r => r.key.startsWith(DATA_KEYS.KEY_DOC_PRE));
+            if (docsArr.length > 0 || idocKeys.length > 0) {
+                jfh.append('<h4>Documenti</h4><table class="table-data"><tbody>');
+                _row(DATA_KEYS.KEY_DOCS, `Elenco (${docsArr.length} documenti)`, docsArr);
+                for (const r of idocKeys) {
+                    const name = r.key.slice(DATA_KEYS.KEY_DOC_PRE.length);
+                    _row(r.key, `Contenuto: ${name}`, r.value);
+                }
+                jfh.append('</tbody></table>');
+            }
+
+            // --- Configurazione (settings) ---
+            const configKeys = [DATA_KEYS.KEY_THEME, DATA_KEYS.ACTIVE_KB_NAME, DATA_KEYS.KEY_PROVIDER, DATA_KEYS.KEY_API_KEYS];
+            const configRows = [];
+            for (const k of configKeys) {
+                if (settingIds.includes(k)) {
+                    const raw = await UaDb.read(k);
+                    configRows.push({ key: k, raw });
+                }
+            }
+            if (configRows.length > 0) {
+                jfh.append('<h4>Configurazione</h4><table class="table-data"><tbody>');
+                for (const c of configRows) {
+                    let desc = getDescriptionForKey(c.key);
+                    if (c.key === DATA_KEYS.KEY_API_KEYS) {
+                        const keys = JSON.parse(c.raw || '{}');
+                        const list = Object.keys(keys);
+                        desc = list.length > 0 ? `Chiavi: ${list.join(', ')}` : 'Nessuna chiave salvata';
+                    }
+                    _row(c.key, desc, c.raw);
+                }
+                jfh.append('</tbody></table>');
+            }
+
+            // --- Build Temporanei (settings) ---
+            const buildKeys = settingIds.filter(id =>
+                id === DATA_KEYS.KEY_BUILD_STATE ||
+                id.startsWith(DATA_KEYS.KEY_CHUNK_RES_PRE) ||
+                id.startsWith(DATA_KEYS.KEY_DOC_KB_PRE)
+            );
+            if (buildKeys.length > 0) {
+                jfh.append('<h4>Build Temporanei</h4><table class="table-data"><tbody>');
+                for (const id of buildKeys) {
+                    const raw = await UaDb.read(id);
+                    if (id === DATA_KEYS.KEY_BUILD_STATE) {
+                        const st = JSON.parse(raw || '{}');
+                        const prog = st.docNames ? `${st.currentDocIndex}/${st.docNames.length}` : '-';
+                        _row(id, `Stato costruzione (${prog})`, raw);
+                    } else if (id.startsWith(DATA_KEYS.KEY_CHUNK_RES_PRE)) {
+                        const name = id.slice(DATA_KEYS.KEY_CHUNK_RES_PRE.length);
+                        const arr = JSON.parse(raw || '[]');
+                        _row(id, `Chunk intermedi: ${name} (${arr.length})`, raw);
+                    } else if (id.startsWith(DATA_KEYS.KEY_DOC_KB_PRE)) {
+                        const name = id.slice(DATA_KEYS.KEY_DOC_KB_PRE.length);
+                        _row(id, `KB parziale: ${name}`, raw);
+                    }
+                }
+                jfh.append('</tbody></table>');
+            }
+
+            // --- Altri dati non categorizzati ---
+            const knownKv = new Set([
+                DATA_KEYS.PHASE0_CHUNKS, DATA_KEYS.PHASE1_INDEX, DATA_KEYS.PHASE2_CONTEXT,
+                DATA_KEYS.KEY_THREAD, DATA_KEYS.KB_DOCLIST, DATA_KEYS.KB_CHILDCHUNKS
+            ]);
+            const extraKv = kvRecords.filter(r =>
+                !knownKv.has(r.key) &&
+                !r.key.startsWith(DATA_KEYS.KEY_KB_PRE) &&
+                !r.key.startsWith(DATA_KEYS.KEY_CONVO_PRE) &&
+                !r.key.startsWith(DATA_KEYS.KEY_DOC_PRE)
+            );
+            const knownSettings = new Set([...configKeys, DATA_KEYS.KEY_DOCS, DATA_KEYS.KEY_BUILD_STATE]);
+            const extraSettings = settingIds.filter(id =>
+                !knownSettings.has(id) &&
+                !id.startsWith(DATA_KEYS.KEY_CHUNK_RES_PRE) &&
+                !id.startsWith(DATA_KEYS.KEY_DOC_KB_PRE)
+            );
+            if (extraKv.length > 0 || extraSettings.length > 0) {
+                jfh.append('<h4>Altri dati</h4><table class="table-data"><tbody>');
+                for (const r of extraKv) _row(r.key, getDescriptionForKey(r.key), r.value);
+                for (const id of extraSettings) {
+                    const val = await UaDb.read(id);
+                    _row(id, getDescriptionForKey(id), val);
+                }
+                jfh.append('</tbody></table>');
+            }
+
+            if (kvRecords.length === 0 && settingIds.length === 0) {
+                jfh.append('<p style="text-align:center;padding:2em;">Nessun dato presente.</p>');
+            }
+
+            jfh.append('</div>');
             wnds.winfo.show(jfh.html());
         };
     }
@@ -1138,8 +1294,8 @@ export const bindEventListener = function() {
 
     // Menu — Dati e Sistema
     HelpPopup.bind("menu-elenco-docs", "<strong>Elenco Documenti</strong><br>Mostra l'elenco dei documenti caricati nel sistema con opzioni di visualizzazione ed eliminazione.");
-    HelpPopup.bind("menu-elenco-dati", "<strong>Dati Archiviati</strong><br>Mostra tutti i dati salvati in IndexedDB: chunk, indici, contesto e thread.");
-    HelpPopup.bind("menu-delete-all", "<strong>Reset</strong><br>Elimina ogni dato: Knowledge Base, contesto, conversazioni, documenti e chiavi salvate. L'app torna allo stato iniziale.");
+    HelpPopup.bind("menu-elenco-dati", "<strong>Dati Archiviati</strong><br>Mostra tutti i dati in IndexedDB raggruppati per tipologia: KB attiva/archiviata, conversazioni, documenti, configurazione e build temporanei.");
+    HelpPopup.bind("menu-delete-all", "<strong>Reset</strong><br>Elimina Knowledge Base, contesto, conversazioni e documenti.<br>Chiavi API e account rimangono invariati.");
     HelpPopup.bind("menu-default-api-keys", "<strong>API Keys Default</strong><br>Ripristina le chiavi API predefinite dal file locale <code>api_x.json</code>, sovrascrivendo quelle attuali.");
     HelpPopup.bind("menu-add-api-key", "<strong>Gestione API Key</strong><br>Aggiungi, attiva o elimina le tue chiavi API personali.");
     HelpPopup.bind("menu-logout", "<strong>Logout</strong><br>Esci dall'applicazione e torna alla schermata di login.");
