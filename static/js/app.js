@@ -97,6 +97,7 @@ const openAppAsync = async function () {
 
         // 3. Configurazione Componenti Input/Output
         TextInput.init();
+        TextInput._inputEl?.focus();
         TextOutput.init();
 
         // 4. Associazione Event Listener e gestione Menu
