@@ -781,10 +781,7 @@ export const TextInput = {
         const index = await idbMgr.read(DATA_KEYS.PHASE1_INDEX);
         const chunks = await idbMgr.read(DATA_KEYS.PHASE0_CHUNKS);
         
-        // TODO: Stato indice
-        console.debug("startConversationAsync - index exists:", !!index);
-        UaLog.log(`Indice presente: ${!!index}`);
-
+    // TODO: Stato indice
         if (!index) { await alert("Eseguire l'Azione 1 prima."); return; }
 
         _Spinner.show();

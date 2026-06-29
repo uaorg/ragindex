@@ -5,7 +5,8 @@
  * @module services/data_repository
  */
 
-import { idbMgr, UaDb } from "./idb_mgr.js";
+import { idbMgr } from "./idb_mgr.js";
+import { UaDb } from "./uadb.js";
 
 export const DataRepository = {
     // --- Documenti e Knowledge Base ---
