@@ -23,28 +23,6 @@
                 }
             ]
         },
-        "opencode": {
-            "api_key_env": "OPENCODE_API_KEY",
-            "exported_key": "260605",
-            "keys": [
-                {
-                    "name": "260605",
-                    "key": "67-y5LEDGyAGZeDfoiDBm588I3Gjiol34wpfbz2nKuV2UQz5F3MhRDmwMCXY31i4ctR",
-                    "notes": "gabriele.tenebra"
-                }
-            ]
-        },
-        "nvidia": {
-            "api_key_env": "NVIDIA_API_KEY",
-            "exported_key": "260615",
-            "keys": [
-                {
-                    "name": "260615",
-                    "key": "zqA5D-pK8Qa7GhzhXhTDmni3cx6VFp0C-8EQgrlTk2heB6P41YPzkMzRAhwCEcIAjCJj9z",
-                    "notes": "giuseppe.materni"
-                }
-            ]
-        },
         "openrouter": {
             "api_key_env": "OPENROUTER_API_KEY",
             "exported_key": "260530",
@@ -85,39 +63,6 @@
                 {
                     "name": "gmt2",
                     "key": "o67_deaFoPWuNsV9xSs82bmNHQsPg0vU9HpaKqgqYBbpDwdWvJMKIMR0",
-                    "notes": "giuseppe.materni"
-                }
-            ]
-        },
-        "deepseek": {
-            "api_key_env": "DEEPSEEK_API_KEY",
-            "exported_key": "ua260320",
-            "keys": [
-                {
-                    "name": "ua260320",
-                    "key": "67-0ACk2NsgtANkBsABk0CatkuBgkdBCI2A",
-                    "notes": "giuseppe.materni"
-                }
-            ]
-        },
-        "qwen": {
-            "api_key_env": "QWEN_API_KEY",
-            "exported_key": "260418",
-            "keys": [
-                {
-                    "name": "260418",
-                    "key": "67-WV-qu-gkglIsSlsICulagBklSduANBdgdAIlsI2tICatgASlIBCdsIASuN0dtB22aIN20a",
-                    "notes": "giuseppe.materni"
-                }
-            ]
-        },
-        "zhipuai": {
-            "api_key_env": "ZHIPUAI_API_KEY",
-            "exported_key": "260620",
-            "keys": [
-                {
-                    "name": "260620",
-                    "key": "a2Sud0CtCAASBsBdA0AaagAdBl0Bukk2.TRpGtlNko2FW4hXg",
                     "notes": "giuseppe.materni"
                 }
             ]
