@@ -8,10 +8,12 @@ const PROJECT_ROOT = path.resolve(__dirname, "..");
 const API_KEYS_PATH = path.join(PROJECT_ROOT, "static", "data", "api_x.json");
 const MODELS_DIR = path.join(PROJECT_ROOT, "static", "data", "models");
 
-const IMPLEMENTED_CLIENTS = [
-  "gemini", "mistral", "groq",
-  "openrouter", "cerebras", "siliconflow"
-];
+async function discoverProviders() {
+  const files = await fs.readdir(MODELS_DIR);
+  return files
+    .filter(f => f.endsWith(".txt"))
+    .map(f => f.replace(/\.txt$/, ""));
+}
 
 const ALPHABET_FROM = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
 const ALPHABET_TO   = "mKpX3vQwL8ZnR4yTbJxF1YHcU9AgNsI2oODh7eMzW5jV6ifqGrPECuS0Btaldk-_";
@@ -177,19 +179,28 @@ async function main() {
   const db = decodeApiKeys(raw);
 
   let totalOk = 0, totalErr = 0, totalSkip = 0;
+  const failures = [];
 
-  const colW = { provider: 14, model: 38, status: 8, time: 8, detail: 50 };
+  const colW = { provider: 11, model: 28, status: 4, time: 6, detail: 45 };
+  const LINE_W = 10 + colW.provider + colW.model + colW.status + colW.time + colW.detail;
 
   function printHeader() {
-    console.log(`  ${C.dim}${"─".repeat(colW.provider + colW.model + colW.status + colW.time + colW.detail + 13)}${C.reset}`);
+    console.log(`  ${C.dim}${"─".repeat(LINE_W - 2)}${C.reset}`);
     console.log(`  ${C.bold}${pad("Provider", colW.provider)}│ ${pad("Modello", colW.model)}│ ${pad("Esito", colW.status)}│ ${pad("Tempo", colW.time)}│ ${pad("Dettaglio", colW.detail)}${C.reset}`);
-    console.log(`  ${C.dim}${"─".repeat(colW.provider + colW.model + colW.status + colW.time + colW.detail + 13)}${C.reset}`);
+    console.log(`  ${C.dim}${"─".repeat(LINE_W - 2)}${C.reset}`);
   }
+
+  const providers = await discoverProviders();
 
   printHeader();
 
-  for (const provider of IMPLEMENTED_CLIENTS) {
+  for (const provider of providers) {
     const config = PROVIDER_CONFIGS[provider];
+    if (!config) {
+      console.log(`  ${pad(provider, colW.provider)}│ ${pad("(config sconosciuta)", colW.model)}│ ${C.yellow}${pad("SKIP", colW.status)}${C.reset}│ ${pad("-", colW.time)}│ ${pad("Provider non in PROVIDER_CONFIGS", colW.detail)}`);
+      totalSkip++;
+      continue;
+    }
     const providerData = db?.providers?.[provider];
     const apiKey = providerData?.keys?.[0]?.key || null;
 
@@ -213,15 +224,27 @@ async function main() {
         console.log(`  ${pad(provider, colW.provider)}│ ${pad(model, colW.model)}│ ${C.green}${pad("OK", colW.status)}${C.reset}│ ${pad(result.elapsed + "s", colW.time)}│ ${C.dim}${pad(result.preview || "", colW.detail)}${C.reset}`);
       } else {
         totalErr++;
-        console.log(`  ${pad(provider, colW.provider)}│ ${pad(model, colW.model)}│ ${C.red}${pad("ERR", colW.status)}${C.reset}│ ${pad(result.elapsed + "s", colW.time)}│ ${C.red}${pad((result.error || "").substring(0, colW.detail), colW.detail)}${C.reset}`);
+        const errMsg = result.error || "";
+        failures.push({ provider, model, error: errMsg });
+        console.log(`  ${pad(provider, colW.provider)}│ ${pad(model, colW.model)}│ ${C.red}${pad("ERR", colW.status)}${C.reset}│ ${pad(result.elapsed + "s", colW.time)}│ ${C.red}${pad(errMsg.substring(0, colW.detail), colW.detail)}${C.reset}`);
       }
     }
   }
 
-  console.log(`  ${C.dim}${"─".repeat(colW.provider + colW.model + colW.status + colW.time + colW.detail + 13)}${C.reset}`);
+  console.log(`  ${C.dim}${"─".repeat(LINE_W - 2)}${C.reset}`);
   const total = totalOk + totalErr + totalSkip;
   const statusColor = totalErr === 0 ? C.green : C.red;
-  console.log(`\n  ${C.bold}Riepilogo:${C.reset} ${total} test · ${C.green}${totalOk} OK${C.reset} · ${C.red}${totalErr} ERR${C.reset} · ${C.yellow}${totalSkip} SKIP${C.reset}${statusColor}\n`);
+  console.log(`\n  ${C.bold}Riepilogo:${C.reset} ${total} test · ${C.green}${totalOk} OK${C.reset} · ${C.red}${totalErr} ERR${C.reset} · ${C.yellow}${totalSkip} SKIP${C.reset}`);
+
+  if (failures.length > 0) {
+    console.log(`\n  ${C.bold}Modelli falliti:${C.reset}`);
+    for (const f of failures) {
+      const shortErr = f.error.substring(0, 60);
+      console.log(`  ${C.red}•${C.reset} ${f.provider}/${f.model} — ${shortErr}`);
+    }
+  }
+
+  console.log("");
 
   process.exit(totalErr > 0 ? 1 : 0);
 }

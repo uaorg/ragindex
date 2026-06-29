@@ -174,7 +174,10 @@ export const LlmProvider = {
      * Carica la configurazione dei modelli dai file su disco.
      * @returns {Promise<void>}
      */
-    loadModels: async () => {
+    loadModels: async (force = false) => {
+        if (force) {
+            _providerModels = {};
+        }
         if (Object.keys(_providerModels).length > 0) {
             return;
         }
@@ -328,8 +331,6 @@ export const LlmProvider = {
             _activeClient = null;
             _activeClientProvider = "";
             _activeApiKey = "";
-            const { AppMgr } = await import("./app_mgr.js");
-            AppMgr.resetConfig();
         }
     },
 
