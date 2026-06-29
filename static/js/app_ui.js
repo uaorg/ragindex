@@ -470,7 +470,16 @@ const _actionClearContextAsync = async function() {
 
 const _actionClearConversazioneAsync = async function() {
     const thread = await idbMgr.read(DATA_KEYS.KEY_THREAD);
-    if (!thread || thread.length < 2) { await alert("Nessuna conversazione successiva da cancellare."); return; }
+    if (!thread || thread.length === 0) { await alert("Nessuna conversazione da cancellare."); return; }
+    const hasContext = await idbMgr.exists(DATA_KEYS.PHASE2_CONTEXT);
+    if (!hasContext) {
+        if (!await confirm("Cancellare l'intera conversazione? (nessun contesto presente)")) return;
+        await idbMgr.delete(DATA_KEYS.KEY_THREAD);
+        _setResponseHtml("");
+        UaLog.log(">>> Conversazione cancellata. <<<");
+        return;
+    }
+    if (thread.length < 2) { await alert("Nessuna conversazione successiva da cancellare."); return; }
     if (!await confirm("Cancellare solo i messaggi successivi alla prima domanda? (contesto e prima domanda restano)")) return;
     const firstMessage = thread[0];
     await idbMgr.create(DATA_KEYS.KEY_THREAD, [firstMessage]);
