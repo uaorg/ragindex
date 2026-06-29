@@ -66,7 +66,7 @@ export const AppMgr = {
             return;
         }
 
-        await LlmProvider.initConfig();
+        await LlmProvider.loadConfig();
 
         _configLLM = LlmProvider.getConfig();
         if (!_configLLM || !_configLLM.windowSize) {
@@ -80,7 +80,7 @@ export const AppMgr = {
         console.info(`Provider: ${_configLLM.provider} | Model: ${_configLLM.model}`);
         console.info(`Window: ${_configLLM.windowSize}k | Prompt: ${_promptSize} bytes`);
 
-        _clientLLM = await LlmProvider.getclient();
+        _clientLLM = await LlmProvider.getClient();
         ragEngine.init(_clientLLM, _configLLM.model, _promptSize);
         _configLoaded = true;
     },

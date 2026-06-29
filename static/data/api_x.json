@@ -45,17 +45,6 @@
                 }
             ]
         },
-        "huggingface": {
-            "api_key_env": "HF_TOKEN",
-            "exported_key": "hf1",
-            "keys": [
-                {
-                    "name": "hf1",
-                    "key": "O2_hfgPYPPEVUUxjWKzGIRQn341w8qFfDKhDI",
-                    "notes": "giuseppe.materni"
-                }
-            ]
-        },
         "groq": {
             "api_key_env": "GROQ_API_KEY",
             "exported_key": "gmt2",

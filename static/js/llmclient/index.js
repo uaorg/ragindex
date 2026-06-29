@@ -15,8 +15,6 @@ export { BaseClient } from './base_client.js';
 export { GeminiClient } from './gemini_client.js';
 export { GroqClient } from './groq_client.js';
 export { MistralClient } from './mistral_client.js';
-export { HuggingFaceClient } from './huggingface_client.js';
-export { OpenAIClient } from './openai_client.js';
 export { OpenRouterClient } from './openrouter_client.js';
 export { CerebrasClient } from './cerebras_client.js';
 export { SiliconFlowClient } from './siliconflow_client.js';

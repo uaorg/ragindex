@@ -168,11 +168,6 @@ class BaseClient {
 
     const errorObj = this._createError(message, errorType, status, detailsContent);
 
-    const errCode = errorObj.code;
-    const errText = errorObj.message;
-    const alertMsg = `ERRORE API [${errCode}]\n${errText}`;
-    await alert(alertMsg);
-
     const result = errorObj;
     return result;
   }
@@ -218,11 +213,6 @@ class BaseClient {
 
       errorObj = this._createError("Errore imprevisto", errName, 500, { message: errMsg });
     }
-
-    const errCode = errorObj.code;
-    const errText = errorObj.message;
-    const alertMsg = `ERRORE RETE [${errCode}]\n${errText}`;
-    alert(alertMsg);
 
     const result = errorObj;
     return result;

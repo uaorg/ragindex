@@ -244,8 +244,7 @@ const _sendRequest = async function (client, payload, errorTag) {
     const isRetryable = RETRYABLE_STATUS_CODES.includes(errCode);
 
     if (isRetryable) {
-      const retryMsg = `Errore transitorio ${errCode}. Riprovo...`;
-      UaLog.log(retryMsg);
+      UaLog.log(`Errore transitorio ${errCode}. Riprovo... (${attempt}/${MAX_RETRIES})`);
       await _sleep(RETRY_DELAY_MS);
     } else {
       result = rr;

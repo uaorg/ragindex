@@ -20,7 +20,7 @@ import { documentUploader } from "./uploader.js";
 import { AppMgr } from "./app_mgr.js";
 import { UaDb } from "./services/uadb.js";
 import { DocsMgr } from "./docs_mgr.js";
-import { LlmProvider } from "./llm_provider.js";
+import { LlmProvider, getProviderConfig } from "./llm_provider.js";
 import { textFormatter, messages2html, messages2text } from "./services/history_utils.js";
 import { ragEngine } from "./rag_engine.js";
 import { DATA_KEYS, getDescriptionForKey, REGEX_NAME_CLEANER } from "./services/data_keys.js";
@@ -615,7 +615,7 @@ export const Commands = {
             btn.setAttribute("data-tt", UaLog.active ? "Close" : "Open");
         }
     },
-    providerSettings: function() { LlmProvider.toggleTreeView(); },
+    providerSettings: function() { toggleProviderTree(); },
     resetAll: async function() {
         const msg1 = "Primo avviso: sta per eseguire un RESET TOTALE dell'applicazione.\n\nVerranno cancellati TUTTI i dati: Knowledge Base, contesto, conversazioni, documenti, chiavi API e configurazione provider.\n\nConfermi?";
         if (!await confirm(msg1)) return;
@@ -805,7 +805,8 @@ export const TextInput = {
                 TextInput.clear();
             } catch (error) {
                 if (error && error.code === 499) return;
-                await alert(`ERRORE CRITICO:\n${error.message || error}`);
+                const errCode = error.code ? `[${error.code}] ` : "";
+                await alert(`ERRORE CRITICO:\n${errCode}${error.message || error}`);
             } finally { _Spinner.hide(); }
         }, 50);
     },
@@ -831,7 +832,8 @@ export const TextInput = {
                 TextInput.clear();
             } catch (error) {
                 if (error && error.code === 499) return;
-                await alert(`ERRORE CRITICO:\n${error.message || error}`);
+                const errCode = error.code ? `[${error.code}] ` : "";
+                await alert(`ERRORE CRITICO:\n${errCode}${error.message || error}`);
             } finally { _Spinner.hide(); }
         }, 50);
     }
@@ -903,6 +905,201 @@ export const updateActiveKbDisplay = async function() {
         activeKbState = savedName || "BASE CORRENTE";
     }
     displayEl.textContent = `KB: ${activeKbState}`;
+};
+
+// ============================================================================
+// PROVIDER TREE UI (albero di selezione provider/modelli)
+// ============================================================================
+
+/**
+ * Aggiorna il display del modello attivo nell'header.
+ */
+export const updateActiveModelDisplay = function() {
+    const displayElement = document.getElementById("active-model-display");
+    if (!displayElement) {
+        return;
+    }
+
+    const config = LlmProvider.getConfig();
+    const displayText = `${config.model} (${config.windowSize}k)`;
+    displayElement.textContent = displayText;
+};
+
+/** @type {boolean} */
+let _treeVisible = false;
+
+const TREE_CONTAINER_ID = "provvider_id";
+
+/**
+ * Costruisce l'HTML dell'albero di selezione provider/modelli.
+ * @returns {string}
+ */
+const _buildProviderTreeHtml = function() {
+    const providerConfig = getProviderConfig();
+    const currentConfig = LlmProvider.getConfig();
+    const wnd = UaWindowAdm.get(TREE_CONTAINER_ID);
+    const container = wnd.getElement();
+
+    if (!container) {
+        return "";
+    }
+
+    const jfh = UaJtfh();
+
+    jfh.append('<div class="provider-tree-header">')
+       .append('  <span>Seleziona Modello</span>')
+       .append('  <button class="provider-tree-close-btn tt-left" data-tt="Chiudi">&times;</button>')
+       .append('</div>')
+       .append('<ul class="provider-tree">');
+
+    for (const providerName in providerConfig) {
+        const provider = providerConfig[providerName];
+        const isActive = providerName === currentConfig.provider;
+        const icon = isActive ? "&#9660;" : "&#9658;";
+        const activeClass = isActive ? "active" : "";
+        const visibleClass = isActive ? " model-list--visible" : "";
+
+        jfh.append(`<li class="provider-node">`)
+           .append(`  <span class="${activeClass}" data-provider="${providerName}">`)
+           .append(`    ${icon} ${providerName}`)
+           .append(`  </span>`)
+           .append(`  <ul class="model-list${visibleClass}">`);
+
+        Object.keys(provider.models).forEach(function(modelName) {
+            const modelData = provider.models[modelName];
+            const isActiveModel = isActive && modelName === currentConfig.model;
+            const activeModelClass = isActiveModel ? " active" : "";
+
+            jfh.append(`    <li class="model-node${activeModelClass}"`)
+               .append(`        data-provider="${providerName}"`)
+               .append(`        data-model="${modelName}">`)
+               .append(`      ${modelName} (${modelData.windowSize}k)`)
+               .append(`    </li>`);
+        });
+
+        jfh.append(`  </ul>`)
+           .append(`</li>`);
+    }
+
+    jfh.append(`</ul>`);
+
+    const treeHtml = jfh.html();
+    return treeHtml;
+};
+
+/**
+ * Aggiunge gli event listener all'albero di selezione.
+ */
+const _addProviderTreeListeners = function() {
+    const wnd = UaWindowAdm.get(TREE_CONTAINER_ID);
+    const container = wnd.getElement();
+
+    if (!container) {
+        return;
+    }
+
+    const closeBtn = container.querySelector(".provider-tree-close-btn");
+    if (closeBtn) {
+        closeBtn.addEventListener("click", function() {
+            toggleProviderTree();
+        });
+    }
+
+    container.querySelectorAll(".provider-node > span").forEach(function(span) {
+        span.addEventListener("click", function(e) {
+            const modelList = e.target.nextElementSibling;
+            const isOpening = modelList.style.display === "none";
+
+            container.querySelectorAll(".model-list").forEach(function(ml) {
+                ml.removeAttribute("style");
+                ml.style.display = "none";
+            });
+
+            container.querySelectorAll(".provider-node > span").forEach(function(s) {
+                const provName = s.dataset.provider;
+                s.innerHTML = `&#9658; ${provName}`;
+            });
+
+            if (isOpening) {
+                modelList.style.display = "block";
+                const provName = e.target.dataset.provider;
+                e.target.innerHTML = `&#9660; ${provName}`;
+            }
+        });
+    });
+
+    container.querySelectorAll(".model-node").forEach(function(node) {
+        node.addEventListener("click", function(e) {
+            const providerName = e.target.dataset.provider;
+            const modelName = e.target.dataset.model;
+            _onProviderModelSelect(providerName, modelName);
+        });
+    });
+};
+
+/**
+ * Gestisce la selezione di un provider/modello dall'albero.
+ * @param {string} provider
+ * @param {string} model
+ */
+const _onProviderModelSelect = function(provider, model) {
+    const success = LlmProvider.setActive(provider, model);
+    if (!success) return;
+
+    LlmProvider.saveConfig();
+    updateActiveModelDisplay();
+
+    if (_treeVisible) {
+        const treeHtml = _buildProviderTreeHtml();
+        const wnd = UaWindowAdm.get(TREE_CONTAINER_ID);
+        wnd.setHtml(treeHtml);
+        _addProviderTreeListeners();
+    }
+    toggleProviderTree();
+};
+
+/**
+ * Mostra/nasconde l'albero di selezione provider/modelli.
+ */
+export const toggleProviderTree = function() {
+    const wnd = UaWindowAdm.create(TREE_CONTAINER_ID);
+    const container = wnd.getElement();
+
+    if (!container) {
+        return;
+    }
+
+    wnd.addClassStyle("provider-tree-container");
+    _treeVisible = !_treeVisible;
+    container.style.display = _treeVisible ? "block" : "none";
+
+    if (_treeVisible) {
+        const treeHtml = _buildProviderTreeHtml();
+        wnd.setHtml(treeHtml);
+        _addProviderTreeListeners();
+    }
+};
+
+/**
+ * Mostra la configurazione corrente del provider in una finestra informativa.
+ */
+export const showProviderConfig = async function() {
+    const config = LlmProvider.getConfig();
+    const jfh = UaJtfh();
+
+    const prov = config.provider;
+    const mod = config.model;
+    const size = `${config.windowSize}k`;
+
+    jfh.append('<div class="config-confirm">')
+       .append('<table class="table-data">')
+       .append(`<tr><td>Provider</td><td>${prov}</td></tr>`)
+       .append(`<tr><td>Modello</td><td>${mod}</td></tr>`)
+       .append(`<tr><td>Prompt Size</td><td>${size}</td></tr>`)
+       .append("</table></div>");
+
+    const htmlContent = jfh.html();
+    wnds.winfo.show(htmlContent);
 };
 
 export const showHtmlThread = async function() {

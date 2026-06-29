@@ -1,100 +1,122 @@
 /**
- * @fileoverview llm_provider.js - Gestione provider LLM
- * @description Fornisce funzioni per caricare e gestire provider e modelli LLM.
- *              Modulo specifico dell'applicazione RagIndex.
+ * llm_provider.js - Gestione stato provider LLM e cache client.
+ *
+ * Modulo puro: nessuna UI, nessun riferimento al DOM.
+ * Si occupa solo di:
+ *   1. Caricare modelli da file (loadModels)
+ *   2. Mantenere provider/modello attivo in memoria
+ *   3. Mantenere una singola istanza client + API key in variabili dirette
+ *   4. Persistenza su IndexedDB (salva/carica configurazione)
+ *   5. Fornire getClient() come punto d'ingresso unico per le richieste LLM
+ *
+ * UI (tree view, toggle, showConfig) in app_ui.js.
+ *
  * @module llm_provider
- * @version 0.1.0
- * @date 2026-04-30
- * @author Team Sviluppo
+ * @version 0.3.0
+ * @date    2026-06-29
  */
+
 "use strict";
 
-import { UaJtfh } from "./services/uajtfh.js";
 import { getApiKey, fetchApiKeys } from "./services/key_retriever.js";
-import { GeminiClient, MistralClient, HuggingFaceClient, GroqClient, OpenAIClient, OpenRouterClient, CerebrasClient, SiliconFlowClient } from "./llmclient/index.js";
-import { UaWindowAdm } from "./services/uawindow.js";
+import {
+    GeminiClient, MistralClient, GroqClient,
+    OpenRouterClient, CerebrasClient, SiliconFlowClient
+} from "./llmclient/index.js";
 import { DATA_KEYS } from "./services/data_keys.js";
 import { UaDb } from "./services/uadb.js";
 
 // ============================================================================
-// COSTANTI DI MODULO
+// COSTANTI
 // ============================================================================
 
-// ============================================================================
-// VARIABILI PRIVATE
-// ============================================================================
-
-/**
- * Configurazione dei provider disponibili.
- * @type {Object}
- * @private
- */
-let _PROVIDER_CONFIG = {};
-
-/**
- * Istanze dei client LLM.
- * @type {Object}
- * @private
- */
-const _CLIENTS = {};
-
-/**
- * Configurazione default del provider.
- * @type {Object}
- * @private
- */
-const _DEFAULT_PROVIDER_CONFIG = {
+const DEFAULT_CONFIG = {
     provider: "gemini",
     model: "gemini-flash-latest",
-    windowSize: 1024,
-    client: "gemini"
+    windowSize: 1024
 };
+
+const SUPPORTED_PROVIDERS = [
+    "gemini", "mistral", "groq",
+    "openrouter", "cerebras", "siliconflow"
+];
 
 // ============================================================================
-// API PUBBLICA - PROVIDER_CONFIG getter
+// STATO PRIVATO
 // ============================================================================
 
-/**
- * Restituisce la configurazione dei provider.
- * @returns {Object} Configurazione dei provider
- * @public
- */
-export const getProviderConfig = () => {
-    return _PROVIDER_CONFIG;
-};
+/** @type {Object<string, {client: string, models: Object}>} */
+let _providerModels = {};
 
-/**
- * Oggetto PROVIDER_CONFIG per compatibilità con key_retriever.js
- */
-export const PROVIDER_CONFIG = new Proxy({}, {
-    get: (target, prop) => {
-        return _PROVIDER_CONFIG[prop];
-    },
-    has: (target, prop) => {
-        return prop in _PROVIDER_CONFIG;
-    }
-});
+/** @type {Object|null} Istanza client per il provider attivo. */
+let _activeClient = null;
 
-/**
- * Configurazione corrente del provider.
- * @type {Object}
- * @private
- */
-const _config = {
-    provider: "",
-    model: "",
-    windowSize: 0,
-    client: ""
-};
+/** @type {string} Provider per cui _activeClient è stato creato. */
+let _activeClientProvider = "";
+
+/** @type {string} API key usata per creare _activeClient. */
+let _activeApiKey = "";
+
+/** @type {string} */
+let _activeProvider = "";
+
+/** @type {string} */
+let _activeModel = "";
+
+/** @type {number} */
+let _windowSize = 0;
 
 // ============================================================================
 // FUNZIONI PRIVATE
 // ============================================================================
 
 /**
- * Controlla se una configurazione è valida.
- * @param {Object} config - Configurazione da validare.
- * @returns {boolean} True se valida.
+ * Crea una nuova istanza client per il provider specificato.
+ * Imposta _activeClient, _activeClientProvider e _activeApiKey.
+ * @param {string} clientName
+ * @param {string} apiKey
+ */
+const _createClientInstance = function(clientName, apiKey) {
+    if (!clientName) {
+        console.error("_createClientInstance: clientName mancante");
+        return;
+    }
+
+    switch (clientName) {
+        case "gemini":
+            _activeClient = new GeminiClient(apiKey);
+            break;
+        case "mistral":
+            _activeClient = new MistralClient(apiKey);
+            break;
+        case "groq":
+            _activeClient = new GroqClient(apiKey);
+            break;
+        case "openrouter":
+            _activeClient = new OpenRouterClient(apiKey);
+            break;
+        case "cerebras":
+            _activeClient = new CerebrasClient(apiKey);
+            break;
+        case "siliconflow":
+            _activeClient = new SiliconFlowClient(apiKey);
+            break;
+        default:
+            _activeClient = null;
+            console.warn(`_createClientInstance: client non supportato: ${clientName}`);
+            break;
+    }
+
+    if (_activeClient) {
+        _activeClientProvider = clientName;
+        _activeApiKey = apiKey;
+    }
+};
+
+/**
+ * Controlla se una configurazione salvata è ancora valida.
+ * @param {Object} config
+ * @returns {boolean}
  */
 const _isValidConfig = function(config) {
     if (!config || typeof config !== "object" || Object.keys(config).length === 0) {
@@ -102,374 +124,247 @@ const _isValidConfig = function(config) {
     }
 
     const { provider, model } = config;
-    if (!provider || !_PROVIDER_CONFIG[provider]) {
+    if (!provider || !_providerModels[provider]) {
         return false;
     }
 
-    if (!model || !_PROVIDER_CONFIG[provider].models[model]) {
+    if (!model || !_providerModels[provider].models[model]) {
         return false;
     }
 
-    const isValid = true;
-    return isValid;
-};
-
-/**
- * Aggiorna il display del modello attivo.
- */
-const _updateActiveModelDisplay = function() {
-    const displayElement = document.getElementById("active-model-display");
-    if (!displayElement) {
-        return;
-    }
-
-    const displayText = `${_config.model} (${_config.windowSize}k)`;
-    displayElement.textContent = displayText;
-};
-
-/**
- * Costruisce l'albero di selezione provider/modelli.
- * @returns {string} HTML dell'albero.
- */
-const _buildTreeView = function() {
-    const wnd = UaWindowAdm.get("provvider_id");
-    const container = wnd.getElement();
-    if (!container) {
-        return "";
-    }
-
-    let treeHtml = `
-      <div class="provider-tree-header">
-        <span>Seleziona Modello</span>
-        <button class="provider-tree-close-btn tt-left" data-tt="Chiudi">&times;</button>
-      </div>
-      <ul class="provider-tree">
-    `;
-
-    for (const providerName in _PROVIDER_CONFIG) {
-        const provider = _PROVIDER_CONFIG[providerName];
-        const isActiveProvider = providerName === _config.provider;
-        const icon = isActiveProvider ? "&#9660;" : "&#9658;";
-        const activeClass = isActiveProvider ? "active" : "";
-
-        treeHtml += `
-        <li class="provider-node">
-          <span class="${activeClass}" data-provider="${providerName}">
-            ${icon} ${providerName}
-          </span>
-          <ul class="model-list${isActiveProvider ? ' model-list--visible' : ''}">
-      `;
-
-        Object.keys(provider.models).forEach(function(modelName) {
-            const modelData = provider.models[modelName];
-            const isActiveModel = isActiveProvider && modelName === _config.model;
-            const activeModelClass = isActiveModel ? "active" : "";
-
-            treeHtml += `
-          <li class="model-node ${activeModelClass}"
-              data-provider="${providerName}"
-              data-model="${modelName}">
-            ${modelName} (${modelData.windowSize}k)
-          </li>`;
-        });
-
-        treeHtml += `</ul></li>`;
-    }
-
-    treeHtml += `</ul>`;
-    return treeHtml;
-};
-
-/**
- * Aggiunge gli event listener all'albero di selezione.
- */
-const _addTreeEventListeners = function() {
-    const wnd = UaWindowAdm.get("provvider_id");
-    const container = wnd.getElement();
-    if (!container) {
-        return;
-    }
-
-    const closeBtn = container.querySelector(".provider-tree-close-btn");
-    if (closeBtn) {
-        closeBtn.addEventListener("click", function() {
-            LlmProvider.toggleTreeView();
-        });
-    }
-
-    container.querySelectorAll(".provider-node > span").forEach(function(span) {
-        span.addEventListener("click", function(e) {
-            const modelList = e.target.nextElementSibling;
-            const isOpening = modelList.style.display === "none";
-
-            container.querySelectorAll(".model-list").forEach(function(ml) {
-                ml.style.display = "none";
-            });
-
-            container.querySelectorAll(".provider-node > span").forEach(function(s) {
-                const provName = s.dataset.provider;
-                s.innerHTML = `&#9658; ${provName}`;
-            });
-
-            if (isOpening) {
-                modelList.style.display = "block";
-                const provName = e.target.dataset.provider;
-                e.target.innerHTML = `&#9660; ${provName}`;
-            }
-        });
-    });
-
-    container.querySelectorAll(".model-node").forEach(function(node) {
-        node.addEventListener("click", function(e) {
-            const providerName = e.target.dataset.provider;
-            const modelName = e.target.dataset.model;
-            LlmProvider._setProviderAndModel(providerName, modelName);
-        });
-    });
-};
-
-/**
- * Crea o aggiorna un client LLM.
- * @param {string} clientName - Nome del client.
- * @param {string} apiKey - Chiave API.
- */
-const _createClientInstance = function(clientName, apiKey) {
-    if (!clientName) {
-        console.error("LlmProvider._createClientInstance: clientName mancante");
-        return;
-    }
-
-    switch (clientName) {
-        case "gemini":
-            _CLIENTS[clientName] = new GeminiClient(apiKey);
-            break;
-        case "mistral":
-            _CLIENTS[clientName] = new MistralClient(apiKey);
-            break;
-        case "huggingface":
-            _CLIENTS[clientName] = new HuggingFaceClient(apiKey);
-            break;
-        case "groq":
-            _CLIENTS[clientName] = new GroqClient(apiKey);
-            break;
-        case "openai":
-            _CLIENTS[clientName] = new OpenAIClient(apiKey);
-            break;
-        case "openrouter":
-            _CLIENTS[clientName] = new OpenRouterClient(apiKey);
-            break;
-        case "cerebras":
-            _CLIENTS[clientName] = new CerebrasClient(apiKey);
-            break;
-        case "siliconflow":
-            _CLIENTS[clientName] = new SiliconFlowClient(apiKey);
-            break;
-        default:
-            _CLIENTS[clientName] = null;
-            console.warn(`LlmProvider._createClientInstance: client non supportato: ${clientName}`);
-            break;
-    }
+    return true;
 };
 
 // ============================================================================
-// API PUBBLICA
+// API PUBBLICA — providerModels
 // ============================================================================
 
 /**
- * Gestore provider LLM.
- * @namespace
+ * Restituisce la mappa provider → modelli caricata da file.
+ * @returns {Object}
  */
+export const getProviderConfig = function() {
+    return _providerModels;
+};
+
+/**
+ * Proxy per compatibilità con key_retriever.js.
+ * Permette accesso dinamico del tipo _PROVIDER_CONFIG[providerName].
+ */
+export const PROVIDER_CONFIG = new Proxy({}, {
+    get: (target, prop) => {
+        return _providerModels[prop];
+    },
+    has: (target, prop) => {
+        return prop in _providerModels;
+    }
+});
+
+// ============================================================================
+// API PUBBLICA — LlmProvider
+// ============================================================================
+
 export const LlmProvider = {
 
-    /**
-     * Stato visibilità albero di selezione.
-     * @type {boolean}
-     * @public
-     */
-    isTreeVisible: false,
+    // ========================================================================
+    // INIZIALIZZAZIONE
+    // ========================================================================
 
     /**
-     * ID container per UI.
-     * @type {string}
-     * @public
-     */
-    container_id: "provvider_id",
-
-    /**
-     * Aggiorna un client con una nuova chiave API.
-     * @param {string} clientName - Nome del client da aggiornare
-     * @public
-     */
-    updateClient: async (clientName) => {
-        const apiKey = await getApiKey(clientName);
-        _createClientInstance(clientName, apiKey);
-        console.debug(`[LlmProvider] Client '${clientName}' aggiornato con nuova API Key.`);
-
-        // Se è il provider attivo, forza il reload della configurazione
-        if (_config.client === clientName) {
-            const { AppMgr } = await import("./app_mgr.js");
-            AppMgr.resetConfig();
-        }
-    },
-
-    /**
-     * Carica la configurazione dei modelli dai file.
-     * @returns {void}
-     * @public
+     * Carica la configurazione dei modelli dai file su disco.
+     * @returns {Promise<void>}
      */
     loadModels: async () => {
-        if (Object.keys(_PROVIDER_CONFIG).length > 0) {
+        if (Object.keys(_providerModels).length > 0) {
             return;
         }
 
-        try {
-            console.info("**** load models *******");
-            //  lista providers
-            const providers = ["gemini", "mistral", "huggingface", "groq", "openai", "openrouter", "cerebras", "siliconflow"];
-            for (const p of providers) {
-                try {
-                    const response = await fetch(`./data/models/${p}.txt`);
-                    if (response.ok) {
-                        const text = await response.text();
-                        const lines = text.split("\n").filter((line) => line.trim() !== "");
-                        _PROVIDER_CONFIG[p] = {
-                            client: p,
-                            models: {}
-                        };
-                        lines.forEach((line) => {
-                            const [name, windowSizeTokens] = line.split("|");
-                            if (name && windowSizeTokens) {
-                                // Convertiamo i token in "k" (es: 1048576 -> 1024)
-                                _PROVIDER_CONFIG[p].models[name] = {
-                                    windowSize: Math.round(parseInt(windowSizeTokens) / 1024)
-                                };
-                            }
-                        });
-                        if (Object.keys(_PROVIDER_CONFIG[p].models).length > 0) {
-                            _CLIENTS[p] = null;
+        for (const p of SUPPORTED_PROVIDERS) {
+            try {
+                const response = await fetch(`./data/models/${p}.txt`);
+                if (response.ok) {
+                    const text = await response.text();
+                    const lines = text.split("\n").filter(function(line) {
+                        return line.trim() !== "";
+                    });
+
+                    _providerModels[p] = {
+                        client: p,
+                        models: {}
+                    };
+
+                    lines.forEach(function(line) {
+                        const [name, windowSizeTokens] = line.split("|");
+                        if (name && windowSizeTokens) {
+                            const tokens = Math.round(parseInt(windowSizeTokens) / 1024);
+                            _providerModels[p].models[name] = {
+                                windowSize: tokens
+                            };
                         }
-                    }
-                } catch (e) {
-                    console.warn(`Impossibile caricare i modelli per ${p}:`, e);
+                    });
                 }
+            } catch (e) {
+                console.warn(`Impossibile caricare i modelli per ${p}:`, e);
             }
-        } catch (error) {
-            console.error("Eccezione durante il caricamento dei modelli:", error);
         }
     },
 
     /**
-     * Inizializza il provider LLM.
-     * @returns {void}
-     * @public
+     * Inizializzazione rapida: carica modelli e API keys.
+     * @returns {Promise<void>}
      */
     init: async () => {
         await LlmProvider.loadModels();
         await fetchApiKeys();
     },
 
-    /**
-     * Inizializza la configurazione del provider.
-     * @returns {void}
-     * @public
-     */
-    initConfig: async () => {
-        await LlmProvider.loadModels();
-
-        const savedConfig = await UaDb.readJson(DATA_KEYS.KEY_PROVIDER);
-
-        if (_isValidConfig(savedConfig)) {
-            Object.assign(_config, savedConfig);
-        } else {
-            // Se savedConfig non è valido, reset al default
-            Object.assign(_config, _DEFAULT_PROVIDER_CONFIG);
-            await UaDb.saveJson(DATA_KEYS.KEY_PROVIDER, _config);
-        }
-
-        _updateActiveModelDisplay();
-    },
+    // ========================================================================
+    // STATO ATTIVO
+    // ========================================================================
 
     /**
-     * Ottiene il client LLM corrente.
-     * @returns {Object|null} Istanza del client o null
-     * @public
+     * Restituisce l'oggetto configurazione corrente (provider, model, windowSize, client).
+     * @returns {Object}
      */
-    getclient: async function() {
-        const clientName = _config.client;
-        if (!_CLIENTS[clientName]) {
-            const apiKey = await getApiKey(clientName);
-            if (apiKey) {
-                _createClientInstance(clientName, apiKey);
-            }
-        }
-        const result = _CLIENTS[clientName] || null;
-        return result;
-    },
-
     getConfig: function() {
-        const config = _config;
+        const config = {
+            provider: _activeProvider,
+            model: _activeModel,
+            windowSize: _windowSize,
+            client: _activeProvider
+        };
         return config;
     },
 
-    toggleTreeView: function() {
-        const wnd = UaWindowAdm.create(LlmProvider.container_id);
-        const container = wnd.getElement();
-        if (!container) {
-            return;
-        }
-
-        wnd.addClassStyle("provider-tree-container");
-        LlmProvider.isTreeVisible = !LlmProvider.isTreeVisible;
-        container.style.display = LlmProvider.isTreeVisible ? "block" : "none";
-
-        if (LlmProvider.isTreeVisible) {
-            const treeHtml = _buildTreeView();
-            wnd.setHtml(treeHtml);
-            _addTreeEventListeners();
-        }
+    /**
+     * API key attualmente in uso.
+     * @returns {string}
+     */
+    getApiKey: function() {
+        return _activeApiKey;
     },
 
-    _setProviderAndModel: async function(provider, model) {
+    /**
+     * Imposta provider e modello attivi in memoria.
+     * Invalida il client se il provider cambia.
+     * NON salva su DB, NON tocca la UI.
+     * @param {string} provider
+     * @param {string} model
+     * @returns {boolean} true se impostato correttamente
+     */
+    setActive: function(provider, model) {
         if (!provider || !model) {
-            console.error("LlmProvider._setProviderAndModel: parametri mancanti");
-            return;
+            console.error("LlmProvider.setActive: parametri mancanti");
+            return false;
         }
 
-        _config.provider = provider;
-        _config.model = model;
-        _config.windowSize = _PROVIDER_CONFIG[provider].models[model].windowSize;
-        _config.client = _PROVIDER_CONFIG[provider].client;
-
-        await UaDb.saveJson(DATA_KEYS.KEY_PROVIDER, _config);
-        _updateActiveModelDisplay();
-
-        if (LlmProvider.isTreeVisible) {
-            const treeHtml = _buildTreeView();
-            const wnd = UaWindowAdm.get(LlmProvider.container_id);
-            wnd.setHtml(treeHtml);
-            _addTreeEventListeners();
+        const providerData = _providerModels[provider];
+        if (!providerData) {
+            console.error(`LlmProvider.setActive: provider sconosciuto: ${provider}`);
+            return false;
         }
-        LlmProvider.toggleTreeView();
+
+        const modelData = providerData.models[model];
+        if (!modelData) {
+            console.error(`LlmProvider.setActive: modello sconosciuto: ${model}`);
+            return false;
+        }
+
+        const providerChanged = provider !== _activeProvider;
+
+        _activeProvider = provider;
+        _activeModel = model;
+        _windowSize = modelData.windowSize;
+
+        if (providerChanged) {
+            _activeClient = null;
+            _activeClientProvider = "";
+            _activeApiKey = "";
+        }
+
+        return true;
     },
 
-    showConfig: async function() {
-        const llmConfig = LlmProvider.getConfig();
-        const jfh = UaJtfh();
+    // ========================================================================
+    // CLIENT
+    // ========================================================================
 
-        const prov = llmConfig.provider;
-        const mod = llmConfig.model;
-        const size = `${llmConfig.windowSize}k`;
-        const cli = llmConfig.client;
+    /**
+     * Restituisce il client LLM per il provider attivo.
+     * Crea una nuova istanza se _activeClient è null o se
+     * il provider attivo è cambiato dopo l'ultima creazione.
+     * @returns {Promise<Object|null>}
+     */
+    getClient: async function() {
+        if (!_activeProvider) {
+            console.error("LlmProvider.getClient: nessun provider attivo");
+            return null;
+        }
 
-        jfh.append('<div class="config-confirm">');
-        jfh.append('<table class="table-data">');
-        jfh.append(`<tr><td>Provider</td><td>${prov}</td></tr>`);
-        jfh.append(`<tr><td>Modello</td><td>${mod}</td></tr>`);
-        jfh.append(`<tr><td>Prompt Size</td><td>${size}</td></tr>`);
-        jfh.append(`<tr><td>client</td><td>${cli}</td></tr>`);
-        jfh.append("</table></div>");
+        if (_activeClient && _activeClientProvider === _activeProvider) {
+            return _activeClient;
+        }
 
-        const { wnds } = await import("./app_ui.js");
-        wnds.winfo.show(jfh.html());
+        const apiKey = await getApiKey(_activeProvider);
+        if (!apiKey) {
+            console.error(`LlmProvider.getClient: chiave API mancante per ${_activeProvider}`);
+            _activeClient = null;
+            _activeClientProvider = "";
+            _activeApiKey = "";
+            return null;
+        }
+
+        _createClientInstance(_activeProvider, apiKey);
+        return _activeClient;
+    },
+
+    /**
+     * Invalida il client attivo se corrisponde al provider specificato.
+     * Chiamato da key_retriever.js quando una chiave viene aggiunta o attivata.
+     * @param {string} clientName
+     */
+    updateClient: async (clientName) => {
+        if (_activeProvider === clientName) {
+            _activeClient = null;
+            _activeClientProvider = "";
+            _activeApiKey = "";
+            const { AppMgr } = await import("./app_mgr.js");
+            AppMgr.resetConfig();
+        }
+    },
+
+    // ========================================================================
+    // PERSISTENZA
+    // ========================================================================
+
+    /**
+     * Carica la configurazione salvata da IndexedDB e la applica.
+     * Se nessuna configurazione valida trovata, usa DEFAULT_CONFIG.
+     * @returns {Promise<void>}
+     */
+    loadConfig: async function() {
+        const savedConfig = await UaDb.readJson(DATA_KEYS.KEY_PROVIDER);
+
+        if (_isValidConfig(savedConfig)) {
+            _activeProvider = savedConfig.provider;
+            _activeModel = savedConfig.model;
+            _windowSize = savedConfig.windowSize;
+        } else {
+            _activeProvider = DEFAULT_CONFIG.provider;
+            _activeModel = DEFAULT_CONFIG.model;
+            _windowSize = DEFAULT_CONFIG.windowSize;
+
+            const defaultToSave = LlmProvider.getConfig();
+            await UaDb.saveJson(DATA_KEYS.KEY_PROVIDER, defaultToSave);
+        }
+    },
+
+    /**
+     * Salva la configurazione corrente su IndexedDB.
+     * @returns {Promise<void>}
+     */
+    saveConfig: async function() {
+        const config = LlmProvider.getConfig();
+        await UaDb.saveJson(DATA_KEYS.KEY_PROVIDER, config);
     }
 };
