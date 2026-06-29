@@ -459,7 +459,8 @@ const _actionDeleteKnowledgeBaseAsync = async function() {
 
 const _actionClearContextAsync = async function() {
     const hasContext = await idbMgr.exists(DATA_KEYS.PHASE2_CONTEXT);
-    if (!hasContext) { await alert("Nessun contesto da cancellare."); _setResponseHtml(""); return; }
+    const hasThread = await idbMgr.exists(DATA_KEYS.KEY_THREAD);
+    if (!hasContext && !hasThread) { await alert("Nessun contesto e nessuna conversazione da cancellare."); return; }
     if (!await confirm("Cancellare contesto e l'intera conversazione (prima domanda inclusa)?")) return;
     await idbMgr.delete(DATA_KEYS.PHASE2_CONTEXT);
     await idbMgr.delete(DATA_KEYS.KEY_THREAD);
