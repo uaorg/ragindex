@@ -13,6 +13,7 @@ const STORAGE_KEY = DATA_KEYS.KEY_API_KEYS;
  * @private
  */
 const _IMPLEMENTED_CLIENTS = ["gemini", "mistral", "groq", "openrouter", "cerebras", "siliconflow"];
+export const IMPLEMENTED_CLIENTS = _IMPLEMENTED_CLIENTS;
 
 /**
  * Recupera la lista dinamica dei provider supportati da _PROVIDER_CONFIG.

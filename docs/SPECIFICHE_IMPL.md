@@ -479,6 +479,12 @@ class BaseClient:
 ### 8.3 Configurazione modelli
 
 I modelli per provider sono letti da file `.txt` in `static/data/models/`.
+La lista dei provider da cui caricare proviene da `IMPLEMENTED_CLIENTS` in `key_retriever.js`
+(whitelist dei provider con client LLM implementato). `loadModels()` itera su questa lista
+e, per ogni provider, tenta il fetch del `.txt`. Solo i provider con file `.txt` valido
+(HTTP 200) compaiono nell'albero di selezione — aggiungi/rimuovi un file `.txt` e l'albero
+si aggiorna automaticamente, senza toccare codice.
+
 Formato:
 ```
 gemini-2.5-flash|1048576|10|8.08

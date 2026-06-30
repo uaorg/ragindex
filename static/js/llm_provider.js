@@ -18,7 +18,7 @@
 
 "use strict";
 
-import { getApiKey, fetchApiKeys } from "./services/key_retriever.js";
+import { getApiKey, fetchApiKeys, IMPLEMENTED_CLIENTS } from "./services/key_retriever.js";
 import {
     GeminiClient, MistralClient, GroqClient,
     OpenRouterClient, CerebrasClient, SiliconFlowClient
@@ -33,11 +33,10 @@ import { UaDb } from "./services/uadb.js";
 // Non c'è un config di default — se nessuna configurazione è stata
 // salvata in precedenza, _activeProvider/_activeModel restano vuoti
 // e l'utente deve selezionare manualmente un provider.
-
-const SUPPORTED_PROVIDERS = [
-    "gemini", "mistral", "groq",
-    "openrouter", "cerebras", "siliconflow"
-];
+//
+// La lista dei provider con client implementato viene da key_retriever.js
+// (IMPLEMENTED_CLIENTS). I modelli vengono caricati da static/data/models/*.txt:
+// solo i provider con file .txt presente appaiono nell'albero di selezione.
 
 // ============================================================================
 // STATO PRIVATO
@@ -190,30 +189,31 @@ export const LlmProvider = {
     loadModels: async () => {
         _providerModels = {};
 
-        for (const p of SUPPORTED_PROVIDERS) {
+        for (const p of IMPLEMENTED_CLIENTS) {
             try {
                 const response = await fetch(`./data/models/${p}.txt`);
-                if (response.ok) {
-                    const text = await response.text();
-                    const lines = text.split("\n").filter(function(line) {
-                        return line.trim() !== "";
-                    });
-
-                    _providerModels[p] = {
-                        client: p,
-                        models: {}
-                    };
-
-                    lines.forEach(function(line) {
-                        const [name, windowSizeTokens] = line.split("|");
-                        if (name && windowSizeTokens) {
-                            const tokens = Math.round(parseInt(windowSizeTokens, 10) / 1024);
-                            _providerModels[p].models[name] = {
-                                windowSize: tokens
-                            };
-                        }
-                    });
+                if (!response.ok) {
+                    continue;
                 }
+                const text = await response.text();
+                const lines = text.split("\n").filter(function(line) {
+                    return line.trim() !== "";
+                });
+
+                _providerModels[p] = {
+                    client: p,
+                    models: {}
+                };
+
+                lines.forEach(function(line) {
+                    const [name, windowSizeTokens] = line.split("|");
+                    if (name && windowSizeTokens) {
+                        const tokens = Math.round(parseInt(windowSizeTokens, 10) / 1024);
+                        _providerModels[p].models[name] = {
+                            windowSize: tokens
+                        };
+                    }
+                });
             } catch (e) {
                 console.warn(`Impossibile caricare i modelli per ${p}:`, e);
             }
