@@ -189,7 +189,19 @@ export const LlmProvider = {
     loadModels: async () => {
         _providerModels = {};
 
-        for (const p of IMPLEMENTED_CLIENTS) {
+        let providers = [];
+        try {
+            const manifestRes = await fetch(`./data/models/manifest.json`);
+            if (manifestRes.ok) {
+                providers = await manifestRes.json();
+            }
+        } catch (_) {}
+
+        if (providers.length === 0) {
+            providers = IMPLEMENTED_CLIENTS;
+        }
+
+        for (const p of providers) {
             try {
                 const response = await fetch(`./data/models/${p}.txt`);
                 if (!response.ok) {

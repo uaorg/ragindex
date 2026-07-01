@@ -4,6 +4,10 @@
 > architettura, KB e metodo di costruzione contesto differenti.
 > Ogni pipeline è isolata concettualmente: possono essere sostituite
 > indipendentemente purché rispettino le interfacce definite.
+>
+> **Nota:** Le sezioni 2 (Pipeline Ingestione) e 3 (Pipeline Retrieval) sono
+> superseded dai documenti dedicati `PIPELINE_CREA_KB.md` e
+> `PIPELINE_CREA_CONTESTO.md`, che includono i prompt LLM effettivi.
 
 ---
 

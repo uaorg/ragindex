@@ -74,7 +74,7 @@ export const help0_html = `
         <strong class="help-section-title">Menu Laterale &mdash; Gestione Dati</strong>
         <div class="help-grid">
             <strong>Elenco Documenti</strong> <span>Mostra i file caricati con opzioni di visualizzazione ed eliminazione.</span>
-            <strong>Dati Archiviati</strong> <span>Mostra tutti i dati in IndexedDB: chunk, indici, contesto e thread.</span>
+            <strong>Riepilogo Dati</strong> <span>Mostra i dati IndexedDB raggruppati per categoria: KB attiva, conversazione, KB archiviate, conversazioni archiviate, configurazione.</span>
             <strong>Reset</strong> <span>Cancella ogni dato: KB, contesto, conversazioni, documenti e chiavi.</span>
         </div>
     </div>
@@ -155,7 +155,7 @@ export const help2_html = `
         <strong>Gestione Dati</strong>
         <ul>
             <li><strong>Elenco Documenti</strong>: Vedi e cancella i file caricati.</li>
-            <li><strong>Dati Archiviati</strong>: Mostra tutto ci&ograve; che c'&egrave; in IndexedDB.</li>
+            <li><strong>Riepilogo Dati</strong>: Mostra i dati IndexedDB raggruppati per categoria.</li>
             <li><strong>Reset</strong>: Elimina ogni dato (KB, chat, documenti, chiavi). L'app torna allo stato iniziale.</li>
         </ul>
     </div>

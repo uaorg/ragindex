@@ -1270,16 +1270,19 @@ export const bindEventListener = function() {
         menuElencoDocs.onclick = async function() {
             const arr = await DocsMgr.names();
             const jfh = UaJtfh();
-            jfh.append('<div class="docs-dialog"><div class="docs-header docs-header-start"><label><input type="checkbox" onclick="document.querySelectorAll(\'.doc-checkbox\').forEach(cb => cb.checked = this.checked)"> Tutto</label>');
-            jfh.append('<button class="btn-danger btn-small btn-ml8" onclick="wnds.delDocs()">Elimina</button></div>');
+            jfh.append('<div class="data-dialog"><h4>Elenco Documenti</h4>');
             if (arr.length > 0) {
-                jfh.append('<table class="table-data"><tbody>');
+                jfh.append('<div class="docs-header">');
+                jfh.append('<label><input type="checkbox" onclick="document.querySelectorAll(\'.doc-checkbox\').forEach(cb => cb.checked = this.checked)"> Seleziona Tutto</label>');
+                jfh.append('<button class="btn-warning btn-small btn-ml15" onclick="wnds.deleteSelectedDocs()">Elimina Selezionati</button>');
+                jfh.append('</div>');
+                jfh.append('<table class="table-data"><thead><tr><th>Sel.</th><th>Nome</th><th>Azioni</th></tr></thead><tbody>');
                 arr.forEach((name, i) => jfh.append(`<tr><td><input type="checkbox" class="doc-checkbox" data-doc-name="${name}"></td><td>${name}</td><td><button class="btn-success" onclick="wnds.viewDoc(${i})">Visualizza</button></td></tr>`));
                 jfh.append('</tbody></table>');
             } else jfh.append('<p>Nessun documento.</p>');
             jfh.append('</div>');
             wnds.viewDoc = async (i) => wnds.wpre.show(await DocsMgr.doc(i));
-            wnds.delDocs = async () => {
+            wnds.deleteSelectedDocs = async () => {
                 const sel = document.querySelectorAll(".doc-checkbox:checked");
                 if (sel.length && await confirm(`Eliminare ${sel.length} documenti?`)) {
                     for (const cb of sel) await DocsMgr.delete(cb.dataset.docName);
@@ -1361,19 +1364,6 @@ export const bindEventListener = function() {
                 jfh.append('</tbody></table>');
             }
 
-            // --- Documenti (settings: docs + kvStore: idoc_*) ---
-            const docsArr = settingIds.includes(DATA_KEYS.KEY_DOCS) ? await UaDb.readJson(DATA_KEYS.KEY_DOCS) : [];
-            const idocKeys = kvRecords.filter(r => r.key.startsWith(DATA_KEYS.KEY_DOC_PRE));
-            if (docsArr.length > 0 || idocKeys.length > 0) {
-                jfh.append('<h4>Documenti</h4><table class="table-data"><tbody>');
-                _row(DATA_KEYS.KEY_DOCS, `Elenco (${docsArr.length} documenti)`, docsArr);
-                for (const r of idocKeys) {
-                    const name = r.key.slice(DATA_KEYS.KEY_DOC_PRE.length);
-                    _row(r.key, `Contenuto: ${name}`, r.value);
-                }
-                jfh.append('</tbody></table>');
-            }
-
             // --- Configurazione (settings) ---
             const configKeys = [DATA_KEYS.KEY_THEME, DATA_KEYS.ACTIVE_KB_NAME, DATA_KEYS.KEY_PROVIDER, DATA_KEYS.KEY_API_KEYS];
             const configRows = [];
@@ -1393,59 +1383,6 @@ export const bindEventListener = function() {
                         desc = list.length > 0 ? `Chiavi: ${list.join(', ')}` : 'Nessuna chiave salvata';
                     }
                     _row(c.key, desc, c.raw);
-                }
-                jfh.append('</tbody></table>');
-            }
-
-            // --- Build Temporanei (settings) ---
-            const buildKeys = settingIds.filter(id =>
-                id === DATA_KEYS.KEY_BUILD_STATE ||
-                id.startsWith(DATA_KEYS.KEY_CHUNK_RES_PRE) ||
-                id.startsWith(DATA_KEYS.KEY_DOC_KB_PRE)
-            );
-            if (buildKeys.length > 0) {
-                jfh.append('<h4>Build Temporanei</h4><table class="table-data"><tbody>');
-                for (const id of buildKeys) {
-                    const raw = await UaDb.read(id);
-                    if (id === DATA_KEYS.KEY_BUILD_STATE) {
-                        const st = JSON.parse(raw || '{}');
-                        const prog = st.docNames ? `${st.currentDocIndex}/${st.docNames.length}` : '-';
-                        _row(id, `Stato costruzione (${prog})`, raw);
-                    } else if (id.startsWith(DATA_KEYS.KEY_CHUNK_RES_PRE)) {
-                        const name = id.slice(DATA_KEYS.KEY_CHUNK_RES_PRE.length);
-                        const arr = JSON.parse(raw || '[]');
-                        _row(id, `Chunk intermedi: ${name} (${arr.length})`, raw);
-                    } else if (id.startsWith(DATA_KEYS.KEY_DOC_KB_PRE)) {
-                        const name = id.slice(DATA_KEYS.KEY_DOC_KB_PRE.length);
-                        _row(id, `KB parziale: ${name}`, raw);
-                    }
-                }
-                jfh.append('</tbody></table>');
-            }
-
-            // --- Altri dati non categorizzati ---
-            const knownKv = new Set([
-                DATA_KEYS.PHASE0_CHUNKS, DATA_KEYS.PHASE1_INDEX, DATA_KEYS.PHASE2_CONTEXT,
-                DATA_KEYS.KEY_THREAD, DATA_KEYS.KB_DOCLIST, DATA_KEYS.KB_CHILDCHUNKS
-            ]);
-            const extraKv = kvRecords.filter(r =>
-                !knownKv.has(r.key) &&
-                !r.key.startsWith(DATA_KEYS.KEY_KB_PRE) &&
-                !r.key.startsWith(DATA_KEYS.KEY_CONVO_PRE) &&
-                !r.key.startsWith(DATA_KEYS.KEY_DOC_PRE)
-            );
-            const knownSettings = new Set([...configKeys, DATA_KEYS.KEY_DOCS, DATA_KEYS.KEY_BUILD_STATE]);
-            const extraSettings = settingIds.filter(id =>
-                !knownSettings.has(id) &&
-                !id.startsWith(DATA_KEYS.KEY_CHUNK_RES_PRE) &&
-                !id.startsWith(DATA_KEYS.KEY_DOC_KB_PRE)
-            );
-            if (extraKv.length > 0 || extraSettings.length > 0) {
-                jfh.append('<h4>Altri dati</h4><table class="table-data"><tbody>');
-                for (const r of extraKv) _row(r.key, getDescriptionForKey(r.key), r.value);
-                for (const id of extraSettings) {
-                    const val = await UaDb.read(id);
-                    _row(id, getDescriptionForKey(id), val);
                 }
                 jfh.append('</tbody></table>');
             }
@@ -1501,7 +1438,7 @@ export const bindEventListener = function() {
 
     // Menu — Dati e Sistema
     HelpPopup.bind("menu-elenco-docs", "<strong>Elenco Documenti</strong><br>Mostra l'elenco dei documenti caricati nel sistema con opzioni di visualizzazione ed eliminazione.");
-    HelpPopup.bind("menu-elenco-dati", "<strong>Dati Archiviati</strong><br>Mostra tutti i dati in IndexedDB raggruppati per tipologia: KB attiva/archiviata, conversazioni, documenti, configurazione e build temporanei.");
+    HelpPopup.bind("menu-elenco-dati", "<strong>Riepilogo Dati</strong><br>Mostra i dati in IndexedDB raggruppati per categoria: Knowledge Base attiva, Conversazione attiva, KB archiviate, Conversazioni archiviate, Configurazione.");
     HelpPopup.bind("menu-default-api-keys", "<strong>API Keys Default</strong><br>Ripristina le chiavi API predefinite, sovrascrivendo quelle attuali.");
     HelpPopup.bind("menu-add-api-key", "<strong>Gestione API Key</strong><br>Aggiungi, attiva o elimina le tue chiavi API personali.");
     HelpPopup.bind("menu-reset", "<strong>Reset</strong><br>Cancella TUTTI i dati: KB, conversazioni, documenti, chiavi API e configurazione. Due conferme richieste.");
