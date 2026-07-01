@@ -30,13 +30,13 @@ import { UaDb } from "./services/uadb.js";
 // COSTANTI
 // ============================================================================
 
-// Non c'è un config di default — se nessuna configurazione è stata
-// salvata in precedenza, _activeProvider/_activeModel restano vuoti
-// e l'utente deve selezionare manualmente un provider.
+// I provider sono scoperti dinamicamente da static/data/models/manifest.json.
+// Ogni provider con file .txt valido in data/models/ compare nell'albero di
+// selezione — aggiungi/rimuovi un .txt + aggiorna manifest.json e l'albero
+// si aggiorna senza toccare codice.
 //
-// La lista dei provider con client implementato viene da key_retriever.js
-// (IMPLEMENTED_CLIENTS). I modelli vengono caricati da static/data/models/*.txt:
-// solo i provider con file .txt presente appaiono nell'albero di selezione.
+// L'unica eccezione è _createClientInstance (switch + import) che va
+// aggiornata a mano quando si aggiunge un nuovo provider LLM client.
 
 // ============================================================================
 // STATO PRIVATO
@@ -133,17 +133,14 @@ const _isValidConfig = function(config) {
 };
 
 const _setDefaultConfig = function() {
-    const defaultProvider = "gemini";
-    if (_providerModels[defaultProvider]) {
-        const models = Object.keys(_providerModels[defaultProvider].models);
-        if (models.length > 0) {
-            const ok = LlmProvider.setActive(defaultProvider, models[0]);
-            if (ok) {
-                console.debug("Configurazione non trovata: impostato default su Gemini.");
-            } else {
-                console.error("_setDefaultConfig: impossibile impostare default Gemini.");
-            }
-        }
+    const providers = Object.keys(_providerModels);
+    if (providers.length === 0) return;
+    const defaultProvider = providers[0];
+    const models = Object.keys(_providerModels[defaultProvider].models);
+    if (models.length === 0) return;
+    const ok = LlmProvider.setActive(defaultProvider, models[0]);
+    if (!ok) {
+        console.error("_setDefaultConfig: impossibile impostare default.");
     }
 };
 
@@ -354,8 +351,8 @@ export const LlmProvider = {
 
     /**
      * Carica la configurazione salvata da IndexedDB e la applica.
-     * Se nessuna configurazione valida trovata, imposta il primo modello di Gemini
-     * come default (scenario primo avvio).
+     * Se nessuna configurazione valida trovata, imposta il primo provider
+     * disponibile come default (scenario primo avvio).
      * @returns {Promise<void>}
      */
     loadConfig: async function() {

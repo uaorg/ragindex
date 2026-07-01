@@ -1,6 +1,0 @@
-Pro/DeepSeek-V3|65536|5|10
-Pro/DeepSeek-R1|65536|5|10
-Qwen/Qwen2.5-72B-Instruct-128K|131072|4|8
-Qwen/QwQ-32B|65536|3|6
-THUDM/glm-4-9b-chat|32768|2|4
-meta-llama/Llama-3.3-70B-Instruct|131072|4|8

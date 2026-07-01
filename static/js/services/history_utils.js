@@ -16,11 +16,6 @@
 // COSTANTI DI MODULO
 // ============================================================================
 
-/** Stringhe fisse per i prompt. */
-export const PROMPT_ANSWER = "# RISPOSTA";
-export const PROMPT_CONTEXT = "# CONTESTO:";
-export const PROMPT_INITIAL_QUESTION = "## DOMANDA INIZIALE:";
-
 /** Prefissi per ruoli nei messaggi. */
 export const QUESTION_PREFIX = "question:";
 export const ANSWER_PREFIX = "answer:";
@@ -97,7 +92,7 @@ export const cleanLlmResponse = function(text) {
         /^Ecco (la risposta|quanto richiesto|le informazioni):\s*/i,
         /^Sicuro,?\s*/i,
         /^Sulla base del contesto fornito,?\s*/i,
-        /^In base ai documenti,?\s*/i
+        /^In base ai documenti,?\s*/i,
     ];
 
     for (const regex of preambles) {
