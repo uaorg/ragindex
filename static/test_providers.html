@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RagIndex — Provider Test</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #121212;
+  color: #e0e0e0;
+  padding: 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+h1 {
+  font-size: 22px;
+  font-weight: 500;
+  color: #fff;
+  margin-bottom: 4px;
+}
+.sub {
+  font-size: 13px;
+  color: #888;
+  margin-bottom: 24px;
+}
+#run-btn {
+  background: #1e88e5;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 28px;
+  font-size: 15px;
+  cursor: pointer;
+  margin-bottom: 24px;
+}
+#run-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+#run-btn:not(:disabled):hover {
+  background: #1565c0;
+}
+#status {
+  font-size: 14px;
+  color: #aaa;
+  margin-bottom: 20px;
+  min-height: 20px;
+}
+#status .done { color: #66bb6a; }
+#status .err  { color: #ef5350; }
+.hidden { display: none; }
+.summary {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.summary .card {
+  background: #1e1e1e;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  padding: 14px 22px;
+  min-width: 90px;
+  text-align: center;
+}
+.summary .card .num {
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+.summary .card .lbl {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #888;
+  margin-top: 2px;
+}
+.card.total .num { color: #e0e0e0; }
+.card.pass  .num { color: #66bb6a; }
+.card.fail  .num { color: #ef5350; }
+.card.skipc .num { color: #ffa726; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #1a1a1a;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #2a2a2a;
+}
+th {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #888;
+  padding: 12px 14px;
+  text-align: left;
+  border-bottom: 1px solid #2a2a2a;
+  background: #1e1e1e;
+}
+td {
+  padding: 10px 14px;
+  font-size: 14px;
+  border-bottom: 1px solid #252525;
+}
+tr:last-child td { border-bottom: none; }
+td.p { color: #bbb; width: 11%; }
+td.m { width: 28%; }
+td.s { width: 5%; }
+td.t { width: 7%; color: #888; }
+td.d { color: #999; font-size: 13px; }
+.badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.3px;
+}
+.badge.ok   { background: #1b5e20; color: #a5d6a7; }
+.badge.err  { background: #b71c1c; color: #ef9a9a; }
+.badge.skip { background: #e65100; color: #ffe0b2; }
+tr.err td { background: rgba(239,83,80,0.06); }
+tr.skip td { background: rgba(255,167,38,0.05); }
+tr:hover td { background: rgba(255,255,255,0.03); }
+</style>
+</head>
+<body>
+
+<h1>RagIndex — Provider &amp; Model Test</h1>
+<p class="sub">Eseguito nel browser via <code>fetch()</code> &middot;
+  Apri con un server locale (es. <code>python3 -m http.server 8080</code>)</p>
+
+<button id="run-btn">Avvia Test</button>
+<div id="status"></div>
+<div id="result-area" class="hidden">
+  <div class="summary" id="summary"></div>
+  <table><thead>
+    <tr><th>Provider</th><th>Modello</th><th>Esito</th><th>Tempo</th><th>Dettaglio</th></tr>
+  </thead>
+  <tbody id="results-body"></tbody>
+  </table>
+</div>
+
+<script>
+const ALPHABET_FROM = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+const ALPHABET_TO   = "mKpX3vQwL8ZnR4yTbJxF1YHcU9AgNsI2oODh7eMzW5jV6ifqGrPECuS0Btaldk-_";
+
+const PROVIDER_CONFIGS = {
+  gemini:      { type: "gemini", baseUrl: "https://generativelanguage.googleapis.com/v1beta/models/" },
+  mistral:     { type: "openai", baseUrl: "https://api.mistral.ai/v1/chat/completions" },
+  groq:        { type: "openai", baseUrl: "https://api.groq.com/openai/v1/chat/completions" },
+  openrouter:  { type: "openai", baseUrl: "https://openrouter.ai/api/v1/chat/completions" },
+  cerebras:    { type: "openai", baseUrl: "https://api.cerebras.ai/v1/chat/completions" },
+  siliconflow: { type: "openai", baseUrl: "https://api.siliconflow.com/v1/chat/completions" },
+};
+
+const $ = document.getElementById.bind(document);
+const statusEl = $("status");
+const bodyEl = $("results-body");
+const summaryEl = $("summary");
+const areaEl = $("result-area");
+const btnEl = $("run-btn");
+
+function setStatus(msg, cls) {
+  const span = document.createElement("span");
+  span.textContent = msg;
+  if (cls) span.className = cls;
+  statusEl.innerHTML = "";
+  statusEl.appendChild(span);
+}
+
+function decodeApiKeys(data) {
+  if (!data || !data.providers) return data;
+  const decoded = JSON.parse(JSON.stringify(data));
+  for (const provider of Object.values(decoded.providers)) {
+    for (const keyObj of (provider.keys || [])) {
+      if (keyObj.key) {
+        keyObj.key = [...keyObj.key].map(function(ch) {
+          const idx = ALPHABET_TO.indexOf(ch);
+          return idx !== -1 ? ALPHABET_FROM[idx] : ch;
+        }).join("");
+      }
+    }
+  }
+  return decoded;
+}
+
+async function fetchApiKeys() {
+  const res = await fetch("./data/api_x.json");
+  if (!res.ok) throw new Error("Cannot fetch api_x.json");
+  const raw = await res.json();
+  const db = decodeApiKeys(raw);
+  return db;
+}
+
+async function loadModels(providerName) {
+  const res = await fetch("./data/models/" + providerName + ".txt");
+  if (!res.ok) return [];
+  const content = await res.text();
+  return content.split("\n")
+    .map(function(line) { return line.trim(); })
+    .filter(function(line) { return line.length > 0 && !line.startsWith("#"); })
+    .map(function(line) { return line.split("|")[0].trim(); });
+}
+
+async function discoverProviders() {
+  const res = await fetch("./data/models/manifest.json");
+  if (res.ok) {
+    const list = await res.json();
+    if (list.length > 0) return list;
+  }
+  return Object.keys(PROVIDER_CONFIGS);
+}
+
+function buildGeminiPayload(messages) {
+  const contents = [];
+  let systemInstruction = null;
+  for (const msg of messages) {
+    if (msg.role === "system") {
+      systemInstruction = { parts: [{ text: msg.content }] };
+    } else if (msg.role === "user") {
+      contents.push({ role: "user", parts: [{ text: msg.content }] });
+    } else if (msg.role === "assistant") {
+      contents.push({ role: "model", parts: [{ text: msg.content }] });
+    }
+  }
+  const payload = {
+    contents: contents,
+    generationConfig: {
+      temperature: 1.0, maxOutputTokens: 10, topP: 0.95, topK: 40,
+      stopSequences: [], candidateCount: 1,
+    },
+    safetySettings: [
+      { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+      { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+      { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+      { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" },
+    ],
+  };
+  if (systemInstruction) payload.system_instruction = systemInstruction;
+  return payload;
+}
+
+async function testModel(provider, modelName, apiKey, config) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(function() { controller.abort(); }, 30000);
+  const start = Date.now();
+
+  try {
+    if (config.type === "gemini") {
+      const url = config.baseUrl + modelName + ":generateContent?key=" + apiKey;
+      const payload = buildGeminiPayload([
+        { role: "user", content: "Ciao, rispondi con una parola." }
+      ]);
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      });
+      const elapsed = ((Date.now() - start) / 1000).toFixed(1);
+      if (!res.ok) {
+        const text = await res.text().catch(function() { return ""; });
+        let detail = text.trim();
+        if (detail.startsWith("<")) detail = "";
+        else detail = detail.substring(0, 70);
+        return { ok: false, elapsed: elapsed, error: res.status + " " + res.statusText + (detail ? " - " + detail : "") };
+      }
+      const data = await res.json();
+      const text = (data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text) || "";
+      return { ok: true, elapsed: elapsed, preview: text.substring(0, 60).replace(/\n/g, " ") };
+    }
+
+    const payload = {
+      model: modelName,
+      messages: [{ role: "user", content: "Ciao, rispondi con una parola." }],
+      max_tokens: 10,
+    };
+    const res = await fetch(config.baseUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + apiKey,
+      },
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    });
+    const elapsed = ((Date.now() - start) / 1000).toFixed(1);
+    if (!res.ok) {
+      const text = await res.text().catch(function() { return ""; });
+      let detail = text.trim();
+      if (detail.startsWith("<")) detail = "";
+      else detail = detail.substring(0, 70);
+      return { ok: false, elapsed: elapsed, error: res.status + " " + res.statusText + (detail ? " - " + detail : "") };
+    }
+    const data = await res.json();
+    const text = (data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || "";
+    return { ok: true, elapsed: elapsed, preview: text.substring(0, 60).replace(/\n/g, " ") };
+  } catch (err) {
+    const elapsed = ((Date.now() - start) / 1000).toFixed(1);
+    const errorMsg = (err.name === "AbortError") ? "Timeout (30s)" : err.message;
+    return { ok: false, elapsed: elapsed, error: errorMsg };
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+function addRow(provider, model, status, elapsed, detail) {
+  const row = document.createElement("tr");
+  row.className = status.toLowerCase();
+  row.innerHTML =
+    '<td class="p">' + escapeHtml(provider) + '</td>' +
+    '<td class="m">' + escapeHtml(model) + '</td>' +
+    '<td class="s"><span class="badge ' + status.toLowerCase() + '">' + status + '</span></td>' +
+    '<td class="t">' + escapeHtml(elapsed) + '</td>' +
+    '<td class="d">' + escapeHtml(detail) + '</td>';
+  bodyEl.appendChild(row);
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function showSummary(total, ok, err, skip) {
+  summaryEl.innerHTML =
+    '<div class="card total"><div class="num">' + total + '</div><div class="lbl">Totale</div></div>' +
+    '<div class="card pass"><div class="num">' + ok + '</div><div class="lbl">OK</div></div>' +
+    '<div class="card fail"><div class="num">' + err + '</div><div class="lbl">ERR</div></div>' +
+    '<div class="card skipc"><div class="num">' + skip + '</div><div class="lbl">SKIP</div></div>';
+}
+
+btnEl.addEventListener("click", async function() {
+  btnEl.disabled = true;
+  btnEl.textContent = "Esecuzione in corso...";
+  areaEl.classList.add("hidden");
+  bodyEl.innerHTML = "";
+  summaryEl.innerHTML = "";
+  setStatus("Caricamento chiavi API...");
+
+  let db;
+  try {
+    db = await fetchApiKeys();
+  } catch (err) {
+    setStatus("ERRORE: " + err.message, "err");
+    btnEl.disabled = false;
+    btnEl.textContent = "Avvia Test";
+    return;
+  }
+
+  setStatus("Caricamento elenco provider...");
+  const providers = await discoverProviders();
+
+  let totalOk = 0, totalErr = 0, totalSkip = 0;
+
+  let estimatedTotal = 0;
+  for (const provider of providers) {
+    const config = PROVIDER_CONFIGS[provider];
+    if (!config) continue;
+    const providerData = db && db.providers && db.providers[provider];
+    const apiKey = providerData && providerData.keys && providerData.keys[0] && providerData.keys[0].key || null;
+    if (!apiKey) continue;
+    const models = await loadModels(provider);
+    estimatedTotal += models.length;
+  }
+
+  let testedModels = 0;
+
+  for (let pi = 0; pi < providers.length; pi++) {
+    const provider = providers[pi];
+    const config = PROVIDER_CONFIGS[provider];
+
+    if (!config) {
+      addRow(provider, "(config sconosciuta)", "SKIP", "-", "Provider non in PROVIDER_CONFIGS");
+      totalSkip++;
+      continue;
+    }
+
+    const providerData = db && db.providers && db.providers[provider];
+    const apiKey = (providerData && providerData.keys && providerData.keys[0] && providerData.keys[0].key) || null;
+
+    if (!apiKey) {
+      addRow(provider, "(nessuna chiave)", "SKIP", "-", "Nessuna API key disponibile");
+      totalSkip++;
+      continue;
+    }
+
+    const models = await loadModels(provider);
+    if (models.length === 0) {
+      addRow(provider, "(nessun modello)", "SKIP", "-", "File modelli non trovato o vuoto");
+      totalSkip++;
+      continue;
+    }
+
+    for (const model of models) {
+      testedModels++;
+      setStatus("Test in corso: " + provider + "/" + model + " (" + testedModels + "/" + estimatedTotal + ")");
+
+      const result = await testModel(provider, model, apiKey, config);
+      if (result.ok) {
+        totalOk++;
+        addRow(provider, model, "OK", result.elapsed + "s", result.preview || "");
+      } else {
+        totalErr++;
+        addRow(provider, model, "ERR", result.elapsed + "s", result.error || "");
+      }
+    }
+  }
+
+  areaEl.classList.remove("hidden");
+  showSummary(totalOk + totalErr + totalSkip, totalOk, totalErr, totalSkip);
+  setStatus("Test completato", "done");
+
+  btnEl.disabled = false;
+  btnEl.textContent = "Riesegui Test";
+});
+</script>
+</body>
+</html>

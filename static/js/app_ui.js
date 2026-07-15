@@ -1146,6 +1146,7 @@ export const bindEventListener = function() {
         "menu-default-api-keys": restoreDefaultApiKeys,
         "menu-add-api-key": addApiKey,
         "menu-reset": Commands.resetAll,
+        "menu-test": function() { window.open("test_providers.html", "_blank"); },
         "menu-logout": _actionLogout,
         "menu-create-kb": TextInput.createKnowledgeAsync,
         "menu-delete-kb": _actionDeleteKnowledgeBaseAsync,
@@ -1442,6 +1443,7 @@ export const bindEventListener = function() {
     HelpPopup.bind("menu-default-api-keys", "<strong>API Keys Default</strong><br>Ripristina le chiavi API predefinite, sovrascrivendo quelle attuali.");
     HelpPopup.bind("menu-add-api-key", "<strong>Gestione API Key</strong><br>Aggiungi, attiva o elimina le tue chiavi API personali.");
     HelpPopup.bind("menu-reset", "<strong>Reset</strong><br>Cancella TUTTI i dati: KB, conversazioni, documenti, chiavi API e configurazione. Due conferme richieste.");
+    HelpPopup.bind("menu-test", "<strong>Test Provider</strong><br>Apre la pagina di test per tutti i provider e modelli configurati.");
     HelpPopup.bind("menu-logout", "<strong>Logout</strong><br>Esci dall'applicazione e torna alla schermata di login.");
 
     // Menu — Info
