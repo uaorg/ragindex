@@ -106,7 +106,7 @@ Estrarre le parole chiave dalla domanda seguente.
 
 ## Fase 2 — Ricerca BM25
 
-Eseguita da `rag_engine.js:352` → `ragEngine.buildContext(serializedIndex, allChunks, searchTerms)`.
+Eseguita da `rag_engine.js:325` → `ragEngine.buildContext(serializedIndex, allChunks, searchTerms)`.
 
 **Lato thread principale** (non nel worker — l'indice Lunr è già deserializzato).
 
@@ -212,7 +212,7 @@ Nessun preambolo.
 
 ### Messaggio USER (per entrambi i casi)
 
-La domanda corrente viene formattata come `# Domanda\n{query}` (riga 211 di `llm_prompts.js`). Non usa più il wrapping `<source>` né `## Instructions` — solo un'intestazione markdown chiara.
+La domanda corrente viene formattata come `# Domanda\n{query}` (riga 210 di `llm_prompts.js`). Non usa più il wrapping `<source>` né `## Instructions` — solo un'intestazione markdown chiara.
 
 ### Cronologia Inclusa
 
@@ -246,7 +246,7 @@ messages = [
 
 ### Post-processing
 
-La risposta grezza dell'LLM viene pulita da `cleanLlmResponse()` (`history_utils.js:87`):
+La risposta grezza dell'LLM viene pulita da `cleanLlmResponse()` (`history_utils.js:82`):
 
 | Pattern rimosso | Esempio |
 |----------------|---------|
@@ -257,7 +257,7 @@ La risposta grezza dell'LLM viene pulita da `cleanLlmResponse()` (`history_utils
 
 ## Sistema di Retry
 
-Le richieste LLM (sia distillazione che generazione) usano `_sendRequest()` (`rag_engine.js:237`):
+Le richieste LLM (sia distillazione che generazione) usano `_sendRequest()` (`rag_engine.js:210`):
 
 | Parametro | Valore | Note |
 |-----------|--------|------|

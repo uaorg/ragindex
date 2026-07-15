@@ -483,11 +483,12 @@ class BaseClient:
 ### 8.3 Configurazione modelli
 
 I modelli per provider sono letti da file `.txt` in `static/data/models/`.
-La lista dei provider da cui caricare proviene da `IMPLEMENTED_CLIENTS` in `key_retriever.js`
-(whitelist dei provider con client LLM implementato). `loadModels()` itera su questa lista
+La lista dei provider da caricare proviene da `static/data/models/manifest.json`;
+se il manifest manca o è vuoto, si fa fallback a `IMPLEMENTED_CLIENTS` in `key_retriever.js`
+(whitelist dei 6 provider con client LLM implementato). `loadModels()` itera su questa lista
 e, per ogni provider, tenta il fetch del `.txt`. Solo i provider con file `.txt` valido
-(HTTP 200) compaiono nell'albero di selezione — aggiungi/rimuovi un file `.txt` e l'albero
-si aggiorna automaticamente, senza toccare codice.
+(HTTP 200) compaiono nell'albero di selezione — aggiungi/rimuovi un file `.txt` + aggiorna
+`manifest.json` e l'albero si aggiorna automaticamente, senza toccare codice.
 
 Formato:
 ```

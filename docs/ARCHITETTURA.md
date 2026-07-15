@@ -8,7 +8,7 @@ servizi puri, client LLM, UI, e worker.
 
 ## Architettura CSS
 
-Il progetto usa LESS compilato lato client via `less.js` (CDN).
+Il progetto usa LESS compilato lato client via `less.js` **locale** (`static/less/less.js` v4.2.1, non CDN).
 - `static/less/style.less` — orchestratore che importa 14 moduli atomici
 - `static/less/modules/` — 14 file `.less` (layout, componenti, temi, tabelle, upload, spinner, etc.)
 - `static/less/uadialog.less`, `ualog3.less`, `tooltip.less` — stili indipendenti per finestre e log
@@ -51,10 +51,7 @@ static/index.html
 ```
 
 ## Gestione Ambiente
-Il sistema utilizza `config.js` per gestire le differenze tra ambiente locale (sviluppo) e produzione. In locale è possibile bypassare il login e disattivare la telemetria per semplificare il workflow di sviluppo. Per dettagli, vedere `docs/SVILUPPO_LOCALE.md`.
+Il sistema utilizza `config.js` per gestire le differenze tra ambiente locale (sviluppo) e produzione. In locale è possibile bypassare il login e disattivare la telemetria per semplificare il workflow di sviluppo. Flag chiave: `DISABLE_LOGIN_ON_LOCAL`, `DISABLE_SENDER_ON_LOCAL`, `LOCAL_USER_ID` (vedi `static/js/services/config.js`).
 
 ## Convenzioni di Codice
-
-Le regole vincolanti (Return Strict, Template Literal Strict, Fail Fast, Factory Pattern, async/await)
-sono documentate in `.agents/skills/javascript/SKILL.md` (800+ righe) e in `docs/BEST_PRACTICES_JS.md`.
-Commenti e JSDoc in italiano, identificatori in inglese.
+Le convenzioni vincolanti (Return Strict, Template Literal Strict, Fail Fast, Factory Pattern, async/await) sono codificate nelle skill JavaScript caricate in `.agents/skills/javascript/SKILL.md` (locale, non committato — vedi `.gitignore`). Commenti e JSDoc in italiano, identificatori in inglese.

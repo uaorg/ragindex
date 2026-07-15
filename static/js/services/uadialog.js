@@ -54,8 +54,8 @@ const DialogManager = {
   },
 
   // Funzione per mostrare il dialogo
-  async showDialog(type, message, defaultValue) {
-    return new Promise((resolve) => {
+  showDialog(type, message, defaultValue) {
+    const promise = new Promise((resolve) => {
       // Chiudi eventuali dialoghi aperti
       const existingOverlay = document.querySelector('.overlay.show');
       if (existingOverlay) {
@@ -132,6 +132,8 @@ const DialogManager = {
         overlay.onclick = handleOverlayClickAlert;
       }
     });
+
+    return promise;
   },
 };
 

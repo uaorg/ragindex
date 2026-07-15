@@ -60,7 +60,7 @@ Né locale né login (guest):
 | Chiave | Valore | Origine | Note |
 |--------|--------|---------|------|
 | `user_web_id` | email utente | `login.html:43` — salvata dopo OAuth Google. Letta da `webuser_id.js:20` per costruire il nome del DB IndexedDB | In ambiente locale (`DISABLE_LOGIN_ON_LOCAL=true`) non viene mai scritta. `WebId.get()` restituisce direttamente `"user_local"`. Rimossa da `WebId.clear()` (logout) |
-| *(less.js)* chiavi `<url>`, `<url>:timestamp`, `<url>:vars` | CSS compilato + metadati | `static/less/less.js` (CDN) | Cache automatica del compilatore LESS lato client. Non controllata dall'applicazione |
+| *(less.js)* chiavi `<url>`, `<url>:timestamp`, `<url>:vars` | CSS compilato + metadati | `static/less/less.js` (locale, v4.2.1) | Cache automatica del compilatore LESS lato client. Non controllata dall'applicazione |
 
 **`localStorage.clear()`** chiamato solo da `app_ui.js:613` (funzione `deleteAll()` / reset totale app).
 
