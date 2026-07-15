@@ -128,13 +128,17 @@ tr:hover td { background: rgba(255,255,255,0.03); }
 #progress-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(18, 18, 18, 0.92);
+  background: transparent;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   z-index: 999;
   gap: 14px;
+  pointer-events: none;
+}
+#progress-overlay > * {
+  pointer-events: none;
 }
 .spinner {
   width: 52px;
