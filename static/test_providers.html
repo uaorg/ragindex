@@ -284,16 +284,17 @@ async function loadModels(providerName) {
   return content.split("\n")
     .map(function(line) { return line.trim(); })
     .filter(function(line) { return line.length > 0 && !line.startsWith("#"); })
-    .map(function(line) { return line.split("|")[0].trim(); });
+    .map(function(line) { return line.split("|")[0].trim(); })
+    .sort();
 }
 
 async function discoverProviders() {
   const res = await fetch("./data/models/manifest.json");
   if (res.ok) {
     const list = await res.json();
-    if (list.length > 0) return list;
+    if (list.length > 0) return list.sort();
   }
-  return Object.keys(PROVIDER_CONFIGS);
+  return Object.keys(PROVIDER_CONFIGS).sort();
 }
 
 function buildGeminiPayload(messages) {
