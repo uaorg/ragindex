@@ -179,6 +179,7 @@ async function main() {
 
   let totalOk = 0, totalErr = 0, totalSkip = 0;
   const failures = [];
+  const htmlResults = [];
 
   const colW = { provider: 11, model: 28, status: 4, time: 6, detail: 45 };
   const LINE_W = 10 + colW.provider + colW.model + colW.status + colW.time + colW.detail;
@@ -197,6 +198,7 @@ async function main() {
     const config = PROVIDER_CONFIGS[provider];
     if (!config) {
       console.log(`  ${pad(provider, colW.provider)}│ ${pad("(config sconosciuta)", colW.model)}│ ${C.yellow}${pad("SKIP", colW.status)}${C.reset}│ ${pad("-", colW.time)}│ ${pad("Provider non in PROVIDER_CONFIGS", colW.detail)}`);
+      htmlResults.push({ provider, model: "(config sconosciuta)", status: "SKIP", elapsed: "-", detail: "Provider non in PROVIDER_CONFIGS" });
       totalSkip++;
       continue;
     }
@@ -205,6 +207,7 @@ async function main() {
 
     if (!apiKey) {
       console.log(`  ${pad(provider, colW.provider)}│ ${pad("(nessuna chiave)", colW.model)}│ ${C.yellow}${pad("SKIP", colW.status)}${C.reset}│ ${pad("-", colW.time)}│ ${pad("Nessuna API key disponibile", colW.detail)}`);
+      htmlResults.push({ provider, model: "(nessuna chiave)", status: "SKIP", elapsed: "-", detail: "Nessuna API key disponibile" });
       totalSkip++;
       continue;
     }
@@ -212,6 +215,7 @@ async function main() {
     const models = await loadModels(provider);
     if (models.length === 0) {
       console.log(`  ${pad(provider, colW.provider)}│ ${pad("(nessun modello)", colW.model)}│ ${C.yellow}${pad("SKIP", colW.status)}${C.reset}│ ${pad("-", colW.time)}│ ${pad("File modelli non trovato o vuoto", colW.detail)}`);
+      htmlResults.push({ provider, model: "(nessun modello)", status: "SKIP", elapsed: "-", detail: "File modelli non trovato o vuoto" });
       totalSkip++;
       continue;
     }
@@ -221,11 +225,13 @@ async function main() {
       if (result.ok) {
         totalOk++;
         console.log(`  ${pad(provider, colW.provider)}│ ${pad(model, colW.model)}│ ${C.green}${pad("OK", colW.status)}${C.reset}│ ${pad(result.elapsed + "s", colW.time)}│ ${C.dim}${pad(result.preview || "", colW.detail)}${C.reset}`);
+        htmlResults.push({ provider, model, status: "OK", elapsed: result.elapsed + "s", detail: result.preview || "" });
       } else {
         totalErr++;
         const errMsg = result.error || "";
         failures.push({ provider, model, error: errMsg });
         console.log(`  ${pad(provider, colW.provider)}│ ${pad(model, colW.model)}│ ${C.red}${pad("ERR", colW.status)}${C.reset}│ ${pad(result.elapsed + "s", colW.time)}│ ${C.red}${pad(errMsg.substring(0, colW.detail), colW.detail)}${C.reset}`);
+        htmlResults.push({ provider, model, status: "ERR", elapsed: result.elapsed + "s", detail: errMsg.substring(0, 70) });
       }
     }
   }
@@ -245,7 +251,169 @@ async function main() {
 
   console.log("");
 
+  const htmlReportPath = path.join(__dirname, "providers_report.html");
+  await writeHtmlReport(htmlReportPath, htmlResults);
+
   process.exit(totalErr > 0 ? 1 : 0);
+}
+
+async function writeHtmlReport(filePath, results) {
+  const total = results.length;
+  const ok = results.filter(r => r.status === "OK").length;
+  const err = results.filter(r => r.status === "ERR").length;
+  const skip = results.filter(r => r.status === "SKIP").length;
+  const ts = new Date().toISOString().replace("T", " ").substring(0, 19);
+
+  function esc(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  function statusClass(s) {
+    if (s === "OK")   return "ok";
+    if (s === "ERR")  return "err";
+    return "skip";
+  }
+
+  let rows = "";
+  for (const r of results) {
+    rows += `<tr class="${statusClass(r.status)}">
+      <td class="p">${esc(r.provider)}</td>
+      <td class="m">${esc(r.model)}</td>
+      <td class="s"><span class="badge ${statusClass(r.status)}">${r.status}</span></td>
+      <td class="t">${esc(r.elapsed)}</td>
+      <td class="d">${esc(r.detail)}</td>
+    </tr>\n`;
+  }
+
+  const html = `<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RagIndex — Provider Test Report</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #121212;
+  color: #e0e0e0;
+  padding: 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+h1 {
+  font-size: 22px;
+  font-weight: 500;
+  color: #ffffff;
+  margin-bottom: 4px;
+}
+.sub {
+  font-size: 13px;
+  color: #888;
+  margin-bottom: 24px;
+}
+.summary {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.summary .card {
+  background: #1e1e1e;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  padding: 14px 22px;
+  min-width: 90px;
+  text-align: center;
+}
+.summary .card .num {
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+.summary .card .lbl {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #888;
+  margin-top: 2px;
+}
+.card.total .num { color: #e0e0e0; }
+.card.pass  .num { color: #66bb6a; }
+.card.fail  .num { color: #ef5350; }
+.card.skipc .num { color: #ffa726; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #1a1a1a;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #2a2a2a;
+}
+th {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #888;
+  padding: 12px 14px;
+  text-align: left;
+  border-bottom: 1px solid #2a2a2a;
+  background: #1e1e1e;
+}
+td {
+  padding: 10px 14px;
+  font-size: 14px;
+  border-bottom: 1px solid #252525;
+}
+tr:last-child td { border-bottom: none; }
+td.p { color: #bbb; width: 11%; }
+td.m { width: 28%; }
+td.s { width: 5%; }
+td.t { width: 7%; color: #888; }
+td.d { color: #999; font-size: 13px; }
+.badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.3px;
+}
+.badge.ok   { background: #1b5e20; color: #a5d6a7; }
+.badge.err  { background: #b71c1c; color: #ef9a9a; }
+.badge.skip { background: #e65100; color: #ffe0b2; }
+tr.ok  td { background: transparent; }
+tr.err td { background: rgba(239,83,80,0.06); }
+tr.skip td { background: rgba(255,167,38,0.05); }
+tr:hover td { background: rgba(255,255,255,0.03); }
+</style>
+</head>
+<body>
+
+<h1>RagIndex — Provider &amp; Model Test</h1>
+<p class="sub">${ts} &middot; Report generato da test/test_providers.js</p>
+
+<div class="summary">
+  <div class="card total"><div class="num">${total}</div><div class="lbl">Totale</div></div>
+  <div class="card pass"><div class="num">${ok}</div><div class="lbl">OK</div></div>
+  <div class="card fail"><div class="num">${err}</div><div class="lbl">ERR</div></div>
+  <div class="card skipc"><div class="num">${skip}</div><div class="lbl">SKIP</div></div>
+</div>
+
+<table>
+<thead>
+<tr><th>Provider</th><th>Modello</th><th>Esito</th><th>Tempo</th><th>Dettaglio</th></tr>
+</thead>
+<tbody>
+${rows}
+</tbody>
+</table>
+
+</body>
+</html>`;
+
+  await fs.writeFile(filePath, html, "utf-8");
+  console.log(`  ${C.dim}Rapporto HTML: ${filePath}${C.reset}`);
 }
 
 main();
