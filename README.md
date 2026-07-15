@@ -44,7 +44,11 @@ L'applicazione è progettata per essere utilizzata seguendo tre fasi sequenziali
 - **Worker**: `static/js/rag_worker.js` (Elaborazione intensiva in background).
 - **LLM Clients**: `static/js/llmclient/` (6 provider: Gemini, Mistral, Groq, OpenRouter, Cerebras, SiliconFlow).
 - **Database Locale**: `static/js/services/idb_mgr.js` (Persistenza via Dexie.js).
-- **Test**: `test/test_providers.js` (Node.js, test manuale di tutti i provider con chiavi reali).
+- **Database Locale**: `static/js/services/idb_mgr.js` (Persistenza via Dexie.js).
+- **Test**: 
+  - `static/test_providers.html` — eseguito nel browser via menu ☰ → "Test Provider" (oppure aprendo direttamente la pagina).
+  - `test/test_providers.js` — Node.js, genera report HTML in `test/providers_report.html`.
+  - Entrambi testano tutti i provider e modelli configurati con chiavi da `static/data/api_x.json`.
 
 ---
 *RagIndex è un progetto focalizzato sulla privacy e sull'efficienza dell'AI lato client.*
