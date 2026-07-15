@@ -125,74 +125,69 @@ tr.err td { background: rgba(239,83,80,0.06); }
 tr.skip td { background: rgba(255,167,38,0.05); }
 tr:hover td { background: rgba(255,255,255,0.03); }
 
-#progress-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(18, 18, 18, 0.8);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+#progress-bar {
+  display: none;
+  position: sticky;
+  top: 0;
   z-index: 999;
-  gap: 14px;
-}
-#progress-overlay > * {
-  pointer-events: none;
-}
-.progress-card {
   background: #1a1a1a;
-  border: 2px solid #00e676;
-  border-radius: 18px;
-  padding: 40px 64px;
-  display: flex;
-  flex-direction: column;
+  border-bottom: 2px solid #00e676;
+  padding: 18px 24px;
+  margin-bottom: 20px;
+  gap: 12px;
   align-items: center;
-  gap: 14px;
-  box-shadow: 0 0 60px rgba(0, 230, 118, 0.15);
+  flex-wrap: wrap;
 }
-.spinner {
-  width: 60px;
-  height: 60px;
-  border: 5px solid #333;
+#progress-bar.show { display: flex; }
+.progress-spinner {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border: 3px solid #333;
   border-top-color: #00e676;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+.progress-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
 .progress-provider {
-  font-size: 20px;
+  font-size: 13px;
   font-weight: 600;
-  color: #bbb;
-  letter-spacing: 3px;
+  color: #999;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
 }
 .progress-model {
-  font-size: 42px;
-  font-weight: 900;
+  font-size: 28px;
+  font-weight: 800;
   color: #00e676;
-  text-align: center;
+  line-height: 1.2;
   word-break: break-all;
-  max-width: 80vw;
-  line-height: 1.25;
-  text-shadow: 0 0 40px rgba(0, 230, 118, 0.35);
+  text-shadow: 0 0 20px rgba(0, 230, 118, 0.2);
 }
-.progress-count {
-  font-size: 16px;
-  font-weight: 500;
-  color: #999;
+.progress-meta {
+  font-size: 13px;
+  color: #777;
 }
 .progress-bar-track {
-  width: 320px;
-  height: 6px;
+  width: 200px;
+  height: 4px;
+  flex-shrink: 0;
   background: #2a2a2a;
-  border-radius: 3px;
+  border-radius: 2px;
   overflow: hidden;
 }
 .progress-bar-fill {
   height: 100%;
   width: 0%;
   background: #00e676;
-  border-radius: 3px;
+  border-radius: 2px;
   transition: width 0.3s ease;
 }
 </style>
@@ -206,14 +201,14 @@ tr:hover td { background: rgba(255,255,255,0.03); }
 <button id="run-btn">Avvia Test</button>
 <div id="status"></div>
 
-<div id="progress-overlay" class="hidden">
-  <div class="progress-card">
-    <div class="spinner"></div>
+<div id="progress-bar">
+  <div class="progress-spinner"></div>
+  <div class="progress-body">
     <div class="progress-provider" id="progress-provider"></div>
     <div class="progress-model" id="progress-model"></div>
-    <div class="progress-count" id="progress-count"></div>
-    <div class="progress-bar-track"><div class="progress-bar-fill" id="progress-fill"></div></div>
+    <div class="progress-meta" id="progress-meta"></div>
   </div>
+  <div class="progress-bar-track"><div class="progress-bar-fill" id="progress-fill"></div></div>
 </div>
 
 <div id="result-area" class="hidden">
@@ -244,10 +239,10 @@ const bodyEl = $("results-body");
 const summaryEl = $("summary");
 const areaEl = $("result-area");
 const btnEl = $("run-btn");
-const overlayEl = $("progress-overlay");
+const barEl = $("progress-bar");
 const provEl = $("progress-provider");
 const modelEl = $("progress-model");
-const countEl = $("progress-count");
+const metaEl = $("progress-meta");
 const fillEl = $("progress-fill");
 
 function setStatus(msg, cls) {
@@ -421,15 +416,20 @@ function showSummary(total, ok, err, skip) {
 function showProgress(provider, model, done, total) {
   provEl.textContent = provider;
   modelEl.textContent = model;
-  countEl.textContent = done + " / " + total;
+  metaEl.textContent = done + " / " + total + " modelli testati";
   fillEl.style.width = (done / total * 100) + "%";
-  overlayEl.classList.remove("hidden");
+  barEl.classList.add("show");
+}
+
+function hideProgress() {
+  barEl.classList.remove("show");
 }
 
 btnEl.addEventListener("click", async function() {
   btnEl.disabled = true;
   btnEl.textContent = "Esecuzione in corso...";
-  areaEl.classList.add("hidden");
+  hideProgress();
+  areaEl.classList.remove("hidden");
   bodyEl.innerHTML = "";
   summaryEl.innerHTML = "";
   setStatus("Caricamento chiavi API...");
@@ -439,7 +439,7 @@ btnEl.addEventListener("click", async function() {
     db = await fetchApiKeys();
   } catch (err) {
     setStatus("ERRORE: " + err.message, "err");
-    overlayEl.classList.add("hidden");
+    hideProgress();
     btnEl.disabled = false;
     btnEl.textContent = "Avvia Test";
     return;
@@ -505,7 +505,7 @@ btnEl.addEventListener("click", async function() {
   }
 
   areaEl.classList.remove("hidden");
-  overlayEl.classList.add("hidden");
+  hideProgress();
   showSummary(totalOk + totalErr + totalSkip, totalOk, totalErr, totalSkip);
   setStatus("Test completato", "done");
 
