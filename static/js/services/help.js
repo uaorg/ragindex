@@ -90,6 +90,7 @@ export const help0_html = `
     <div>
         <strong class="help-section-title">Menu Laterale &mdash; Sistema</strong>
         <div class="help-grid-last">
+            <strong>Test Provider</strong> <span>Verifica tutti i provider e modelli configurati (apre pagina di test dedicata).</span>
             <strong>Logout</strong> <span>Esci dall'applicazione e torna alla schermata di login.</span>
         </div>
     </div>
@@ -171,6 +172,7 @@ export const help2_html = `
     <div>
         <strong>Sistema</strong>
         <ul>
+            <li><strong>Test Provider</strong>: Apre la pagina di test per verificare tutti i provider e modelli configurati.</li>
             <li><strong>Logout</strong>: Esci e torna alla schermata di login.</li>
         </ul>
     </div>
